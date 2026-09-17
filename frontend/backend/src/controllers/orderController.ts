@@ -13,7 +13,8 @@ export const createOrder = async (req: any, res: Response) => {
     const { items, shipping, paymentMethod, ...address } = req.body;
 
     const subtotal = items.reduce(
-      (s: number, i: any) => s + Number(i.price) * Number(i.quantity),
+      (s: number, i: any) =>
+        s + Number(i.price) * Number(i.quantity),
       0
     );
 
@@ -49,7 +50,9 @@ export const createOrder = async (req: any, res: Response) => {
     // Update stock
     for (const item of items) {
       const product = await prisma.product.findUnique({
-        where: { id: item.productId }
+        where: {
+          id: item.productId
+        }
       });
 
       if (product) {
@@ -62,11 +65,13 @@ export const createOrder = async (req: any, res: Response) => {
           newStock === 0
             ? 'OUT_OF_STOCK'
             : newStock <= 5
-            ? 'LOW_STOCK'
-            : 'IN_STOCK';
+              ? 'LOW_STOCK'
+              : 'IN_STOCK';
 
         await prisma.product.update({
-          where: { id: item.productId },
+          where: {
+            id: item.productId
+          },
           data: {
             stock: newStock,
             stockStatus: newStatus
@@ -77,12 +82,16 @@ export const createOrder = async (req: any, res: Response) => {
 
     // Clear cart
     const cart = await prisma.cart.findUnique({
-      where: { userId: req.user.id }
+      where: {
+        userId: req.user.id
+      }
     });
 
     if (cart) {
       await prisma.cartItem.deleteMany({
-        where: { cartId: cart.id }
+        where: {
+          cartId: cart.id
+        }
       });
     }
 
@@ -112,22 +121,27 @@ export const createOrder = async (req: any, res: Response) => {
 
         const emailHtml =
           '<div style="font-family:Arial,sans-serif;max-width:650px;margin:auto;color:#333;">' +
-          '<div style="padding:25px;text-align:center;border-bottom:4px solid #f5c400;">' +
+
+          '<div style="padding:25px;text-align:center;border-bottom:4px solid #f5c400;background:#ffffff;">' +
           '<h1 style="margin:0;color:#1d4ed8;">Rainbow Colors</h1>' +
-          '<p>Peintures et matériaux de construction</p>' +
+          '<p style="margin:8px 0 0;color:#666;">Peintures et matériaux de construction</p>' +
           '</div>' +
 
           '<div style="padding:30px;background:#f8fafc;">' +
+
           '<h2 style="color:#1d4ed8;">Merci pour votre commande !</h2>' +
+
           '<p>Nous avons bien reçu votre commande.</p>' +
 
-          '<p><strong>Numéro de commande :</strong> ' +
+          '<p>' +
+          '<strong>Numéro de commande :</strong> ' +
           order.orderNumber +
           '</p>' +
 
           '<h3>Détails de la commande</h3>' +
 
           '<table style="width:100%;border-collapse:collapse;background:white;">' +
+
           '<thead>' +
           '<tr style="background:#f1f5f9;">' +
           '<th style="padding:10px;text-align:left;">Produit</th>' +
@@ -139,38 +153,50 @@ export const createOrder = async (req: any, res: Response) => {
           '<tbody>' +
           itemsHtml +
           '</tbody>' +
+
           '</table>' +
 
           '<div style="margin-top:20px;background:white;padding:20px;border-radius:10px;">' +
 
-          '<p><strong>Sous-total :</strong> ' +
+          '<p>' +
+          '<strong>Sous-total :</strong> ' +
           Number(order.subtotal).toFixed(2) +
-          ' TND</p>' +
+          ' TND' +
+          '</p>' +
 
-          '<p><strong>Livraison :</strong> ' +
+          '<p>' +
+          '<strong>Livraison :</strong> ' +
           Number(order.shipping).toFixed(2) +
-          ' TND</p>' +
+          ' TND' +
+          '</p>' +
 
-          '<p><strong>TVA :</strong> ' +
+          '<p>' +
+          '<strong>TVA :</strong> ' +
           Number(order.tax).toFixed(2) +
-          ' TND</p>' +
+          ' TND' +
+          '</p>' +
 
           '<p style="font-size:20px;color:#1d4ed8;">' +
           '<strong>Total :</strong> ' +
           Number(order.total).toFixed(2) +
-          ' TND</p>' +
+          ' TND' +
+          '</p>' +
 
           '</div>' +
 
-          '<p><strong>Mode de paiement :</strong> ' +
+          '<p>' +
+          '<strong>Mode de paiement :</strong> ' +
           order.paymentMethod +
           '</p>' +
 
-          '<p>Votre commande est actuellement <strong>en attente de traitement</strong>.</p>' +
+          '<p>' +
+          'Votre commande est actuellement ' +
+          '<strong>en attente de traitement</strong>.' +
+          '</p>' +
 
           '</div>' +
 
-          '<div style="padding:20px;text-align:center;background:#fff;color:#777;font-size:13px;">' +
+          '<div style="padding:20px;text-align:center;background:#ffffff;color:#777;font-size:13px;">' +
           '<p>Rainbow Colors — Sfax, Tunisie</p>' +
           '<p>+216 29 253 908</p>' +
           '<p>contact@rainbow-colors.tn</p>' +
@@ -178,8 +204,8 @@ export const createOrder = async (req: any, res: Response) => {
 
           '</div>';
 
-        await resend.emails.send({
-          from: 'Rainbow Colors <contact@rainbow-colors.tn>',
+        const emailResult = await resend.emails.send({
+          from: 'Rainbow Colors <onboarding@resend.dev>',
           to: order.email,
           subject:
             'Confirmation de votre commande ' +
@@ -187,9 +213,18 @@ export const createOrder = async (req: any, res: Response) => {
           html: emailHtml
         });
 
-        console.log(
-          'Confirmation email sent to ' + order.email
-        );
+        if (emailResult.error) {
+          console.error(
+            'Resend error:',
+            emailResult.error
+          );
+        } else {
+          console.log(
+            'Confirmation email sent successfully:',
+            emailResult.data?.id
+          );
+        }
+
       } catch (emailError) {
         console.error(
           'Email sending failed:',
@@ -198,7 +233,10 @@ export const createOrder = async (req: any, res: Response) => {
       }
     }
 
-    res.json({ order });
+    res.json({
+      order
+    });
+
   } catch (err: any) {
     res.status(400).json({
       error: err.message
