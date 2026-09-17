@@ -1,4 +1,3 @@
-```ts
 import { Response } from 'express';
 import { prisma } from '../config/prisma';
 import { Resend } from 'resend';
@@ -14,12 +13,12 @@ export const createOrder = async (req: any, res: Response) => {
     const { items, shipping, paymentMethod, ...address } = req.body;
 
     const subtotal = items.reduce(
-      (s: number, i: any) => s + i.price * i.quantity,
+      (s: number, i: any) => s + Number(i.price) * Number(i.quantity),
       0
     );
 
     const tax = subtotal * 0.19;
-    const total = subtotal + shipping + tax;
+    const total = subtotal + Number(shipping) + tax;
 
     const order = await prisma.order.create({
       data: {
@@ -42,7 +41,9 @@ export const createOrder = async (req: any, res: Response) => {
           }))
         }
       },
-      include: { items: true }
+      include: {
+        items: true
+      }
     });
 
     // Update stock
@@ -52,14 +53,17 @@ export const createOrder = async (req: any, res: Response) => {
       });
 
       if (product) {
-        const newStock = Math.max(0, product.stock - item.quantity);
+        const newStock = Math.max(
+          0,
+          product.stock - Number(item.quantity)
+        );
 
         const newStatus =
           newStock === 0
             ? 'OUT_OF_STOCK'
             : newStock <= 5
-              ? 'LOW_STOCK'
-              : 'IN_STOCK';
+            ? 'LOW_STOCK'
+            : 'IN_STOCK';
 
         await prisma.product.update({
           where: { id: item.productId },
@@ -86,135 +90,133 @@ export const createOrder = async (req: any, res: Response) => {
     if (order.email && process.env.RESEND_API_KEY) {
       try {
         const itemsHtml = order.items
-          .map(
-            (item: any) => `
-              <tr>
-                <td style="padding:10px;border-bottom:1px solid #eee;">
-                  ${item.name}
-                </td>
-                <td style="padding:10px;border-bottom:1px solid #eee;text-align:center;">
-                  ${item.quantity}
-                </td>
-                <td style="padding:10px;border-bottom:1px solid #eee;text-align:right;">
-                  ${(item.price * item.quantity).toFixed(2)} TND
-                </td>
-              </tr>
-            `
-          )
+          .map((item: any) => {
+            const itemTotal =
+              Number(item.price) * Number(item.quantity);
+
+            return (
+              '<tr>' +
+              '<td style="padding:10px;border-bottom:1px solid #eee;">' +
+              item.name +
+              '</td>' +
+              '<td style="padding:10px;border-bottom:1px solid #eee;text-align:center;">' +
+              item.quantity +
+              '</td>' +
+              '<td style="padding:10px;border-bottom:1px solid #eee;text-align:right;">' +
+              itemTotal.toFixed(2) +
+              ' TND</td>' +
+              '</tr>'
+            );
+          })
           .join('');
+
+        const emailHtml =
+          '<div style="font-family:Arial,sans-serif;max-width:650px;margin:auto;color:#333;">' +
+          '<div style="padding:25px;text-align:center;border-bottom:4px solid #f5c400;">' +
+          '<h1 style="margin:0;color:#1d4ed8;">Rainbow Colors</h1>' +
+          '<p>Peintures et matériaux de construction</p>' +
+          '</div>' +
+
+          '<div style="padding:30px;background:#f8fafc;">' +
+          '<h2 style="color:#1d4ed8;">Merci pour votre commande !</h2>' +
+          '<p>Nous avons bien reçu votre commande.</p>' +
+
+          '<p><strong>Numéro de commande :</strong> ' +
+          order.orderNumber +
+          '</p>' +
+
+          '<h3>Détails de la commande</h3>' +
+
+          '<table style="width:100%;border-collapse:collapse;background:white;">' +
+          '<thead>' +
+          '<tr style="background:#f1f5f9;">' +
+          '<th style="padding:10px;text-align:left;">Produit</th>' +
+          '<th style="padding:10px;text-align:center;">Qté</th>' +
+          '<th style="padding:10px;text-align:right;">Prix</th>' +
+          '</tr>' +
+          '</thead>' +
+
+          '<tbody>' +
+          itemsHtml +
+          '</tbody>' +
+          '</table>' +
+
+          '<div style="margin-top:20px;background:white;padding:20px;border-radius:10px;">' +
+
+          '<p><strong>Sous-total :</strong> ' +
+          Number(order.subtotal).toFixed(2) +
+          ' TND</p>' +
+
+          '<p><strong>Livraison :</strong> ' +
+          Number(order.shipping).toFixed(2) +
+          ' TND</p>' +
+
+          '<p><strong>TVA :</strong> ' +
+          Number(order.tax).toFixed(2) +
+          ' TND</p>' +
+
+          '<p style="font-size:20px;color:#1d4ed8;">' +
+          '<strong>Total :</strong> ' +
+          Number(order.total).toFixed(2) +
+          ' TND</p>' +
+
+          '</div>' +
+
+          '<p><strong>Mode de paiement :</strong> ' +
+          order.paymentMethod +
+          '</p>' +
+
+          '<p>Votre commande est actuellement <strong>en attente de traitement</strong>.</p>' +
+
+          '</div>' +
+
+          '<div style="padding:20px;text-align:center;background:#fff;color:#777;font-size:13px;">' +
+          '<p>Rainbow Colors — Sfax, Tunisie</p>' +
+          '<p>+216 29 253 908</p>' +
+          '<p>contact@rainbow-colors.tn</p>' +
+          '</div>' +
+
+          '</div>';
 
         await resend.emails.send({
           from: 'Rainbow Colors <contact@rainbow-colors.tn>',
           to: order.email,
-          subject: `Confirmation de votre commande ${order.orderNumber}`,
-          html: `
-            <div style="font-family:Arial,sans-serif;max-width:650px;margin:auto;color:#333;">
-
-              <div style="background:#ffffff;padding:25px;text-align:center;border-bottom:4px solid #f5c400;">
-                <h1 style="margin:0;color:#1d4ed8;">
-                  Rainbow Colors
-                </h1>
-                <p style="margin:8px 0 0;color:#666;">
-                  Peintures et matériaux de construction
-                </p>
-              </div>
-
-              <div style="padding:30px;background:#f8fafc;">
-
-                <h2 style="color:#1d4ed8;">
-                  Merci pour votre commande !
-                </h2>
-
-                <p>
-                  Nous avons bien reçu votre commande.
-                </p>
-
-                <p>
-                  <strong>Numéro de commande :</strong>
-                  ${order.orderNumber}
-                </p>
-
-                <h3>Détails de la commande</h3>
-
-                <table style="width:100%;border-collapse:collapse;background:white;">
-                  <thead>
-                    <tr style="background:#f1f5f9;">
-                      <th style="padding:10px;text-align:left;">Produit</th>
-                      <th style="padding:10px;text-align:center;">Qté</th>
-                      <th style="padding:10px;text-align:right;">Prix</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    ${itemsHtml}
-                  </tbody>
-                </table>
-
-                <div style="margin-top:20px;background:white;padding:20px;border-radius:10px;">
-
-                  <p>
-                    <strong>Sous-total :</strong>
-                    ${order.subtotal.toFixed(2)} TND
-                  </p>
-
-                  <p>
-                    <strong>Livraison :</strong>
-                    ${order.shipping.toFixed(2)} TND
-                  </p>
-
-                  <p>
-                    <strong>TVA :</strong>
-                    ${order.tax.toFixed(2)} TND
-                  </p>
-
-                  <p style="font-size:20px;color:#1d4ed8;">
-                    <strong>Total :</strong>
-                    ${order.total.toFixed(2)} TND
-                  </p>
-
-                </div>
-
-                <p style="margin-top:25px;">
-                  <strong>Mode de paiement :</strong>
-                  ${order.paymentMethod}
-                </p>
-
-                <p>
-                  Votre commande est actuellement
-                  <strong>en attente de traitement</strong>.
-                </p>
-
-              </div>
-
-              <div style="padding:20px;text-align:center;background:#ffffff;color:#777;font-size:13px;">
-                <p>Rainbow Colors — Sfax, Tunisie</p>
-                <p>+216 29 253 908</p>
-                <p>contact@rainbow-colors.tn</p>
-              </div>
-
-            </div>
-          `
+          subject:
+            'Confirmation de votre commande ' +
+            order.orderNumber,
+          html: emailHtml
         });
 
-        console.log(`Confirmation email sent to ${order.email}`);
+        console.log(
+          'Confirmation email sent to ' + order.email
+        );
       } catch (emailError) {
-        // Email failure should not cancel the order
-        console.error('Email sending failed:', emailError);
+        console.error(
+          'Email sending failed:',
+          emailError
+        );
       }
     }
 
     res.json({ order });
-
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({
+      error: err.message
+    });
   }
 };
 
 export const getOrders = async (req: any, res: Response) => {
   const orders = await prisma.order.findMany({
-    where: { userId: req.user.id },
-    include: { items: true },
-    orderBy: { createdAt: 'desc' }
+    where: {
+      userId: req.user.id
+    },
+    include: {
+      items: true
+    },
+    orderBy: {
+      createdAt: 'desc'
+    }
   });
 
   res.json(orders);
@@ -228,16 +230,18 @@ export const getOrder = async (req: any, res: Response) => {
     },
     include: {
       items: {
-        include: { product: true }
+        include: {
+          product: true
+        }
       }
     }
   });
 
   if (!order) {
-    return res.status(404).json({ error: 'Order not found' });
+    return res.status(404).json({
+      error: 'Order not found'
+    });
   }
 
   res.json(order);
 };
-```
-
