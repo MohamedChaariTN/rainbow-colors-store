@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Produits | Rainbow Colors</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <img src="images/logo ranbow colors.jpeg" alt="Rainbow Colors">
+      <span class="logo-text">Rainbow <span>Colors</span></span>
+    </a>
+    <nav class="nav-desktop"><a href="index.html" class="nav-link ">Accueil</a><a href="products.html" class="nav-link active">Produits</a><a href="categories.html" class="nav-link ">Catégories</a><a href="about.html" class="nav-link ">À Propos</a><a href="contact.html" class="nav-link ">Contact</a></nav>
+    <div class="header-actions">
+      <a href="search.html" class="icon-btn" title="Rechercher">🔍</a>
+      <a href="cart.html" class="icon-btn" title="Panier">
+        🛒<span class="cart-count" style="display:none">0</span>
+      </a>
+      <span class="auth-btn"><button class="icon-btn" onclick="openAuthModal()" title="Connexion">👤</button></span>
+      <button class="icon-btn mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+    </div>
+  </div>
+</header>
+<div class="mobile-menu-overlay" onclick="toggleMobileMenu()"></div>
+<div class="mobile-menu">
+  <button class="icon-btn" style="position:absolute;top:16px;right:16px" onclick="toggleMobileMenu()">✕</button>
+  <a href="index.html" class="mobile-nav-link">Accueil</a><a href="products.html" class="mobile-nav-link">Produits</a><a href="categories.html" class="mobile-nav-link">Catégories</a><a href="about.html" class="mobile-nav-link">À Propos</a><a href="contact.html" class="mobile-nav-link">Contact</a>
+  <a href="cart.html" class="mobile-nav-link">🛒 Panier</a>
+  <a href="account.html" class="mobile-nav-link">👤 Mon Compte</a>
+  <a href="orders.html" class="mobile-nav-link">📦 Mes Commandes</a>
+  <a href="wishlist.html" class="mobile-nav-link">❤️ Favoris</a>
+</div>
+
+
+<section class="page-header">
+  <div class="section-inner">
+    <h1>Nos Produits</h1>
+    <p>Découvrez notre gamme complète de peintures et matériaux de construction</p>
+    <div class="breadcrumb"><a href="index.html">Accueil</a><span>></span><span>Produits</span></div>
+  </div>
+</section>
+<section class="section">
+  <div class="section-inner">
+    <div style="max-width:500px;margin:0 auto 40px">
+      <div class="search-bar-large">
+        <input type="text" id="searchInput" placeholder="Rechercher un produit...">
+        <button onclick="doSearch()">🔍</button>
+      </div>
+    </div>
+    <div class="products-grid" id="productList"><div class="loading-skeleton" style="height:300px"></div><div class="loading-skeleton" style="height:300px"></div><div class="loading-skeleton" style="height:300px"></div></div>
+  </div>
+</section>
+<script>
+async function doSearch() {
+  const q = document.getElementById('searchInput').value;
+  loadProducts({ search: q });
+}
+document.getElementById('searchInput')?.addEventListener('keypress', e => { if(e.key==='Enter') doSearch(); });
+async function loadProducts(params={}) {
+  try {
+    const data = await fetchProducts(params);
+    document.getElementById('productList').innerHTML = data.products.length 
+      ? data.products.map(p => renderProductCard(p)).join('')
+      : '<div style="text-align:center;padding:60px;color:var(--rc-gray-500)"><h3>Aucun produit trouvé</h3></div>';
+  } catch(e) { console.error(e); }
+}
+document.addEventListener('DOMContentLoaded', () => loadProducts());
+</script>
+
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="images/logo ranbow colors.jpeg" alt="Rainbow Colors">
+        <p>Rainbow Colors - Votre fournisseur de confiance pour peintures et matériaux de construction en Tunisie.</p>
+        <div class="footer-social">
+          <a href="#">📘</a><a href="#">📸</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <a href="index.html">Accueil</a><a href="products.html">Produits</a><a href="categories.html">Catégories</a><a href="about.html">À Propos</a><a href="contact.html">Contact</a>
+      </div>
+      <div class="footer-col">
+        <h4>Compte</h4>
+        <a href="account.html">Mon Compte</a><a href="cart.html">Panier</a><a href="orders.html">Commandes</a><a href="wishlist.html">Favoris</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <div class="footer-contact-item"><span>📍</span><span>Route de Gabès Km 4,5<br>Sfax, Tunisie</span></div>
+        <div class="footer-contact-item"><span>📞</span><span>+216 29 253 908</span></div>
+        <div class="footer-contact-item"><span>✉️</span><span>contact@rainbow-colors.tn</span></div>
+      </div>
+    </div>
+    <div class="footer-bottom"><p>© 2026 Rainbow Colors. Tous droits réservés.</p><p>🇹🇳 Fait en Tunisie</p></div>
+  </div>
+</footer>
+<a href="https://wa.me/21629253908" class="whatsapp-float" target="_blank">📱</a>
+
+
+<div class="modal-overlay" id="authModal">
+  <div class="modal" style="position:relative">
+    <button class="close-btn" onclick="closeAuthModal()">✕</button>
+    <div id="loginForm">
+      <h2>Connexion</h2>
+      <p>Connectez-vous à votre compte Rainbow Colors</p>
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="votre@email.com" required></div>
+        <div class="form-group"><label>Mot de passe</label><input type="password" id="loginPassword" placeholder="••••••••" required></div>
+        <button type="submit" class="btn btn-primary">Se connecter</button>
+      </form>
+      <div class="switch">Pas encore de compte ? <a onclick="openAuthModal('register')">Créer un compte</a></div>
+    </div>
+    <div id="registerForm" style="display:none">
+      <h2>Inscription</h2>
+      <p>Créez votre compte en quelques secondes</p>
+      <form onsubmit="handleRegister(event)">
+        <div class="form-row">
+          <div class="form-group"><label>Prénom</label><input type="text" id="regFirstName" placeholder="Prénom" required></div>
+          <div class="form-group"><label>Nom</label><input type="text" id="regLastName" placeholder="Nom" required></div>
+        </div>
+        <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="votre@email.com" required></div>
+        <div class="form-group"><label>Téléphone</label><input type="tel" id="regPhone" placeholder="+216 XX XXX XXX"></div>
+        <div class="form-group"><label>Mot de passe</label><input type="password" id="regPassword" placeholder="Min. 6 caractères" required></div>
+        <button type="submit" class="btn btn-primary">Créer mon compte</button>
+      </form>
+      <div class="switch">Déjà un compte ? <a onclick="openAuthModal('login')">Se connecter</a></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+
+</body>
+</html>
