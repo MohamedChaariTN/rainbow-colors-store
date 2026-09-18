@@ -168,12 +168,18 @@ async function handleContactSubmit(event) {
 
     success.textContent = '✓ Votre message a bien été envoyé à Rainbow Colors. Un email de confirmation vous a également été envoyé.';
     success.style.display = 'block';
+    success.style.background = '#ecfdf5';
+    success.style.color = '#166534';
+    success.style.border = '1px solid #bbf7d0';
+    success.style.boxShadow = '0 4px 14px rgba(22, 101, 52, 0.08)';
     form.reset();
   } catch (error) {
     success.textContent = '✕ ' + error.message;
     success.style.display = 'block';
     success.style.background = '#fef2f2';
     success.style.color = '#991b1b';
+    success.style.border = '1px solid #fecaca';
+    success.style.boxShadow = '0 4px 14px rgba(153, 27, 27, 0.08)';
   } finally {
     button.disabled = false;
     button.textContent = 'Envoyer le message';
