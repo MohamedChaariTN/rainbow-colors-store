@@ -5,7 +5,7 @@ import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from '.
 import { getWishlist, toggleWishlist } from '../controllers/wishlistController';
 import { createOrder, getOrders, getOrder } from '../controllers/orderController';
 import { processPayment, getPaymentMethods } from '../controllers/paymentController';
-import { getDashboard, getAllOrders, updateOrderStatus, getAllUsers, updateUser, deleteUser, getAllProducts } from '../controllers/adminController';
+import { getDashboard, getAllOrders, updateOrderStatus, getAllUsers, getUserDetails, updateUser, deleteUser, getAllProducts } from '../controllers/adminController';
 import { authenticate, requireAdmin } from '../middleware/auth';
 import { upload } from '../config/upload';
 
@@ -52,6 +52,7 @@ router.get('/admin/dashboard', authenticate, requireAdmin, getDashboard);
 router.get('/admin/orders', authenticate, requireAdmin, getAllOrders);
 router.patch('/admin/orders/:id', authenticate, requireAdmin, updateOrderStatus);
 router.get('/admin/users', authenticate, requireAdmin, getAllUsers);
+router.get('/admin/users/:id', authenticate, requireAdmin, getUserDetails);
 router.patch('/admin/users/:id', authenticate, requireAdmin, updateUser);
 router.delete('/admin/users/:id', authenticate, requireAdmin, deleteUser);
 router.get('/admin/products/all', authenticate, requireAdmin, getAllProducts);
