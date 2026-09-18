@@ -1602,15 +1602,9 @@ async function loadAdminCustomers() {
                 "
               >
 
-                <button
-                  class="btn-sm btn-edit"
-                  onclick="
-                    editUser(${u.id})
-                  "
-                  title="Modifier"
-                >
-                  ✏️
-                </button>
+                <button class="btn-sm btn-edit" onclick="viewUserDetails(${u.id})" title="Historique des achats">👁️</button>
+
+                <button class="btn-sm btn-edit" onclick="editUser(${u.id})" title="Modifier">✏️</button>
 
                 <button
                   class="btn-sm btn-delete"
@@ -1635,6 +1629,25 @@ async function loadAdminCustomers() {
       error
     );
   }
+}
+
+async function viewUserDetails(id) {
+  try {
+    const data = await api('/admin/users/' + id);
+    const u = data.user;
+    const orders = Array.isArray(u.orders) ? u.orders : [];
+    const old = document.getElementById('customerDetailsModal');
+    if (old) old.remove();
+    const ordersHtml = orders.length ? orders.map(o => {
+      const items = (o.items || []).map(item => '<div class="customer-order-item"><span>' + escapeHtml(item.name) + '</span><strong>' + Number(item.quantity || 0) + ' × ' + Number(item.price || 0).toFixed(3) + ' TND</strong></div>').join('');
+      return '<div class="customer-order-card"><div class="customer-order-head"><div><strong>' + escapeHtml(o.orderNumber) + '</strong><small>' + new Date(o.createdAt).toLocaleString('fr-FR') + '</small></div><strong>' + Number(o.total || 0).toFixed(2) + ' TND</strong></div><div class="customer-order-meta"><span>📦 ' + escapeHtml(o.status) + '</span><span>💳 ' + escapeHtml(o.paymentStatus) + '</span><span>💰 ' + escapeHtml(o.paymentMethod) + '</span></div><div class="customer-order-address">📍 ' + escapeHtml([o.address, o.city, o.governorate, o.postalCode].filter(Boolean).join(', ')) + '</div><div class="customer-order-items">' + items + '</div></div>';
+    }).join('') : '<div class="customer-empty-history">Aucune commande pour ce client.</div>';
+    const modal = document.createElement('div');
+    modal.id = 'customerDetailsModal';
+    modal.className = 'customer-details-modal';
+    modal.innerHTML = '<div class="customer-details-backdrop" onclick="this.parentElement.remove()"></div><div class="customer-details-panel"><button class="customer-details-close" onclick="document.getElementById(\'customerDetailsModal\').remove()">×</button><div class="customer-details-header"><div><span class="customer-details-kicker">FICHE CLIENT</span><h2>' + escapeHtml((u.firstName || '') + ' ' + (u.lastName || '')) + '</h2><p>' + escapeHtml(u.email || '') + '</p></div><div class="customer-details-avatar">👤</div></div><div class="customer-details-grid"><div><span>Pays</span><strong>🇹🇳 ' + escapeHtml(data.country || 'Tunisie') + '</strong></div><div><span>Téléphone</span><strong>' + escapeHtml(u.phone || '—') + '</strong></div><div><span>Ville</span><strong>' + escapeHtml(u.city || '—') + '</strong></div><div><span>Adresse</span><strong>' + escapeHtml(u.address || '—') + '</strong></div><div><span>Client depuis</span><strong>' + new Date(u.createdAt).toLocaleDateString('fr-FR') + '</strong></div><div><span>Commandes</span><strong>' + orders.length + '</strong></div></div><div class="customer-history-title"><h3>Historique des achats</h3><span>' + orders.length + ' commande(s)</span></div><div class="customer-history-list">' + ordersHtml + '</div></div>';
+    document.body.appendChild(modal);
+  } catch (error) { alert(error.message); }
 }
 
 async function editUser(id) {
