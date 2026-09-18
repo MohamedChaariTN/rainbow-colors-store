@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import crypto from 'crypto';
-import { Resend } from 'resend';
+import nodemailer = require('nodemailer');
 import { prisma } from '../config/prisma';
 
 const registerSchema = z.object({
@@ -59,15 +59,27 @@ export const register = async (req: Request, res: Response) => {
 };
 
 async function sendVerificationEmail(email: string, firstName: string, code: string) {
-  if (!process.env.RESEND_API_KEY) throw new Error('Le service email n’est pas configuré.');
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const result = await resend.emails.send({
-    from: 'Rainbow Colors <onboarding@resend.dev>',
+  const gmailUser = process.env.GMAIL_USER;
+  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
+  if (!gmailUser || !gmailAppPassword) throw new Error('Le service email n’est pas configuré.');
+
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: gmailUser,
+      pass: gmailAppPassword
+    }
+  });
+
+  const safeFirstName = firstName.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  await transporter.sendMail({
+    from: `Rainbow Colors <${gmailUser}>`,
     to: email,
     subject: 'Votre code de vérification — Rainbow Colors',
-    html: '<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#172033"><div style="padding:24px;background:#101a33;color:#fff;border-radius:14px 14px 0 0;font-size:26px;font-weight:900">Rainbow <span style="color:#ffd400">Colors</span></div><div style="padding:30px;background:#f8fafc"><h2>Vérification de votre email</h2><p>Bonjour ' + firstName.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + ',</p><p>Voici votre code de vérification :</p><div style="font-size:36px;font-weight:900;letter-spacing:8px;text-align:center;background:#fff;border:1px solid #dbe3ef;border-radius:14px;padding:18px;margin:24px 0">' + code + '</div><p>Ce code est valable pendant 10 minutes.</p><p>Si vous n’avez pas demandé cette inscription, ignorez cet email.</p></div></div>'
+    html: '<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#172033"><div style="padding:24px;background:#101a33;color:#fff;border-radius:14px 14px 0 0;font-size:26px;font-weight:900">Rainbow <span style="color:#ffd400">Colors</span></div><div style="padding:30px;background:#f8fafc"><h2>Vérification de votre email</h2><p>Bonjour ' + safeFirstName + ',</p><p>Voici votre code de vérification :</p><div style="font-size:36px;font-weight:900;letter-spacing:8px;text-align:center;background:#fff;border:1px solid #dbe3ef;border-radius:14px;padding:18px;margin:24px 0">' + code + '</div><p>Ce code est valable pendant 10 minutes.</p><p>Si vous n’avez pas demandé cette inscription, ignorez cet email.</p></div></div>'
   });
-  if (result.error) throw new Error(result.error.message || 'Impossible d’envoyer le code de vérification.');
 }
 
 export const verifyEmail = async (req: Request, res: Response) => {
