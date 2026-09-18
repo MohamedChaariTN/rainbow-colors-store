@@ -61,10 +61,32 @@ export const register = async (req: Request, res: Response) => {
 
 async function sendVerificationEmail(email: string, firstName: string, code: string) {
   const apiKey = process.env.MAILERSEND_API_KEY;
-  const senderEmail = process.env.MAILERSEND_FROM_EMAIL;
-
   if (!apiKey) throw new Error('Le service email n’est pas configuré.');
-  if (!senderEmail) throw new Error('L’adresse d’envoi MailerSend n’est pas configurée.');
+
+  let senderEmail = process.env.MAILERSEND_FROM_EMAIL?.trim();
+
+  if (!senderEmail) {
+    const domainResponse = await fetch('https://api.mailersend.com/v1/domains?verified=true&limit=100', {
+      headers: {
+        accept: 'application/json',
+        authorization: 'Bearer ' + apiKey
+      }
+    });
+    const domainResult: any = await domainResponse.json().catch(() => ({}));
+
+    if (!domainResponse.ok) {
+      throw new Error(domainResult?.message || domainResult?.errors?.[0]?.message || 'Impossible de récupérer le domaine MailerSend.');
+    }
+
+    const domains = Array.isArray(domainResult?.data) ? domainResult.data : [];
+    const verifiedDomain = domains.find((domain: any) => domain?.is_verified === true) || domains[0];
+
+    if (!verifiedDomain?.name) {
+      throw new Error('Aucun domaine MailerSend vérifié n’est disponible.');
+    }
+
+    senderEmail = 'noreply@' + verifiedDomain.name;
+  }
 
   const safeFirstName = firstName.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const htmlContent = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#172033"><div style="padding:24px;background:#101a33;color:#fff;border-radius:14px 14px 0 0;font-size:26px;font-weight:900">Rainbow <span style="color:#ffd400">Colors</span></div><div style="padding:30px;background:#f8fafc"><h2>Vérification de votre email</h2><p>Bonjour ' + safeFirstName + ',</p><p>Voici votre code de vérification :</p><div style="font-size:36px;font-weight:900;letter-spacing:8px;text-align:center;background:#fff;border:1px solid #dbe3ef;border-radius:14px;padding:18px;margin:24px 0">' + code + '</div><p>Ce code est valable pendant 10 minutes.</p><p>Si vous n’avez pas demandé cette inscription, ignorez cet email.</p></div></div>';
