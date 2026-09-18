@@ -24,20 +24,39 @@ export const register = async (req: Request, res: Response) => {
   try {
     const data = registerSchema.parse(req.body);
     const existing = await prisma.user.findUnique({ where: { email: data.email } });
-    if (existing) return res.status(400).json({ error: 'Email already registered' });
+    if (existing) {
+      if (!existing.emailVerified && existing.verificationCode) {
+        return res.status(400).json({ error: 'Cet email a déjà une inscription en attente. Utilisez « Renvoyer le code » pour continuer.' });
+      }
+      return res.status(400).json({ error: 'Cet email est déjà utilisé. Connectez-vous à votre compte.' });
+    }
 
     const hashed = await bcrypt.hash(data.password, 12);
     const code = crypto.randomInt(100000, 1000000).toString();
     const user = await prisma.user.create({
-      data: { ...data, password: hashed, verificationCode: code, verificationExpiresAt: new Date(Date.now() + 10 * 60 * 1000), emailVerified: false }
+      data: {
+        ...data,
+        password: hashed,
+        verificationCode: code,
+        verificationExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        emailVerified: false
+      }
     });
-    await sendVerificationEmail(user.email, user.firstName, code);
+
+    try {
+      await sendVerificationEmail(user.email, user.firstName, code);
+    } catch (emailError: any) {
+      // Do not leave a blocked, unverified account when the email provider fails.
+      await prisma.user.delete({ where: { id: user.id } }).catch(() => {});
+      const detail = emailError?.message ? ' ' + emailError.message : '';
+      return res.status(503).json({ error: 'Impossible d’envoyer le code de vérification pour le moment.' + detail });
+    }
+
     res.json({ verificationRequired: true, email: user.email });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
 };
-
 
 async function sendVerificationEmail(email: string, firstName: string, code: string) {
   if (!process.env.RESEND_API_KEY) throw new Error('Le service email n’est pas configuré.');
