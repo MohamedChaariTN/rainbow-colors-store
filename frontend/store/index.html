@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('homeCategories').innerHTML = cats.map(renderCategoryCard).join('');
   } catch(e) { console.error(e); }
   try {
-    const data = await fetchProducts({ limit: 8 });
+    const data = await fetchProducts({ limit: 72 });
     document.getElementById('homeProducts').innerHTML = data.products.map(p => renderProductCard(p)).join('');
   } catch(e) { console.error(e); }
 });
