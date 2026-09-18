@@ -57,11 +57,12 @@ function updateAuthUI() {
 
   if (currentUser) {
     const initials = (currentUser.firstName[0] + currentUser.lastName[0]).toUpperCase();
+    const avatarContent = currentUser.profileImage ? '<img src="' + currentUser.profileImage + '" alt="Photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">' : initials;
     const isAdmin = currentUser.role === 'ADMIN';
     const adminLink = isAdmin ? '<a href="/admin">⚙️ Dashboard Admin</a>' : '';
     authBtn.innerHTML = `
       <div class="user-menu" style="position:relative">
-        <button class="icon-btn" style="background:linear-gradient(135deg,var(--rc-blue),var(--rc-purple));color:white;font-weight:700;font-size:13px" onclick="toggleUserMenu()">${initials}</button>
+        <button class="icon-btn" style="background:linear-gradient(135deg,var(--rc-blue),var(--rc-purple));color:white;font-weight:700;font-size:13px;overflow:hidden;padding:0" onclick="toggleUserMenu()">${avatarContent}</button>
         <div class="user-dropdown" id="userDropdown">
           <div style="padding:10px 14px;border-bottom:1px solid var(--rc-gray-100);margin-bottom:4px">
             <div style="font-weight:700;font-size:14px">${currentUser.firstName} ${currentUser.lastName}</div>
@@ -94,12 +95,13 @@ function openAuthModal(mode = 'login') {
   const overlay = document.getElementById('authModal');
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
+  const verificationForm = document.getElementById('verificationForm');
   if (mode === 'login') {
-    loginForm.style.display = 'block';
-    registerForm.style.display = 'none';
-  } else {
-    loginForm.style.display = 'none';
-    registerForm.style.display = 'block';
+    loginForm.style.display = 'block'; registerForm.style.display = 'none'; verificationForm.style.display = 'none';
+  } else if (mode === 'register') {
+    loginForm.style.display = 'none'; registerForm.style.display = 'block'; verificationForm.style.display = 'none';
+  } else if (mode === 'verify') {
+    loginForm.style.display = 'none'; registerForm.style.display = 'none'; verificationForm.style.display = 'block';
   }
   overlay.classList.add('open');
 }
@@ -136,15 +138,35 @@ async function handleRegister(e) {
         password: document.getElementById('regPassword').value,
         firstName: document.getElementById('regFirstName').value,
         lastName: document.getElementById('regLastName').value,
-        phone: document.getElementById('regPhone').value
+        phone: document.getElementById('regPhone').value,
+        profileImage: await readProfileImage()
       }
     });
-    setAuth(data.token, data.user);
-    closeAuthModal();
-    showToast('Compte créé avec succès !');
+    pendingVerificationEmail = data.email;
+    document.getElementById('verificationEmail').textContent = data.email;
+    openAuthModal('verify');
+    showToast('Code de vérification envoyé à votre email !');
   } catch (err) {
     showToast(err.message, 'error');
   }
+}
+
+let pendingVerificationEmail = null;
+async function readProfileImage() {
+  const file = document.getElementById('regProfileImage')?.files?.[0];
+  if (!file) return undefined;
+  if (file.size > 2000000) throw new Error('La photo doit faire 2 Mo maximum.');
+  return new Promise((resolve, reject) => { const reader=new FileReader(); reader.onload=()=>resolve(reader.result); reader.onerror=()=>reject(new Error('Impossible de lire la photo.')); reader.readAsDataURL(file); });
+}
+
+async function handleVerifyEmail(e) {
+  e.preventDefault();
+  try { const data=await api('/auth/verify-email',{method:'POST',body:{email:pendingVerificationEmail,code:document.getElementById('verificationCode').value.trim()}}); setAuth(data.token,data.user); closeAuthModal(); showToast('Email vérifié et compte activé !'); }
+  catch(err){ showToast(err.message,'error'); }
+}
+async function resendVerificationCode() {
+  try { await api('/auth/resend-verification',{method:'POST',body:{email:pendingVerificationEmail}}); showToast('Nouveau code envoyé !'); }
+  catch(err){ showToast(err.message,'error'); }
 }
 
 // ===== CART =====
