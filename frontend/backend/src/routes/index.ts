@@ -4,7 +4,7 @@ import { getProducts, getProduct, createProduct, updateProduct, deleteProduct, g
 import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from '../controllers/cartController';
 import { getWishlist, toggleWishlist } from '../controllers/wishlistController';
 import { createOrder, getOrders, getOrder } from '../controllers/orderController';
-import { processPayment, getPaymentMethods } from '../controllers/paymentController';
+import { processPayment, getPaymentMethods, konnectWebhook } from '../controllers/paymentController';
 import { getDashboard, getAllOrders, updateOrderStatus, getAllUsers, getUserDetails, getAdminOrder, updateUser, deleteUser, getAllProducts, getContactMessages, markContactMessageRead, deleteContactMessage, replyToContactMessage } from '../controllers/adminController';
 import { authenticate, requireAdmin } from '../middleware/auth';
 import { sendContactMessage } from '../controllers/contactController';
@@ -60,6 +60,7 @@ router.get('/orders/:id', authenticate, getOrder);
 // Payment
 router.get('/payment/methods', getPaymentMethods);
 router.post('/payment/process', authenticate, processPayment);
+router.get('/payment/konnect/webhook', konnectWebhook);
 
 // Admin
 router.get('/admin/dashboard', authenticate, requireAdmin, getDashboard);
