@@ -47,29 +47,325 @@
 </section>
 <script>
 async function loadOrders() {
-  if(!authToken){ openAuthModal(); return; }
+  const ordersList = document.getElementById('ordersList');
+
+  if (!authToken) {
+    ordersList.innerHTML = `
+      <div class="cart-empty">
+        <div class="cart-empty-icon">🔐</div>
+        <h2>Connectez-vous pour voir vos commandes</h2>
+        <p>Vous devez être connecté à votre compte Rainbow Colors.</p>
+        <button class="btn btn-primary" onclick="openAuthModal()">Se connecter</button>
+      </div>
+    `;
+    return;
+  }
+
   try {
     const orders = await api('/orders');
-    if(!orders.length){ document.getElementById('ordersList').innerHTML='<div class="cart-empty"><div class="cart-empty-icon">📦</div><h2>Aucune commande</h2><p>Vous n'avez pas encore passé de commande</p><a href="products.html" class="btn btn-primary">Découvrir les produits</a></div>'; return; }
-    document.getElementById('ordersList').innerHTML = orders.map(o=>{
-      const st = 'status-'+o.status.toLowerCase();
-      const stt = {PENDING:'En attente',CONFIRMED:'Confirmée',PROCESSING:'En traitement',SHIPPED:'Expédiée',DELIVERED:'Livrée',CANCELLED:'Annulée'}[o.status];
-      const pst = o.paymentStatus==='PAID'?'✅ Payée':'⏳ En attente';
+
+    if (!Array.isArray(orders) || orders.length === 0) {
+      ordersList.innerHTML = `
+        <div class="cart-empty">
+          <div class="cart-empty-icon">📦</div>
+          <h2>Aucune commande</h2>
+          <p>Vous n'avez pas encore passé de commande.</p>
+          <a href="products.html" class="btn btn-primary">Découvrir les produits</a>
+        </div>
+      `;
+      return;
+    }
+
+    ordersList.innerHTML = orders.map((o, index) => {
+      const st = 'status-' + String(o.status || 'PENDING').toLowerCase();
+      const stt = {
+        PENDING: 'En attente',
+        CONFIRMED: 'Confirmée',
+        PROCESSING: 'En traitement',
+        SHIPPED: 'Expédiée',
+        DELIVERED: 'Livrée',
+        CANCELLED: 'Annulée'
+      }[o.status] || o.status || 'En attente';
+
+      const pst = o.paymentStatus === 'PAID'
+        ? '✅ Payée'
+        : '⏳ En attente';
+
+      const items = Array.isArray(o.items) ? o.items : [];
+
+      const itemsHtml = items.length
+        ? items.map(i => `
+            <div style="
+              display:flex;
+              justify-content:space-between;
+              gap:14px;
+              align-items:center;
+              padding:12px 0;
+              border-bottom:1px solid var(--rc-gray-100);
+            ">
+              <div>
+                <strong>${escapeHtmlOrders(i.name)}</strong>
+                <div style="
+                  color:var(--rc-gray-400);
+                  font-size:13px;
+                  margin-top:3px;
+                ">
+                  Quantité : ${Number(i.quantity || 0)}
+                </div>
+              </div>
+              <strong>
+                ${(Number(i.price || 0) * Number(i.quantity || 0)).toFixed(2)} TND
+              </strong>
+            </div>
+          `).join('')
+        : '<p style="color:var(--rc-gray-400)">Aucun article.</p>';
+
+      const address = [
+        o.address,
+        o.city,
+        o.governorate,
+        o.postalCode
+      ].filter(Boolean).map(escapeHtmlOrders).join(', ');
+
       return `
-        <div style="background:white;border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:1px solid var(--rc-gray-100)">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-            <div><span style="font-size:18px;font-weight:800;color:var(--rc-blue)">${o.orderNumber}</span><span style="color:var(--rc-gray-400);font-size:13px;margin-left:12px">${new Date(o.createdAt).toLocaleDateString('fr-FR')}</span></div>
-            <span class="stock-status ${st}">${stt}</span>
+        <div style="
+          background:white;
+          border-radius:16px;
+          padding:24px;
+          margin-bottom:16px;
+          box-shadow:0 2px 12px rgba(0,0,0,0.06);
+          border:1px solid var(--rc-gray-100);
+        ">
+
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:16px;
+            flex-wrap:wrap;
+            gap:10px;
+          ">
+            <div>
+              <span style="
+                font-size:18px;
+                font-weight:800;
+                color:var(--rc-blue);
+              ">
+                ${escapeHtmlOrders(o.orderNumber)}
+              </span>
+
+              <span style="
+                color:var(--rc-gray-400);
+                font-size:13px;
+                margin-left:12px;
+              ">
+                ${new Date(o.createdAt).toLocaleDateString('fr-FR')}
+              </span>
+            </div>
+
+            <span class="stock-status ${st}">
+              ${escapeHtmlOrders(stt)}
+            </span>
           </div>
-          <div style="color:var(--rc-gray-500);font-size:14px;margin-bottom:12px">${o.items.length} article(s) · ${pst} · ${o.total.toFixed(2)} TND</div>
-          <div style="display:flex;gap:12px;flex-wrap:wrap">
-            ${o.items.map(i=>`<span style="background:var(--rc-gray-50);padding:6px 12px;border-radius:8px;font-size:13px">${i.name} × ${i.quantity}</span>`).join('')}
+
+          <div style="
+            color:var(--rc-gray-500);
+            font-size:14px;
+            margin-bottom:16px;
+          ">
+            ${items.length} article(s) · ${pst} ·
+            <strong>${Number(o.total || 0).toFixed(2)} TND</strong>
+          </div>
+
+          <div style="
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+          ">
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="toggleOrderDetails(${index})"
+            >
+              👁️ Voir les détails
+            </button>
+          </div>
+
+          <div
+            id="orderDetails-${index}"
+            style="
+              display:none;
+              margin-top:20px;
+              padding-top:20px;
+              border-top:1px solid var(--rc-gray-100);
+            "
+          >
+
+            <h3 style="
+              font-size:18px;
+              margin:0 0 14px;
+            ">
+              Détails de la commande
+            </h3>
+
+            <div style="
+              display:grid;
+              grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+              gap:12px;
+              margin-bottom:20px;
+            ">
+
+              <div style="
+                background:var(--rc-gray-50);
+                padding:14px;
+                border-radius:10px;
+              ">
+                <strong>Statut</strong>
+                <div style="margin-top:5px;">
+                  ${escapeHtmlOrders(stt)}
+                </div>
+              </div>
+
+              <div style="
+                background:var(--rc-gray-50);
+                padding:14px;
+                border-radius:10px;
+              ">
+                <strong>Paiement</strong>
+                <div style="margin-top:5px;">
+                  ${pst}
+                </div>
+              </div>
+
+              <div style="
+                background:var(--rc-gray-50);
+                padding:14px;
+                border-radius:10px;
+              ">
+                <strong>Mode de paiement</strong>
+                <div style="margin-top:5px;">
+                  ${escapeHtmlOrders(o.paymentMethod || '-')}
+                </div>
+              </div>
+
+              <div style="
+                background:var(--rc-gray-50);
+                padding:14px;
+                border-radius:10px;
+              ">
+                <strong>Adresse de livraison</strong>
+                <div style="margin-top:5px;">
+                  ${address || '-'}
+                </div>
+              </div>
+
+            </div>
+
+            <h4 style="
+              font-size:16px;
+              margin:0 0 8px;
+            ">
+              Produits
+            </h4>
+
+            <div>
+              ${itemsHtml}
+            </div>
+
+            <div style="
+              margin-top:20px;
+              background:var(--rc-gray-50);
+              padding:16px;
+              border-radius:12px;
+            ">
+              <div style="
+                display:flex;
+                justify-content:space-between;
+                margin-bottom:8px;
+              ">
+                <span>Sous-total</span>
+                <strong>${Number(o.subtotal || 0).toFixed(2)} TND</strong>
+              </div>
+
+              <div style="
+                display:flex;
+                justify-content:space-between;
+                margin-bottom:8px;
+              ">
+                <span>Livraison</span>
+                <strong>${Number(o.shipping || 0).toFixed(2)} TND</strong>
+              </div>
+
+              <div style="
+                display:flex;
+                justify-content:space-between;
+                margin-bottom:8px;
+              ">
+                <span>TVA</span>
+                <strong>${Number(o.tax || 0).toFixed(2)} TND</strong>
+              </div>
+
+              <div style="
+                display:flex;
+                justify-content:space-between;
+                padding-top:10px;
+                margin-top:10px;
+                border-top:1px solid var(--rc-gray-200);
+                font-size:18px;
+                color:var(--rc-blue);
+              ">
+                <strong>Total</strong>
+                <strong>${Number(o.total || 0).toFixed(2)} TND</strong>
+              </div>
+            </div>
+
           </div>
         </div>
       `;
     }).join('');
-  } catch(e){ console.error(e); }
+
+  } catch (e) {
+    console.error('Orders page error:', e);
+
+    ordersList.innerHTML = `
+      <div class="cart-empty">
+        <div class="cart-empty-icon">⚠️</div>
+        <h2>Impossible d'afficher vos commandes</h2>
+        <p style="max-width:520px;margin:0 auto 18px;">
+          ${escapeHtmlOrders(e.message || 'Erreur inconnue')}
+        </p>
+        <button class="btn btn-primary" onclick="loadOrders()">
+          Réessayer
+        </button>
+      </div>
+    `;
+  }
 }
+
+function escapeHtmlOrders(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function toggleOrderDetails(index) {
+  const box = document.getElementById('orderDetails-' + index);
+  if (!box) return;
+
+  const button = box.parentElement.querySelector('button[onclick^="toggleOrderDetails"]');
+
+  if (box.style.display === 'none' || !box.style.display) {
+    box.style.display = 'block';
+    if (button) button.textContent = '🔽 Masquer les détails';
+  } else {
+    box.style.display = 'none';
+    if (button) button.textContent = '👁️ Voir les détails';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', loadOrders);
 </script>
 
