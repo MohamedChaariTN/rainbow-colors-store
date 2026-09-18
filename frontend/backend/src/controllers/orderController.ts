@@ -48,52 +48,23 @@ export const createOrder = async (req: any, res: Response) => {
       }
     });
 
-    // Update stock
-    for (const item of items) {
-      const product = await prisma.product.findUnique({
-        where: {
-          id: item.productId
+    // Reserve stock and clear the cart immediately only for cash-on-delivery.
+    // Card/e-Dinar orders stay pending until Konnect confirms payment.
+    if (paymentMethod === 'cod') {
+      for (const item of items) {
+        const product = await prisma.product.findUnique({ where: { id: item.productId } });
+        if (product) {
+          const newStock = Math.max(0, product.stock - Number(item.quantity));
+          const newStatus = newStock === 0 ? 'OUT_OF_STOCK' : newStock <= 5 ? 'LOW_STOCK' : 'IN_STOCK';
+          await prisma.product.update({
+            where: { id: product.id },
+            data: { stock: newStock, stockStatus: newStatus }
+          });
         }
-      });
-
-      if (product) {
-        const newStock = Math.max(
-          0,
-          product.stock - Number(item.quantity)
-        );
-
-        const newStatus =
-          newStock === 0
-            ? 'OUT_OF_STOCK'
-            : newStock <= 5
-              ? 'LOW_STOCK'
-              : 'IN_STOCK';
-
-        await prisma.product.update({
-          where: {
-            id: item.productId
-          },
-          data: {
-            stock: newStock,
-            stockStatus: newStatus
-          }
-        });
       }
-    }
 
-    // Clear cart
-    const cart = await prisma.cart.findUnique({
-      where: {
-        userId: req.user.id
-      }
-    });
-
-    if (cart) {
-      await prisma.cartItem.deleteMany({
-        where: {
-          cartId: cart.id
-        }
-      });
+      const cart = await prisma.cart.findUnique({ where: { userId: req.user.id } });
+      if (cart) await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
     }
 
     // Send confirmation email
