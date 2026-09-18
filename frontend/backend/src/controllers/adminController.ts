@@ -401,6 +401,47 @@ export const deleteUser = async (req: Request, res: Response) => {
 };
 
 
+
+// =========================
+// CONTACT MESSAGES
+// =========================
+
+export const getContactMessages = async (req: Request, res: Response) => {
+  try {
+    const messages = await prisma.contactMessage.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(messages);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const markContactMessageRead = async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid message ID' });
+    const message = await prisma.contactMessage.update({
+      where: { id },
+      data: { isRead: true }
+    });
+    res.json(message);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+export const deleteContactMessage = async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid message ID' });
+    await prisma.contactMessage.delete({ where: { id } });
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
 // =========================
 // PRODUCTS
 // =========================
