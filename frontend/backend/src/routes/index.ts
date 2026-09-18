@@ -5,7 +5,7 @@ import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from '.
 import { getWishlist, toggleWishlist } from '../controllers/wishlistController';
 import { createOrder, getOrders, getOrder } from '../controllers/orderController';
 import { processPayment, getPaymentMethods } from '../controllers/paymentController';
-import { getDashboard, getAllOrders, updateOrderStatus, getAllUsers, getUserDetails, getAdminOrder, updateUser, deleteUser, getAllProducts } from '../controllers/adminController';
+import { getDashboard, getAllOrders, updateOrderStatus, getAllUsers, getUserDetails, getAdminOrder, updateUser, deleteUser, getAllProducts, getContactMessages, markContactMessageRead, deleteContactMessage } from '../controllers/adminController';
 import { authenticate, requireAdmin } from '../middleware/auth';
 import { sendContactMessage } from '../controllers/contactController';
 import { upload } from '../config/upload';
@@ -25,6 +25,11 @@ router.post('/contact', sendContactMessage);
 router.get('/products', getProducts);
 router.get('/products/categories', getCategories);
 router.get('/products/:slug', getProduct);
+
+// Contact messages (admin)
+router.get('/admin/contact-messages', authenticate, requireAdmin, getContactMessages);
+router.patch('/admin/contact-messages/:id/read', authenticate, requireAdmin, markContactMessageRead);
+router.delete('/admin/contact-messages/:id', authenticate, requireAdmin, deleteContactMessage);
 
 // Products (admin)
 router.post('/admin/products', authenticate, requireAdmin, upload.single('image'), createProduct);
