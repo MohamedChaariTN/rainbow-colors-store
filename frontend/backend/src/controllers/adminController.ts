@@ -225,20 +225,62 @@ export const getAllUsers = async (req: Request, res: Response) => {
 export const getUserDetails = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
-    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid user ID' });
+
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
     const user = await prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, firstName: true, lastName: true, phone: true, address: true, city: true, role: true, createdAt: true,
-        orders: { orderBy: { createdAt: 'desc' }, select: { id: true, orderNumber: true, status: true, paymentStatus: true, paymentMethod: true, subtotal: true, shipping: true, tax: true, total: true, address: true, city: true, governorate: true, postalCode: true, createdAt: true,
-          items: { select: { id: true, name: true, price: true, quantity: true } }
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        address: true,
+        city: true,
+        role: true,
+        createdAt: true,
+        orders: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            orderNumber: true,
+            status: true,
+            paymentStatus: true,
+            paymentMethod: true,
+            subtotal: true,
+            shipping: true,
+            tax: true,
+            total: true,
+            address: true,
+            city: true,
+            governorate: true,
+            postalCode: true,
+            createdAt: true,
+            items: {
+              select: {
+                id: true,
+                name: true,
+                price: true,
+                quantity: true
+              }
+            }
+          }
         }
       }
     });
-    if (!user) return res.status(404).json({ error: 'Client introuvable' });
-    res.json({ user, country: 'Tunisie' });
-  } catch (err: any) { res.status(500).json({ error: err.message }); }
-};
 
+    if (!user) {
+      return res.status(404).json({ error: 'Client introuvable' });
+    }
+
+    res.json({ user, country: 'Tunisie' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
 export const updateUser = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
