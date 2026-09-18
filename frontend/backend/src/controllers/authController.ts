@@ -88,7 +88,7 @@ export const login = async (req: Request, res: Response) => {
     const valid = await bcrypt.compare(data.password, user.password);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
-    if (!user.emailVerified) return res.status(403).json({ error: 'Veuillez vérifier votre email avant de vous connecter.' });
+    if (!user.emailVerified && user.verificationCode) return res.status(403).json({ error: 'Veuillez vérifier votre email avant de vous connecter.' });
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
     res.json({ token, user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role, profileImage: user.profileImage } });
   } catch (err: any) {
