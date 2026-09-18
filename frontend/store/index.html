@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
         <button type="submit" class="btn btn-primary">Se connecter</button>
       </form>
-      <div class="switch">Pas encore de compte ? <a onclick="openAuthModal('register')">Créer un compte</a></div>
+      <div class="switch">Pas encore de compte ? <button type="button" onclick="openAuthModal('register')" style="border:0;background:none;padding:0;cursor:pointer;color:var(--rc-blue);font:inherit;font-weight:600">Créer un compte</button></div>
     </div>
     <div id="registerForm" style="display:none">
       <h2>Inscription</h2>
@@ -169,12 +169,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="form-group"><label>Mot de passe</label><input type="password" id="regPassword" placeholder="Min. 6 caractères" required></div>
         <button type="submit" class="btn btn-primary">Créer mon compte</button>
       </form>
-      <div class="switch">Déjà un compte ? <a onclick="openAuthModal('login')">Se connecter</a></div>
+      <div class="switch">Déjà un compte ? <button type="button" onclick="openAuthModal('login')" style="border:0;background:none;padding:0;cursor:pointer;color:var(--rc-blue);font:inherit;font-weight:600">Se connecter</button></div>
     </div>
   </div>
 </div>
 
-<script src="js/main.js"></script>
+<script src="js/main.js?v=20260918-2"></script>
 
 </body>
 </html>
