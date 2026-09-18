@@ -1004,17 +1004,6 @@ async function main() {
     },
   ];
 
-  // Keep old products in the database for existing orders, but hide them
-  // from the public catalog because this new list replaces the old catalog.
-  const newProductSlugs = productsData.map((p) => p.slug);
-  await prisma.product.updateMany({
-    where: {
-      slug: { notIn: newProductSlugs },
-    },
-    data: {
-      isActive: false,
-    },
-  });
 
   for (const p of productsData) {
     await prisma.product.upsert({
@@ -1027,8 +1016,6 @@ async function main() {
         stock: p.stock,
         stockStatus: p.stockStatus,
         badge: p.badge,
-        image: p.image,
-        images: JSON.stringify([p.image]),
         features: p.features,
         categoryId: p.categoryId,
         isActive: true,
