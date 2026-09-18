@@ -1,142 +1,23 @@
-/* =========================================================
-   RAINBOW COLORS - ADMIN DASHBOARD
-   Stable admin.js
-   ========================================================= */
+const API_URL = window.location.origin + '/api';
 
-(function () {
-  "use strict";
+let authToken = localStorage.getItem('rc_token');
+let currentUser = null;
 
-  // ---------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------
+let knownOrderIds = new Set();
+let firstOrdersLoad = true;
+let autoRefreshTimer = null;
 
-  function getToken() {
-    return (
-      localStorage.getItem("adminToken") ||
-      localStorage.getItem("token") ||
-      localStorage.getItem("authToken") ||
-      sessionStorage.getItem("adminToken") ||
-      sessionStorage.getItem("token") ||
-      ""
-    );
-  }
-
-  function escapeHtml(value) {
-    if (value === null || value === undefined) return "";
-    return String(value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-  function formatMoney(value) {
-    const number = Number(value || 0);
-    return number.toFixed(2) + " TND";
-  }
-
-  function formatDate(value) {
-    if (!value) return "-";
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return value;
-    }
-
-    return date.toLocaleDateString("fr-FR", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    });
-  }
-
-  function getValue(obj, keys, fallback = "") {
-    for (const key of keys) {
-      if (
-        obj &&
-        Object.prototype.hasOwnProperty.call(obj, key) &&
-        obj[key] !== null &&
-        obj[key] !== undefined
-      ) {
-        return obj[key];
-      }
-    }
-
-    return fallback;
-  }
-
-  function findElement(ids) {
-    for (const id of ids) {
-      const el = document.getElementById(id);
-      if (el) return el;
-    }
-
-    return null;
-  }
-
-  // ---------------------------------------------------------
-  // Notifications
-  // ---------------------------------------------------------
-
-  function showNotification(message, type = "info") {
-    let box = document.getElementById("adminNotification");
-
-    if (!box) {
-      box = document.createElement("div");
-      box.id = "adminNotification";
-
-      box.style.position = "fixed";
-      box.style.top = "20px";
-      box.style.right = "20px";
-      box.style.zIndex = "99999";
-      box.style.padding = "14px 18px";
-      box.style.borderRadius = "10px";
-      box.style.fontWeight = "600";
-      box.style.maxWidth = "420px";
-      box.style.boxShadow = "0 8px 30px rgba(0,0,0,.18)";
-      box.style.fontFamily = "Arial, sans-serif";
-
-      document.body.appendChild(box);
-    }
-
-    if (type === "success") {
-      box.style.background = "#e8f7ee";
-      box.style.color = "#157347";
-      box.style.border = "1px solid #b7e4c7";
-    } else if (type === "error") {
-      box.style.background = "#fdecec";
-      box.style.color = "#b42318";
-      box.style.border = "1px solid #f5c2c7";
-    } else {
-      box.style.background = "#eef4ff";
-      box.style.color = "#1d4ed8";
-      box.style.border = "1px solid #c7d7fe";
-    }
-
-    box.textContent = message;
-    box.style.display = "block";
-
-    clearTimeout(box._timer);
-
-    box._timer = setTimeout(function () {
-      box.style.display = "none";
-    }, 4000);
-  }
-
-  // ---------------------------------------------------------
-  // API
-  // ---------------------------------------------------------
-
-  async function api(endpoint, options = {}) {
+// =========================
+// API
+// =========================
+async function api(endpoint, options = {}) {
   const headers = {
-    'Content-Type': 'application/json',
+    ...(options.body instanceof FormData
+      ? {}
+      : { 'Content-Type': 'application/json' }),
 
     ...(authToken
-      ? {
-          Authorization: 'Bearer ' + authToken
-        }
+      ? { Authorization: 'Bearer ' + authToken }
       : {}),
 
     ...(options.headers || {})
@@ -155,10 +36,7 @@
     fetchOptions.body = JSON.stringify(options.body);
   }
 
-  const res = await fetch(
-    API_URL + endpoint,
-    fetchOptions
-  );
+  const res = await fetch(API_URL + endpoint, fetchOptions);
 
   const text = await res.text();
 
@@ -182,1214 +60,2192 @@
 
   return data;
 }
-    const headers = Object.assign(
-      {
-        "Content-Type": "application/json"
-      },
-      options.headers || {}
+
+// =========================
+// HELPERS
+// =========================
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// =========================
+// ADMIN AUTH
+// =========================
+async function checkAdmin() {
+  authToken = localStorage.getItem('rc_token');
+
+  if (!authToken) {
+    location.href = '../store/index.html';
+    return false;
+  }
+
+  try {
+    const data = await api('/auth/me');
+
+    currentUser = data.user;
+
+    if (!currentUser || currentUser.role !== 'ADMIN') {
+      alert('Accès réservé aux administrateurs');
+      location.href = '../store/index.html';
+      return false;
+    }
+
+    const adminName =
+      document.getElementById('adminName');
+
+    const avatar =
+      document.querySelector('.admin-avatar');
+
+    if (adminName) {
+      adminName.textContent =
+        (currentUser.firstName || '') +
+        ' ' +
+        (currentUser.lastName || '');
+    }
+
+    if (avatar) {
+      avatar.textContent = (
+        (currentUser.firstName?.[0] || 'A') +
+        (currentUser.lastName?.[0] || '')
+      ).toUpperCase();
+    }
+
+    return true;
+
+  } catch (error) {
+    console.error('Admin auth error:', error);
+
+    localStorage.removeItem('rc_token');
+
+    location.href = '../store/index.html';
+
+    return false;
+  }
+}
+
+function logoutAdmin() {
+  localStorage.removeItem('rc_token');
+  location.href = '../store/index.html';
+}
+
+// =========================
+// NAVIGATION
+// =========================
+function showSection(id) {
+  document
+    .querySelectorAll('.admin-section')
+    .forEach(section => {
+      section.classList.remove('active');
+    });
+
+  document
+    .querySelectorAll('.admin-nav a')
+    .forEach(link => {
+      link.classList.remove('active');
+    });
+
+  const section =
+    document.getElementById(id);
+
+  if (section) {
+    section.classList.add('active');
+  }
+
+  const navLink =
+    Array.from(
+      document.querySelectorAll('.admin-nav a')
+    ).find(link =>
+      (link.getAttribute('onclick') || '')
+        .includes(`showSection('${id}')`)
     );
 
-    const token = getToken();
+  if (navLink) {
+    navLink.classList.add('active');
+  }
 
-    if (token) {
-      headers.Authorization = "Bearer " + token;
-    }
+  const titles = {
+    dashboard: 'Tableau de bord',
+    products: 'Gestion des produits',
+    orders: 'Gestion des commandes',
+    customers: 'Gestion des clients',
+    categories: 'Catégories'
+  };
 
-    const response = await fetch(url, {
-      ...options,
-      headers
-    });
+  const pageTitle =
+    document.getElementById('pageTitle');
 
-    const text = await response.text();
+  if (pageTitle) {
+    pageTitle.textContent =
+      titles[id] || 'Admin';
+  }
 
-    let data = {};
+  if (id === 'dashboard') {
+    loadDashboard();
+  }
 
-    if (text) {
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        data = { raw: text };
+  if (id === 'products') {
+    loadAdminProducts();
+  }
+
+  if (id === 'orders') {
+    loadAdminOrders();
+  }
+
+  if (id === 'customers') {
+    loadAdminCustomers();
+  }
+
+  if (id === 'categories') {
+    loadAdminCategories();
+  }
+}
+
+// =========================
+// NEW ORDER NOTIFICATION
+// =========================
+function showNewOrderNotification(order) {
+  const old =
+    document.getElementById(
+      'newOrderNotification'
+    );
+
+  if (old) {
+    old.remove();
+  }
+
+  const notification =
+    document.createElement('div');
+
+  notification.id =
+    'newOrderNotification';
+
+  notification.style.cssText = `
+    position:fixed;
+    top:20px;
+    right:20px;
+    z-index:99999;
+    width:350px;
+    background:#fff;
+    border-radius:14px;
+    padding:18px;
+    box-shadow:0 10px 40px rgba(0,0,0,.18);
+    border:2px solid #2563eb;
+  `;
+
+  const firstName =
+    order.user?.firstName ||
+    order.firstName ||
+    '';
+
+  const lastName =
+    order.user?.lastName ||
+    order.lastName ||
+    '';
+
+  notification.innerHTML = `
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      gap:12px
+    ">
+      <div>
+
+        <div style="
+          font-size:18px;
+          font-weight:800;
+          color:#2563eb
+        ">
+          🔔 Nouvelle commande
+        </div>
+
+        <div style="
+          margin-top:8px;
+          font-weight:700
+        ">
+          ${escapeHtml(order.orderNumber)}
+        </div>
+
+        <div style="
+          margin-top:5px;
+          color:#666
+        ">
+          ${escapeHtml(firstName)}
+          ${escapeHtml(lastName)}
+        </div>
+
+        <div style="
+          margin-top:5px;
+          font-weight:700
+        ">
+          ${Number(order.total || 0).toFixed(2)} TND
+        </div>
+
+      </div>
+
+      <button
+        id="closeNewOrderNotification"
+        style="
+          border:none;
+          background:transparent;
+          font-size:20px;
+          cursor:pointer
+        "
+      >
+        ✕
+      </button>
+
+    </div>
+
+    <button
+      id="viewNewOrderButton"
+      style="
+        margin-top:14px;
+        width:100%;
+        padding:10px;
+        border:none;
+        border-radius:9px;
+        background:#2563eb;
+        color:#fff;
+        font-weight:700;
+        cursor:pointer
+      "
+    >
+      Voir les commandes
+    </button>
+  `;
+
+  document.body.appendChild(
+    notification
+  );
+
+  document
+    .getElementById(
+      'closeNewOrderNotification'
+    )
+    ?.addEventListener(
+      'click',
+      () => {
+        notification.remove();
       }
-    }
+    );
 
-    if (!response.ok) {
-      const message =
-        data?.error ||
-        data?.message ||
-        data?.raw ||
-        `HTTP ${response.status}`;
-
-      throw new Error(message);
-    }
-
-    return data;
-  }
-
-  // ---------------------------------------------------------
-  // Sections
-  // ---------------------------------------------------------
-
-  function getSections() {
-    return [
-      {
-        name: "dashboard",
-        ids: ["dashboardSection", "dashboard", "section-dashboard"]
-      },
-      {
-        name: "products",
-        ids: ["productsSection", "products", "section-products"]
-      },
-      {
-        name: "orders",
-        ids: ["ordersSection", "orders", "section-orders"]
-      },
-      {
-        name: "customers",
-        ids: ["customersSection", "customers", "section-customers"]
-      },
-      {
-        name: "categories",
-        ids: ["categoriesSection", "categories", "section-categories"]
+  document
+    .getElementById(
+      'viewNewOrderButton'
+    )
+    ?.addEventListener(
+      'click',
+      () => {
+        notification.remove();
+        showSection('orders');
       }
-    ];
+    );
+
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.remove();
+    }
+  }, 10000);
+
+  if (
+    'Notification' in window &&
+    Notification.permission === 'granted'
+  ) {
+    new Notification(
+      'Nouvelle commande Rainbow Colors',
+      {
+        body:
+          `${order.orderNumber} - ` +
+          `${Number(
+            order.total || 0
+          ).toFixed(2)} TND`
+      }
+    );
+  }
+}
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    return;
   }
 
-  function getSection(name) {
-    const entry = getSections().find(function (item) {
-      return item.name === name;
-    });
-
-    if (!entry) return null;
-
-    return findElement(entry.ids);
-  }
-
-  function showSection(name) {
-    const sections = getSections();
-
-    sections.forEach(function (item) {
-      const section = findElement(item.ids);
-
-      if (!section) return;
-
-      section.style.display = item.name === name ? "" : "none";
-    });
-
-    document.querySelectorAll(
-      ".sidebar a, .sidebar button, .nav-item, .menu-item"
-    ).forEach(function (el) {
-      el.classList.remove("active");
-    });
-
-    document.querySelectorAll(
-      `[data-section="${name}"], [data-page="${name}"]`
-    ).forEach(function (el) {
-      el.classList.add("active");
-    });
-
+  if (
+    Notification.permission === 'default'
+  ) {
     try {
-      localStorage.setItem("adminCurrentSection", name);
-    } catch (e) {}
-
-    if (name === "dashboard") {
-      loadDashboard();
-    }
-
-    if (name === "products") {
-      loadProducts();
-    }
-
-    if (name === "orders") {
-      loadOrders();
-    }
-
-    if (name === "customers") {
-      loadCustomers();
-    }
-
-    if (name === "categories") {
-      loadCategories();
-    }
-  }
-
-  window.showSection = showSection;
-  window.openSection = showSection;
-
-  // Compatibility with older HTML
-  window.showDashboard = function () {
-    showSection("dashboard");
-  };
-
-  window.showProducts = function () {
-    showSection("products");
-  };
-
-  window.showOrders = function () {
-    showSection("orders");
-  };
-
-  window.showCustomers = function () {
-    showSection("customers");
-  };
-
-  window.showCategories = function () {
-    showSection("categories");
-  };
-
-  // ---------------------------------------------------------
-  // Dashboard
-  // ---------------------------------------------------------
-
-  async function loadDashboard() {
-    try {
-      const data = await api("/admin/dashboard");
-
-      renderDashboard(data);
+      await Notification.requestPermission();
     } catch (error) {
-      console.error("Dashboard error:", error);
-
-      // Don't break the page if the API fails.
-      showNotification(
-        "Impossible de charger certaines données du dashboard.",
-        "error"
-      );
+      console.error(error);
     }
   }
+}
 
-  function renderDashboard(data) {
-    const dashboard = data?.dashboard || data || {};
+// =========================
+// DASHBOARD
+// =========================
+async function loadDashboard() {
+  try {
+    const data =
+      await api('/admin/dashboard');
 
-    const stats = {
-      products: getValue(
-        dashboard,
-        ["totalProducts", "productsCount", "products"],
-        0
-      ),
-      orders: getValue(
-        dashboard,
-        ["totalOrders", "ordersCount", "orders"],
-        0
-      ),
-      users: getValue(
-        dashboard,
-        ["totalUsers", "usersCount", "customersCount", "customers"],
-        0
-      ),
-      revenue: getValue(
-        dashboard,
-        ["totalRevenue", "revenue", "sales", "totalSales"],
-        0
-      )
-    };
+    const statProducts =
+      document.getElementById(
+        'statProducts'
+      );
 
-    const productElements = [
-      document.getElementById("totalProducts"),
-      document.getElementById("productsCount"),
-      document.getElementById("statProducts")
-    ];
+    const statOrders =
+      document.getElementById(
+        'statOrders'
+      );
 
-    const orderElements = [
-      document.getElementById("totalOrders"),
-      document.getElementById("ordersCount"),
-      document.getElementById("statOrders")
-    ];
+    const statUsers =
+      document.getElementById(
+        'statUsers'
+      );
 
-    const userElements = [
-      document.getElementById("totalUsers"),
-      document.getElementById("usersCount"),
-      document.getElementById("totalCustomers"),
-      document.getElementById("customersCount"),
-      document.getElementById("statCustomers")
-    ];
+    const statRevenue =
+      document.getElementById(
+        'statRevenue'
+      );
 
-    const revenueElements = [
-      document.getElementById("totalRevenue"),
-      document.getElementById("revenue"),
-      document.getElementById("statRevenue")
-    ];
+    if (statProducts) {
+      statProducts.textContent =
+        data.stats.totalProducts;
+    }
 
-    productElements.forEach(function (el) {
-      if (el) el.textContent = stats.products;
-    });
+    if (statOrders) {
+      statOrders.textContent =
+        data.stats.totalOrders;
+    }
 
-    orderElements.forEach(function (el) {
-      if (el) el.textContent = stats.orders;
-    });
+    if (statUsers) {
+      statUsers.textContent =
+        data.stats.totalUsers;
+    }
 
-    userElements.forEach(function (el) {
-      if (el) el.textContent = stats.users;
-    });
-
-    revenueElements.forEach(function (el) {
-      if (el) el.textContent = formatMoney(stats.revenue);
-    });
+    if (statRevenue) {
+      statRevenue.textContent =
+        Number(
+          data.stats.totalRevenue || 0
+        ).toFixed(2);
+    }
 
     const recentOrders =
-      dashboard.recentOrders ||
-      dashboard.orders ||
-      data?.recentOrders ||
-      [];
+      document.getElementById(
+        'recentOrders'
+      );
+
+    if (recentOrders) {
+      recentOrders.innerHTML =
+        data.recentOrders.length
+          ? data.recentOrders
+              .map(
+                o => `
+                  <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    padding:10px 0;
+                    border-bottom:
+                      1px solid var(--gray-100)
+                  ">
+
+                    <div>
+                      <strong>
+                        ${escapeHtml(
+                          o.orderNumber
+                        )}
+                      </strong>
+
+                      <div style="
+                        font-size:12px;
+                        color:var(--gray-400)
+                      ">
+                        ${escapeHtml(
+                          o.user?.firstName || ''
+                        )}
+                        ${escapeHtml(
+                          o.user?.lastName || ''
+                        )}
+                      </div>
+                    </div>
+
+                    <div style="
+                      text-align:right
+                    ">
+
+                      <div style="
+                        font-weight:700
+                      ">
+                        ${Number(
+                          o.total || 0
+                        ).toFixed(2)} TND
+                      </div>
+
+                      <span
+                        class="badge status-${String(
+                          o.status
+                        ).toLowerCase()}"
+                      >
+                        ${escapeHtml(
+                          o.status
+                        )}
+                      </span>
+
+                    </div>
+                  </div>
+                `
+              )
+              .join('')
+          : `
+            <p style="
+              color:var(--gray-400);
+              font-size:14px
+            ">
+              Aucune commande
+            </p>
+          `;
+    }
 
     const lowStock =
-      dashboard.lowStock ||
-      dashboard.lowStockProducts ||
-      data?.lowStock ||
-      [];
-
-    renderRecentOrders(recentOrders);
-    renderLowStock(lowStock);
-  }
-
-  function renderRecentOrders(orders) {
-    const container = findElement([
-      "recentOrders",
-      "recentOrdersTable",
-      "dashboardOrders"
-    ]);
-
-    if (!container) return;
-
-    if (!Array.isArray(orders) || orders.length === 0) {
-      container.innerHTML =
-        '<div style="padding:20px;text-align:center;">Aucune commande récente.</div>';
-      return;
-    }
-
-    const rows = orders
-      .slice(0, 10)
-      .map(function (order) {
-        const reference = getValue(
-          order,
-          ["orderNumber", "reference", "code", "orderCode"],
-          "#" + (order.id || "")
-        );
-
-        const customer =
-          order.user?.name ||
-          order.user?.firstName ||
-          order.customer?.name ||
-          order.customerName ||
-          "Client";
-
-        const total = getValue(
-          order,
-          ["total", "totalAmount", "amount"],
-          0
-        );
-
-        const status = getValue(
-          order,
-          ["status", "orderStatus"],
-          "PENDING"
-        );
-
-        return `
-          <tr>
-            <td>${escapeHtml(reference)}</td>
-            <td>${escapeHtml(customer)}</td>
-            <td>${formatMoney(total)}</td>
-            <td>${escapeHtml(status)}</td>
-            <td>${formatDate(order.createdAt)}</td>
-          </tr>
-        `;
-      })
-      .join("");
-
-    const table =
-      container.tagName === "TABLE"
-        ? container
-        : container.querySelector("table");
-
-    if (table) {
-      const tbody = table.querySelector("tbody");
-
-      if (tbody) {
-        tbody.innerHTML = rows;
-      }
-    } else {
-      container.innerHTML = `
-        <div style="overflow:auto;">
-          <table style="width:100%;border-collapse:collapse;">
-            <thead>
-              <tr>
-                <th>Commande</th>
-                <th>Client</th>
-                <th>Total</th>
-                <th>Statut</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      `;
-    }
-  }
-
-  function renderLowStock(products) {
-    const container = findElement([
-      "lowStock",
-      "lowStockProducts",
-      "dashboardLowStock"
-    ]);
-
-    if (!container) return;
-
-    if (!Array.isArray(products) || products.length === 0) {
-      container.innerHTML =
-        '<div style="padding:20px;text-align:center;">Aucun produit en stock faible.</div>';
-      return;
-    }
-
-    const rows = products
-      .slice(0, 10)
-      .map(function (product) {
-        const name = getValue(product, ["name", "title"], "Produit");
-        const stock = getValue(
-          product,
-          ["stock", "quantity", "inventory"],
-          0
-        );
-
-        return `
-          <tr>
-            <td>${escapeHtml(name)}</td>
-            <td>${escapeHtml(stock)}</td>
-          </tr>
-        `;
-      })
-      .join("");
-
-    container.innerHTML = `
-      <div style="overflow:auto;">
-        <table style="width:100%;border-collapse:collapse;">
-          <thead>
-            <tr>
-              <th>Produit</th>
-              <th>Stock</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    `;
-  }
-
-  // ---------------------------------------------------------
-  // Orders
-  // ---------------------------------------------------------
-
-  async function loadOrders() {
-    try {
-      const data = await api("/admin/orders");
-
-      const orders = Array.isArray(data)
-        ? data
-        : data.orders || data.data || [];
-
-      renderOrders(orders);
-    } catch (error) {
-      console.error("Orders error:", error);
-
-      showNotification(
-        "Impossible de charger les commandes.",
-        "error"
+      document.getElementById(
+        'lowStock'
       );
-    }
-  }
 
-  function renderOrders(orders) {
-    const container = findElement([
-      "ordersTable",
-      "ordersList",
-      "ordersContainer",
-      "adminOrders"
-    ]);
+    if (lowStock) {
+      lowStock.innerHTML =
+        data.lowStock.length
+          ? data.lowStock
+              .map(
+                p => `
+                  <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    padding:10px 0;
+                    border-bottom:
+                      1px solid var(--gray-100)
+                  ">
 
-    if (!container) return;
+                    <span>
+                      ${escapeHtml(p.name)}
+                    </span>
 
-    const html = `
-      <div style="overflow:auto;">
-        <table style="width:100%;border-collapse:collapse;">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Commande</th>
-              <th>Client</th>
-              <th>Total</th>
-              <th>Paiement</th>
-              <th>Statut</th>
-              <th>Date</th>
-            </tr>
-          </thead>
+                    <span style="
+                      color:var(--danger);
+                      font-weight:700;
+                      font-size:13px
+                    ">
+                      ${p.stock}
+                      restant(s)
+                    </span>
 
-          <tbody>
-            ${
-              orders.length
-                ? orders.map(function (order) {
-                    return orderRow(order);
-                  }).join("")
-                : `
-                  <tr>
-                    <td colspan="7" style="text-align:center;padding:20px;">
-                      Aucune commande.
-                    </td>
-                  </tr>
+                  </div>
                 `
-            }
-          </tbody>
-        </table>
-      </div>
-    `;
-
-    container.innerHTML = html;
-  }
-
-  function orderRow(order) {
-    const id = order.id;
-
-    const reference = getValue(
-      order,
-      ["orderNumber", "reference", "code"],
-      "#" + id
-    );
-
-    const customer =
-      order.user?.name ||
-      order.user?.email ||
-      order.customer?.name ||
-      order.customerName ||
-      "-";
-
-    const total = getValue(
-      order,
-      ["total", "totalAmount", "amount"],
-      0
-    );
-
-    const paymentStatus = getValue(
-      order,
-      ["paymentStatus"],
-      "PENDING"
-    );
-
-    const status = getValue(
-      order,
-      ["status", "orderStatus"],
-      "PENDING"
-    );
-
-    return `
-      <tr>
-        <td>${escapeHtml(id)}</td>
-
-        <td>
-          <strong>${escapeHtml(reference)}</strong>
-        </td>
-
-        <td>${escapeHtml(customer)}</td>
-
-        <td>${formatMoney(total)}</td>
-
-        <td>${escapeHtml(paymentStatus)}</td>
-
-        <td>
-          <select
-            onchange="updateOrderStatusFromSelect(${Number(id)}, this)"
-            style="padding:7px;border-radius:6px;"
-          >
-            ${statusOption("PENDING", status)}
-            ${statusOption("CONFIRMED", status)}
-            ${statusOption("PROCESSING", status)}
-            ${statusOption("SHIPPED", status)}
-            ${statusOption("DELIVERED", status)}
-            ${statusOption("CANCELLED", status)}
-          </select>
-        </td>
-
-        <td>${formatDate(order.createdAt)}</td>
-      </tr>
-    `;
-  }
-
-  function statusOption(value, current) {
-    return `
-      <option value="${value}" ${
-        String(value) === String(current) ? "selected" : ""
-      }>
-        ${value}
-      </option>
-    `;
-  }
-
-  // ---------------------------------------------------------
-  // UPDATE ORDER STATUS
-  // ---------------------------------------------------------
-
-  async function updateOrderStatusFromSelect(id, selectElement) {
-    if (!id || !selectElement) return;
-
-    const newStatus = selectElement.value;
-    const oldStatus = selectElement.dataset.previous || newStatus;
-
-    selectElement.disabled = true;
-
-    try {
-      await api("/admin/orders/" + id, {
-        method: "PATCH",
-        body: JSON.stringify({
-          status: newStatus
-        })
-      });
-
-      selectElement.dataset.previous = newStatus;
-
-      showNotification(
-        "Statut de la commande mis à jour.",
-        "success"
-      );
-
-      loadDashboard();
-    } catch (error) {
-      console.error("Update order status error:", error);
-
-      selectElement.value = oldStatus;
-
-      showNotification(
-        "Erreur : " + error.message,
-        "error"
-      );
-    } finally {
-      selectElement.disabled = false;
-    }
-  }
-
-  window.updateOrderStatusFromSelect =
-    updateOrderStatusFromSelect;
-
-  async function updateOrderStatus(id, status, selectElement) {
-    if (!id) return;
-
-    const previous =
-      selectElement?.dataset?.previous ||
-      selectElement?.value ||
-      "";
-
-    if (selectElement) {
-      selectElement.disabled = true;
+              )
+              .join('')
+          : `
+            <p style="
+              color:var(--gray-400);
+              font-size:14px
+            ">
+              Tout est en ordre
+            </p>
+          `;
     }
 
-    try {
-      await api("/admin/orders/" + id, {
-        method: "PATCH",
-        body: JSON.stringify({
-          status: status
-        })
-      });
-
-      if (selectElement) {
-        selectElement.dataset.previous = status;
-        selectElement.value = status;
-      }
-
-      showNotification(
-        "Statut de la commande mis à jour.",
-        "success"
-      );
-
-      loadDashboard();
-    } catch (error) {
-      console.error("Update order error:", error);
-
-      if (selectElement && previous) {
-        selectElement.value = previous;
-      }
-
-      showNotification(
-        "Erreur : " + error.message,
-        "error"
-      );
-    } finally {
-      if (selectElement) {
-        selectElement.disabled = false;
-      }
-    }
+  } catch (error) {
+    console.error(
+      'Dashboard error:',
+      error
+    );
   }
+}
 
-  window.updateOrderStatus = updateOrderStatus;
+// =========================
+// PRODUCTS
+// =========================
+let editingProductId = null;
 
-  // ---------------------------------------------------------
-  // Customers
-  // ---------------------------------------------------------
+async function loadAdminProducts() {
+  try {
+    const data =
+      await api('/admin/products/all');
 
-  async function loadCustomers() {
-    try {
-      const data = await api("/admin/users");
-
-      const users = Array.isArray(data)
-        ? data
-        : data.users || data.data || [];
-
-      renderCustomers(users);
-    } catch (error) {
-      console.error("Customers error:", error);
-
-      showNotification(
-        "Impossible de charger les clients.",
-        "error"
+    const tbody =
+      document.querySelector(
+        '#productsTable tbody'
       );
+
+    if (!tbody) {
+      return;
     }
-  }
 
-  function renderCustomers(users) {
-    const container = findElement([
-      "customersTable",
-      "customersList",
-      "customersContainer",
-      "adminCustomers",
-      "usersTable"
-    ]);
-
-    if (!container) return;
-
-    const rows = users
-      .map(function (user) {
-        const name =
-          user.name ||
-          [user.firstName, user.lastName]
-            .filter(Boolean)
-            .join(" ") ||
-          "-";
-
-        const role = user.role || "CUSTOMER";
-
-        return `
-          <tr>
-            <td>${escapeHtml(user.id)}</td>
-            <td>${escapeHtml(name)}</td>
-            <td>${escapeHtml(user.email || "-")}</td>
-            <td>${escapeHtml(user.phone || "-")}</td>
-            <td>${escapeHtml(role)}</td>
-            <td>${formatDate(user.createdAt)}</td>
-            <td>
-              <button
-                type="button"
-                onclick="editUser(${Number(user.id)})"
-              >
-                ✏️
-              </button>
-
-              <button
-                type="button"
-                onclick="deleteUser(${Number(user.id)})"
-              >
-                🗑️
-              </button>
-            </td>
-          </tr>
-        `;
-      })
-      .join("");
-
-    container.innerHTML = `
-      <div style="overflow:auto;">
-        <table style="width:100%;border-collapse:collapse;">
-          <thead>
+    tbody.innerHTML =
+      data
+        .map(
+          p => `
             <tr>
-              <th>ID</th>
-              <th>Nom</th>
-              <th>Email</th>
-              <th>Téléphone</th>
-              <th>Rôle</th>
-              <th>Inscription</th>
-              <th>Actions</th>
+
+              <td>
+                <img
+                  src="${escapeHtml(
+                    p.image || ''
+                  )}"
+                  alt="${escapeHtml(
+                    p.name
+                  )}"
+                  onerror="
+                    this.src=
+                    '../store/images/logo ranbow colors.jpeg'
+                  "
+                >
+              </td>
+
+              <td>
+                <strong>
+                  ${escapeHtml(p.name)}
+                </strong>
+              </td>
+
+              <td>
+                ${escapeHtml(
+                  p.category?.name || ''
+                )}
+              </td>
+
+              <td>
+                ${Number(
+                  p.price || 0
+                ).toFixed(2)} TND
+              </td>
+
+              <td>
+                ${p.stock}
+              </td>
+
+              <td>
+
+                <span class="
+                  badge
+                  badge-${
+                    p.stockStatus === 'IN_STOCK'
+                      ? 'new'
+                      : p.stockStatus === 'LOW_STOCK'
+                      ? 'sale'
+                      : 'eco'
+                  }
+                ">
+                  ${escapeHtml(
+                    String(
+                      p.stockStatus || ''
+                    ).replace(
+                      '_',
+                      ' '
+                    )
+                  )}
+                </span>
+
+              </td>
+
+              <td>
+
+                <button
+                  class="btn-sm btn-edit"
+                  onclick='editProduct(
+                    ${JSON.stringify(p)
+                      .replace(
+                        /'/g,
+                        '&#39;'
+                      )}
+                  )'
+                >
+                  ✏️
+                </button>
+
+                <button
+                  class="btn-sm btn-delete"
+                  onclick="
+                    deleteProduct(${p.id})
+                  "
+                >
+                  🗑️
+                </button>
+
+              </td>
+
             </tr>
-          </thead>
+          `
+        )
+        .join('');
 
-          <tbody>
-            ${
-              rows ||
-              `
-              <tr>
-                <td colspan="7" style="text-align:center;padding:20px;">
-                  Aucun client.
-                </td>
-              </tr>
-              `
-            }
-          </tbody>
-        </table>
-      </div>
-    `;
+  } catch (error) {
+    console.error(
+      'Products error:',
+      error
+    );
   }
+}
 
-  // ---------------------------------------------------------
-  // Edit user
-  // ---------------------------------------------------------
+async function loadCategoriesSelect() {
+  try {
+    const cats =
+      await api('/products/categories');
 
-  async function editUser(id) {
-    try {
-      const name = prompt("Nom du client :");
-
-      if (name === null) return;
-
-      await api("/admin/users/" + id, {
-        method: "PATCH",
-        body: JSON.stringify({
-          name: name
-        })
-      });
-
-      showNotification(
-        "Client modifié avec succès.",
-        "success"
+    const select =
+      document.getElementById(
+        'prodCategory'
       );
 
-      loadCustomers();
-    } catch (error) {
-      console.error(error);
-
-      showNotification(
-        "Erreur : " + error.message,
-        "error"
-      );
+    if (!select) {
+      return;
     }
+
+    select.innerHTML =
+      cats
+        .map(
+          c => `
+            <option value="${c.id}">
+              ${escapeHtml(c.name)}
+            </option>
+          `
+        )
+        .join('');
+
+  } catch (error) {
+    console.error(error);
   }
+}
 
-  window.editUser = editUser;
+function openProductModal() {
+  editingProductId = null;
 
-  // ---------------------------------------------------------
-  // Delete user
-  // ---------------------------------------------------------
-
-  async function deleteUser(id) {
-    if (!id) return;
-
-    const confirmed = confirm(
-      "Voulez-vous vraiment supprimer ce client ?"
+  const title =
+    document.getElementById(
+      'productModalTitle'
     );
 
-    if (!confirmed) return;
-
-    try {
-      await api("/admin/users/" + id, {
-        method: "DELETE"
-      });
-
-      showNotification(
-        "Client supprimé.",
-        "success"
-      );
-
-      loadCustomers();
-    } catch (error) {
-      console.error(error);
-
-      showNotification(
-        "Erreur : " + error.message,
-        "error"
-      );
-    }
+  if (title) {
+    title.textContent =
+      'Ajouter un produit';
   }
 
-  window.deleteUser = deleteUser;
+  const form =
+    document.getElementById(
+      'productForm'
+    );
 
-  // ---------------------------------------------------------
-  // Products
-  // ---------------------------------------------------------
-
-  async function loadProducts() {
-    try {
-      const data = await api("/admin/products/all");
-
-      const products = Array.isArray(data)
-        ? data
-        : data.products || data.data || [];
-
-      renderProducts(products);
-    } catch (error) {
-      console.error("Products error:", error);
-
-      showNotification(
-        "Impossible de charger les produits.",
-        "error"
-      );
-    }
+  if (form) {
+    form.reset();
   }
 
-  function renderProducts(products) {
-    const container = findElement([
-      "productsTable",
-      "productsList",
-      "productsContainer",
-      "adminProducts"
-    ]);
+  const prodId =
+    document.getElementById(
+      'prodId'
+    );
 
-    if (!container) return;
+  if (prodId) {
+    prodId.value = '';
+  }
 
-    const rows = products
-      .map(function (product) {
-        const name =
-          product.name ||
-          product.title ||
-          "Produit";
+  const modal =
+    document.getElementById(
+      'productModal'
+    );
 
-        const price = getValue(
-          product,
-          ["price", "salePrice"],
-          0
+  if (modal) {
+    modal.classList.add('open');
+  }
+
+  loadCategoriesSelect();
+}
+
+function closeProductModal() {
+  const modal =
+    document.getElementById(
+      'productModal'
+    );
+
+  if (modal) {
+    modal.classList.remove('open');
+  }
+}
+
+function editProduct(p) {
+  editingProductId = p.id;
+
+  document.getElementById(
+    'productModalTitle'
+  ).textContent =
+    'Modifier le produit';
+
+  document.getElementById(
+    'prodId'
+  ).value = p.id;
+
+  document.getElementById(
+    'prodName'
+  ).value = p.name;
+
+  document.getElementById(
+    'prodSlug'
+  ).value = p.slug;
+
+  document.getElementById(
+    'prodDesc'
+  ).value = p.description || '';
+
+  document.getElementById(
+    'prodPrice'
+  ).value = p.price;
+
+  document.getElementById(
+    'prodOldPrice'
+  ).value = p.oldPrice || '';
+
+  document.getElementById(
+    'prodStock'
+  ).value = p.stock;
+
+  document.getElementById(
+    'prodStockStatus'
+  ).value = p.stockStatus;
+
+  document.getElementById(
+    'prodBadge'
+  ).value = p.badge || '';
+
+  let features = [];
+
+  try {
+    features =
+      JSON.parse(
+        p.features || '[]'
+      );
+  } catch {
+    features = [];
+  }
+
+  document.getElementById(
+    'prodFeatures'
+  ).value =
+    features.join('\n');
+
+  document.getElementById(
+    'productModal'
+  ).classList.add('open');
+
+  loadCategoriesSelect()
+    .then(() => {
+      const category =
+        document.getElementById(
+          'prodCategory'
         );
 
-        const stock = getValue(
-          product,
-          ["stock", "quantity", "inventory"],
-          0
-        );
-
-        return `
-          <tr>
-            <td>${escapeHtml(product.id || "-")}</td>
-            <td>${escapeHtml(name)}</td>
-            <td>${formatMoney(price)}</td>
-            <td>${escapeHtml(stock)}</td>
-            <td>
-              ${product.category?.name
-                ? escapeHtml(product.category.name)
-                : "-"
-              }
-            </td>
-          </tr>
-        `;
-      })
-      .join("");
-
-    container.innerHTML = `
-      <div style="overflow:auto;">
-        <table style="width:100%;border-collapse:collapse;">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Produit</th>
-              <th>Prix</th>
-              <th>Stock</th>
-              <th>Catégorie</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${
-              rows ||
-              `
-              <tr>
-                <td colspan="5" style="text-align:center;padding:20px;">
-                  Aucun produit.
-                </td>
-              </tr>
-              `
-            }
-          </tbody>
-        </table>
-      </div>
-    `;
-  }
-
-  // ---------------------------------------------------------
-  // Categories
-  // ---------------------------------------------------------
-
-  async function loadCategories() {
-    try {
-      const data = await api("/admin/categories");
-
-      const categories = Array.isArray(data)
-        ? data
-        : data.categories || data.data || [];
-
-      renderCategories(categories);
-    } catch (error) {
-      console.error("Categories error:", error);
-
-      showNotification(
-        "Impossible de charger les catégories.",
-        "error"
-      );
-    }
-  }
-
-  function renderCategories(categories) {
-    const container = findElement([
-      "categoriesTable",
-      "categoriesList",
-      "categoriesContainer",
-      "adminCategories"
-    ]);
-
-    if (!container) return;
-
-    const rows = categories
-      .map(function (category) {
-        return `
-          <tr>
-            <td>${escapeHtml(category.id)}</td>
-            <td>${escapeHtml(category.name || "-")}</td>
-            <td>${escapeHtml(category.slug || "-")}</td>
-            <td>
-              ${
-                category._count?.products ??
-                category.products?.length ??
-                0
-              }
-            </td>
-            <td>
-              <button
-                type="button"
-                onclick="editCategory(${Number(category.id)})"
-              >
-                ✏️
-              </button>
-
-              <button
-                type="button"
-                onclick="deleteCategory(${Number(category.id)})"
-              >
-                🗑️
-              </button>
-            </td>
-          </tr>
-        `;
-      })
-      .join("");
-
-    container.innerHTML = `
-      <div style="overflow:auto;">
-        <table style="width:100%;border-collapse:collapse;">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nom</th>
-              <th>Slug</th>
-              <th>Produits</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${
-              rows ||
-              `
-              <tr>
-                <td colspan="5" style="text-align:center;padding:20px;">
-                  Aucune catégorie.
-                </td>
-              </tr>
-              `
-            }
-          </tbody>
-        </table>
-      </div>
-    `;
-  }
-
-  async function editCategory(id) {
-    const name = prompt("Nouveau nom de catégorie :");
-
-    if (name === null || !name.trim()) return;
-
-    try {
-      await api("/admin/categories/" + id, {
-        method: "PATCH",
-        body: JSON.stringify({
-          name: name.trim()
-        })
-      });
-
-      showNotification(
-        "Catégorie modifiée.",
-        "success"
-      );
-
-      loadCategories();
-    } catch (error) {
-      console.error(error);
-
-      showNotification(
-        "Erreur : " + error.message,
-        "error"
-      );
-    }
-  }
-
-  window.editCategory = editCategory;
-
-  async function deleteCategory(id) {
-    if (!id) return;
-
-    const confirmed = confirm(
-      "Voulez-vous supprimer cette catégorie ?"
-    );
-
-    if (!confirmed) return;
-
-    try {
-      await api("/admin/categories/" + id, {
-        method: "DELETE"
-      });
-
-      showNotification(
-        "Catégorie supprimée.",
-        "success"
-      );
-
-      loadCategories();
-    } catch (error) {
-      console.error(error);
-
-      showNotification(
-        "Erreur : " + error.message,
-        "error"
-      );
-    }
-  }
-
-  window.deleteCategory = deleteCategory;
-
-  // ---------------------------------------------------------
-  // Add category
-  // ---------------------------------------------------------
-
-  async function createCategory() {
-    const name = prompt("Nom de la nouvelle catégorie :");
-
-    if (name === null || !name.trim()) return;
-
-    try {
-      await api("/admin/categories", {
-        method: "POST",
-        body: JSON.stringify({
-          name: name.trim()
-        })
-      });
-
-      showNotification(
-        "Catégorie créée.",
-        "success"
-      );
-
-      loadCategories();
-    } catch (error) {
-      console.error(error);
-
-      showNotification(
-        "Erreur : " + error.message,
-        "error"
-      );
-    }
-  }
-
-  window.createCategory = createCategory;
-
-  // ---------------------------------------------------------
-  // Modal helpers
-  // ---------------------------------------------------------
-
-  function openModal(id) {
-    const modal = document.getElementById(id);
-
-    if (modal) {
-      modal.classList.add("open");
-      modal.style.display = "flex";
-    }
-  }
-
-  function closeModal(id) {
-    const modal = document.getElementById(id);
-
-    if (modal) {
-      modal.classList.remove("open");
-      modal.style.display = "none";
-    }
-  }
-
-  window.openModal = openModal;
-  window.closeModal = closeModal;
-
-  // ---------------------------------------------------------
-  // Navigation click support
-  // ---------------------------------------------------------
-
-  document.addEventListener("click", function (event) {
-    const target = event.target.closest(
-      "[data-section], [data-page]"
-    );
-
-    if (!target) return;
-
-    const section =
-      target.getAttribute("data-section") ||
-      target.getAttribute("data-page");
-
-    if (!section) return;
-
-    event.preventDefault();
-
-    showSection(section);
-  });
-
-  // ---------------------------------------------------------
-  // Initialize
-  // ---------------------------------------------------------
-
-  document.addEventListener("DOMContentLoaded", function () {
-    console.log("Rainbow Colors Admin JS loaded successfully.");
-
-    // Make sure modals are hidden
-    document.querySelectorAll(".modal-overlay").forEach(function (modal) {
-      if (!modal.classList.contains("open")) {
-        modal.style.display = "none";
+      if (category) {
+        category.value =
+          p.categoryId;
       }
     });
+}
 
-    // Restore previous section or dashboard
-    let startSection = "dashboard";
+async function saveProduct(event) {
+  event.preventDefault();
 
-    try {
-      const saved = localStorage.getItem("adminCurrentSection");
+  const formData =
+    new FormData();
 
-      if (
-        saved &&
-        ["dashboard", "products", "orders", "customers", "categories"].includes(
-          saved
+  formData.append(
+    'name',
+    document.getElementById(
+      'prodName'
+    ).value
+  );
+
+  formData.append(
+    'slug',
+    document.getElementById(
+      'prodSlug'
+    ).value
+  );
+
+  formData.append(
+    'description',
+    document.getElementById(
+      'prodDesc'
+    ).value
+  );
+
+  formData.append(
+    'price',
+    document.getElementById(
+      'prodPrice'
+    ).value
+  );
+
+  const oldPrice =
+    document.getElementById(
+      'prodOldPrice'
+    ).value;
+
+  if (oldPrice) {
+    formData.append(
+      'oldPrice',
+      oldPrice
+    );
+  }
+
+  formData.append(
+    'stock',
+    document.getElementById(
+      'prodStock'
+    ).value
+  );
+
+  formData.append(
+    'stockStatus',
+    document.getElementById(
+      'prodStockStatus'
+    ).value
+  );
+
+  formData.append(
+    'badge',
+    document.getElementById(
+      'prodBadge'
+    ).value
+  );
+
+  formData.append(
+    'categoryId',
+    document.getElementById(
+      'prodCategory'
+    ).value
+  );
+
+  formData.append(
+    'features',
+    JSON.stringify(
+      document
+        .getElementById(
+          'prodFeatures'
         )
-      ) {
-        startSection = saved;
+        .value
+        .split('\n')
+        .filter(
+          f => f.trim()
+        )
+    )
+  );
+
+  const file =
+    document.getElementById(
+      'prodImage'
+    ).files[0];
+
+  if (file) {
+    formData.append(
+      'image',
+      file
+    );
+  }
+
+  try {
+    const url =
+      editingProductId
+        ? `/admin/products/${editingProductId}`
+        : '/admin/products';
+
+    const method =
+      editingProductId
+        ? 'PATCH'
+        : 'POST';
+
+    const response =
+      await fetch(
+        API_URL + url,
+        {
+          method,
+          headers: {
+            ...(authToken
+              ? {
+                  Authorization:
+                    'Bearer ' +
+                    authToken
+                }
+              : {})
+          },
+          body: formData
+        }
+      );
+
+    const data =
+      await response
+        .json()
+        .catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        data.message ||
+        'Erreur lors de l’enregistrement'
+      );
+    }
+
+    closeProductModal();
+
+    await loadAdminProducts();
+
+    await loadDashboard();
+
+    alert(
+      editingProductId
+        ? 'Produit modifié !'
+        : 'Produit créé !'
+    );
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function deleteProduct(id) {
+  if (
+    !confirm(
+      'Supprimer ce produit ?'
+    )
+  ) {
+    return;
+  }
+
+  try {
+    await api(
+      '/admin/products/' + id,
+      {
+        method: 'DELETE'
       }
-    } catch (e) {}
+    );
 
-    showSection(startSection);
+    await loadAdminProducts();
 
-    // Keep dashboard refreshed
-    setInterval(function () {
-      if (document.hidden) return;
+    await loadDashboard();
 
-      const dashboard = getSection("dashboard");
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+// =========================
+// ORDERS
+// =========================
+async function loadAdminOrders(
+  showNotification = true
+) {
+  try {
+    const orders =
+      await api('/admin/orders');
+
+    if (!Array.isArray(orders)) {
+      return;
+    }
+
+    if (
+      !firstOrdersLoad &&
+      showNotification
+    ) {
+      const newOrders =
+        orders.filter(
+          order =>
+            !knownOrderIds.has(
+              order.id
+            )
+        );
+
+      newOrders
+        .slice(0, 3)
+        .forEach(order => {
+          showNewOrderNotification(
+            order
+          );
+        });
+    }
+
+    knownOrderIds =
+      new Set(
+        orders.map(
+          order => order.id
+        )
+      );
+
+    firstOrdersLoad = false;
+
+    const tbody =
+      document.querySelector(
+        '#ordersTable tbody'
+      );
+
+    if (!tbody) {
+      return;
+    }
+
+    if (!orders.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td
+            colspan="7"
+            style="
+              text-align:center;
+              padding:30px;
+              color:#999
+            "
+          >
+            Aucune commande
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+    tbody.innerHTML =
+      orders
+        .map(o => {
+          const paymentLabel =
+            o.paymentMethod === 'cod'
+              ? '💵 COD'
+              : o.paymentMethod === 'card'
+              ? '💳 Carte'
+              : '📮 E-Dinar';
+
+          const firstName =
+            o.user?.firstName ||
+            o.firstName ||
+            '';
+
+          const lastName =
+            o.user?.lastName ||
+            o.lastName ||
+            '';
+
+          const email =
+            o.user?.email ||
+            o.email ||
+            '';
+
+          const phone =
+            o.user?.phone ||
+            o.phone ||
+            '-';
+
+          return `
+            <tr>
+
+              <td>
+                <strong>
+                  ${escapeHtml(
+                    o.orderNumber
+                  )}
+                </strong>
+              </td>
+
+              <td>
+                <strong>
+                  ${escapeHtml(
+                    firstName
+                  )}
+                  ${escapeHtml(
+                    lastName
+                  )}
+                </strong>
+
+                <br>
+
+                <small
+                  style="
+                    color:var(--gray-400)
+                  "
+                >
+                  ${escapeHtml(
+                    email
+                  )}
+                </small>
+
+                <br>
+
+                <small
+                  style="
+                    color:var(--gray-400)
+                  "
+                >
+                  ${escapeHtml(
+                    phone
+                  )}
+                </small>
+              </td>
+
+              <td>
+                ${new Date(
+                  o.createdAt
+                ).toLocaleString(
+                  'fr-FR'
+                )}
+              </td>
+
+              <td>
+                <strong>
+                  ${Number(
+                    o.total || 0
+                  ).toFixed(2)}
+                  TND
+                </strong>
+              </td>
+
+              <td>
+                ${paymentLabel}
+
+                <br>
+
+                <small>
+                  ${escapeHtml(
+                    o.paymentStatus ||
+                    'PENDING'
+                  )}
+                </small>
+              </td>
+
+              <td>
+                <span
+                  class="
+                    badge
+                    status-${String(
+                      o.status
+                    ).toLowerCase()}
+                  "
+                >
+                  ${escapeHtml(
+                    o.status
+                  )}
+                </span>
+              </td>
+
+              <td>
+
+                <select
+                  onchange="
+                    updateOrderStatus(
+                      ${o.id},
+                      this.value,
+                      this
+                    )
+                  "
+                  style="
+                    padding:6px 10px;
+                    border-radius:8px;
+                    border:
+                      1px solid
+                      var(--gray-300);
+                    font-size:13px
+                  "
+                >
+
+                  <option
+                    value="PENDING"
+                    ${
+                      o.status ===
+                      'PENDING'
+                        ? 'selected'
+                        : ''
+                    }
+                  >
+                    En attente
+                  </option>
+
+                  <option
+                    value="CONFIRMED"
+                    ${
+                      o.status ===
+                      'CONFIRMED'
+                        ? 'selected'
+                        : ''
+                    }
+                  >
+                    Confirmée
+                  </option>
+
+                  <option
+                    value="PROCESSING"
+                    ${
+                      o.status ===
+                      'PROCESSING'
+                        ? 'selected'
+                        : ''
+                    }
+                  >
+                    En traitement
+                  </option>
+
+                  <option
+                    value="SHIPPED"
+                    ${
+                      o.status ===
+                      'SHIPPED'
+                        ? 'selected'
+                        : ''
+                    }
+                  >
+                    Expédiée
+                  </option>
+
+                  <option
+                    value="DELIVERED"
+                    ${
+                      o.status ===
+                      'DELIVERED'
+                        ? 'selected'
+                        : ''
+                    }
+                  >
+                    Livrée
+                  </option>
+
+                  <option
+                    value="CANCELLED"
+                    ${
+                      o.status ===
+                      'CANCELLED'
+                        ? 'selected'
+                        : ''
+                    }
+                  >
+                    Annulée
+                  </option>
+
+                </select>
+
+              </td>
+
+            </tr>
+          `;
+        })
+        .join('');
+
+  } catch (error) {
+    console.error(
+      'Orders error:',
+      error
+    );
+  }
+}
+
+// =========================
+// UPDATE ORDER STATUS
+// =========================
+async function updateOrderStatus(
+  id,
+  status,
+  selectElement = null
+) {
+  const oldValue =
+    selectElement
+      ? selectElement.value
+      : status;
+
+  if (selectElement) {
+    selectElement.disabled = true;
+  }
+
+  try {
+    await api(
+      '/admin/orders/' + id,
+      {
+        method: 'PATCH',
+        body: {
+          status: status
+        }
+      }
+    );
+
+    await loadAdminOrders(false);
+
+    await loadDashboard();
+
+  } catch (error) {
+    console.error(
+      'Update order status error:',
+      error
+    );
+
+    alert(
+      'Erreur lors de la modification du statut :\n\n' +
+      error.message
+    );
+
+    await loadAdminOrders(false);
+
+  } finally {
+    if (selectElement) {
+      selectElement.disabled = false;
 
       if (
-        dashboard &&
-        dashboard.style.display !== "none"
+        selectElement.parentNode
       ) {
-        loadDashboard();
+        selectElement.value =
+          oldValue;
       }
-    }, 60000);
-  });
+    }
+  }
+}
 
-  // ---------------------------------------------------------
-  // Global functions
-  // ---------------------------------------------------------
+// =========================
+// CUSTOMERS
+// =========================
+async function loadAdminCustomers() {
+  try {
+    const users =
+      await api('/admin/users');
 
-  window.loadDashboard = loadDashboard;
-  window.loadOrders = loadOrders;
-  window.loadCustomers = loadCustomers;
-  window.loadProducts = loadProducts;
-  window.loadCategories = loadCategories;
+    const table =
+      document.getElementById(
+        'customersTable'
+      );
 
-})();
+    const tbody =
+      table?.querySelector(
+        'tbody'
+      );
+
+    if (!tbody) {
+      return;
+    }
+
+    tbody.innerHTML =
+      users
+        .map(
+          u => `
+            <tr>
+
+              <td>
+                #${u.id}
+              </td>
+
+              <td>
+                <strong>
+                  ${escapeHtml(
+                    u.firstName || ''
+                  )}
+
+                  ${escapeHtml(
+                    u.lastName || ''
+                  )}
+                </strong>
+              </td>
+
+              <td>
+                ${escapeHtml(
+                  u.email || ''
+                )}
+              </td>
+
+              <td>
+                ${escapeHtml(
+                  u.phone || '-'
+                )}
+              </td>
+
+              <td>
+                <span
+                  class="
+                    badge ${
+                      u.role === 'ADMIN'
+                        ? 'badge-premium'
+                        : 'badge-new'
+                    }
+                  "
+                >
+                  ${escapeHtml(
+                    u.role
+                  )}
+                </span>
+              </td>
+
+              <td>
+                ${new Date(
+                  u.createdAt
+                ).toLocaleDateString(
+                  'fr-FR'
+                )}
+              </td>
+
+              <td
+                style="
+                  white-space:nowrap
+                "
+              >
+
+                <button
+                  class="btn-sm btn-edit"
+                  onclick="
+                    editUser(${u.id})
+                  "
+                  title="Modifier"
+                >
+                  ✏️
+                </button>
+
+                <button
+                  class="btn-sm btn-delete"
+                  onclick="
+                    deleteUser(${u.id})
+                  "
+                  title="Supprimer"
+                >
+                  🗑️
+                </button>
+
+              </td>
+
+            </tr>
+          `
+        )
+        .join('');
+
+  } catch (error) {
+    console.error(
+      'Customers error:',
+      error
+    );
+  }
+}
+
+async function editUser(id) {
+  try {
+    const users =
+      await api('/admin/users');
+
+    const user =
+      users.find(
+        item =>
+          Number(item.id) ===
+          Number(id)
+      );
+
+    if (!user) {
+      alert(
+        'Client introuvable'
+      );
+
+      return;
+    }
+
+    const firstName =
+      prompt(
+        'Prénom :',
+        user.firstName || ''
+      );
+
+    if (firstName === null) {
+      return;
+    }
+
+    const lastName =
+      prompt(
+        'Nom :',
+        user.lastName || ''
+      );
+
+    if (lastName === null) {
+      return;
+    }
+
+    const email =
+      prompt(
+        'Email :',
+        user.email || ''
+      );
+
+    if (email === null) {
+      return;
+    }
+
+    const phone =
+      prompt(
+        'Téléphone :',
+        user.phone || ''
+      );
+
+    if (phone === null) {
+      return;
+    }
+
+    const address =
+      prompt(
+        'Adresse :',
+        user.address || ''
+      );
+
+    if (address === null) {
+      return;
+    }
+
+    const city =
+      prompt(
+        'Ville :',
+        user.city || ''
+      );
+
+    if (city === null) {
+      return;
+    }
+
+    const role =
+      prompt(
+        'Rôle (CUSTOMER ou ADMIN) :',
+        user.role || 'CUSTOMER'
+      );
+
+    if (role === null) {
+      return;
+    }
+
+    const normalizedRole =
+      role
+        .trim()
+        .toUpperCase();
+
+    if (
+      normalizedRole !==
+        'CUSTOMER' &&
+      normalizedRole !==
+        'ADMIN'
+    ) {
+      alert(
+        'Le rôle doit être CUSTOMER ou ADMIN.'
+      );
+
+      return;
+    }
+
+    await api(
+      '/admin/users/' + id,
+      {
+        method: 'PATCH',
+        body: {
+          firstName:
+            firstName.trim(),
+
+          lastName:
+            lastName.trim(),
+
+          email:
+            email.trim(),
+
+          phone:
+            phone.trim() || null,
+
+          address:
+            address.trim() || null,
+
+          city:
+            city.trim() || null,
+
+          role:
+            normalizedRole
+        }
+      }
+    );
+
+    alert(
+      'Client modifié avec succès !'
+    );
+
+    await loadAdminCustomers();
+
+    await loadDashboard();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function deleteUser(id) {
+  if (
+    !confirm(
+      'Voulez-vous vraiment supprimer ce client ?'
+    )
+  ) {
+    return;
+  }
+
+  try {
+    await api(
+      '/admin/users/' + id,
+      {
+        method: 'DELETE'
+      }
+    );
+
+    alert(
+      'Client supprimé avec succès !'
+    );
+
+    await loadAdminCustomers();
+
+    await loadDashboard();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+// =========================
+// CATEGORIES
+// =========================
+async function loadAdminCategories() {
+  try {
+    const cats =
+      await api('/admin/categories');
+
+    const container =
+      document.getElementById(
+        'categoriesList'
+      );
+
+    if (!container) {
+      return;
+    }
+
+    container.innerHTML = `
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+        padding:18px;
+        border-bottom:
+          1px solid var(--gray-100)
+      ">
+
+        <div>
+
+          <h3 style="
+            margin:0 0 5px
+          ">
+            Gestion des catégories
+          </h3>
+
+          <p style="
+            margin:0;
+            color:var(--gray-500);
+            font-size:13px
+          ">
+            Ajouter, modifier ou
+            supprimer une catégorie.
+          </p>
+
+        </div>
+
+        <button
+          class="btn btn-primary"
+          onclick="
+            createCategory()
+          "
+        >
+          + Ajouter
+        </button>
+
+      </div>
+
+      ${
+        cats.length
+          ? cats
+              .map(
+                c => `
+                  <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    gap:15px;
+                    padding:16px;
+                    border-bottom:
+                      1px solid
+                      var(--gray-100);
+                    flex-wrap:wrap
+                  ">
+
+                    <div style="
+                      display:flex;
+                      align-items:center;
+                      gap:12px
+                    ">
+
+                      <span style="
+                        width:42px;
+                        height:42px;
+                        border-radius:10px;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        background:${
+                          escapeHtml(
+                            c.color ||
+                            '#2563eb'
+                          )
+                        }22;
+                        font-size:22px
+                      ">
+                        ${escapeHtml(
+                          c.icon ||
+                          '📁'
+                        )}
+                      </span>
+
+                      <div>
+
+                        <strong>
+                          ${escapeHtml(
+                            c.name
+                          )}
+                        </strong>
+
+                        <p style="
+                          margin:3px 0 0;
+                          font-size:13px;
+                          color:var(--gray-500)
+                        ">
+                          ${escapeHtml(
+                            c.description ||
+                            ''
+                          )}
+                          ·
+                          ${
+                            c._count
+                              ?.products ||
+                            0
+                          }
+                          produits
+                        </p>
+
+                        <p style="
+                          margin:3px 0 0;
+                          font-size:12px;
+                          color:var(--gray-400)
+                        ">
+                          Slug:
+                          ${escapeHtml(
+                            c.slug ||
+                            ''
+                          )}
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                    <div style="
+                      display:flex;
+                      align-items:center;
+                      gap:8px
+                    ">
+
+                      <span style="
+                        width:16px;
+                        height:16px;
+                        border-radius:50%;
+                        background:${
+                          escapeHtml(
+                            c.color ||
+                            '#ccc'
+                          )
+                        };
+                        display:inline-block
+                      "></span>
+
+                      <button
+                        class="
+                          btn-sm
+                          btn-edit
+                        "
+                        onclick="
+                          editCategory(
+                            ${c.id}
+                          )
+                        "
+                        title="Modifier"
+                      >
+                        ✏️
+                      </button>
+
+                      <button
+                        class="
+                          btn-sm
+                          btn-delete
+                        "
+                        onclick="
+                          deleteCategory(
+                            ${c.id}
+                          )
+                        "
+                        title="Supprimer"
+                      >
+                        🗑️
+                      </button>
+
+                    </div>
+
+                  </div>
+                `
+              )
+              .join('')
+          : `
+              <div style="
+                padding:30px;
+                text-align:center;
+                color:var(--gray-400)
+              ">
+                Aucune catégorie.
+              </div>
+            `
+      }
+    `;
+
+  } catch (error) {
+    console.error(
+      'Categories error:',
+      error
+    );
+  }
+}
+
+async function createCategory() {
+  const name =
+    prompt(
+      'Nom de la catégorie :'
+    );
+
+  if (name === null) {
+    return;
+  }
+
+  const cleanName =
+    name.trim();
+
+  if (!cleanName) {
+    alert(
+      'Le nom de la catégorie est obligatoire.'
+    );
+
+    return;
+  }
+
+  const slug =
+    prompt(
+      'Slug :',
+      cleanName
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(
+          /[\u0300-\u036f]/g,
+          ''
+        )
+        .replace(
+          /[^a-z0-9]+/g,
+          '-'
+        )
+        .replace(
+          /(^-|-$)/g,
+          ''
+        )
+    );
+
+  if (slug === null) {
+    return;
+  }
+
+  const description =
+    prompt(
+      'Description :',
+      ''
+    );
+
+  if (description === null) {
+    return;
+  }
+
+  const icon =
+    prompt(
+      'Icône / emoji :',
+      '📁'
+    );
+
+  if (icon === null) {
+    return;
+  }
+
+  const color =
+    prompt(
+      'Couleur hexadécimale :',
+      '#2563eb'
+    );
+
+  if (color === null) {
+    return;
+  }
+
+  try {
+    await api(
+      '/admin/categories',
+      {
+        method: 'POST',
+        body: {
+          name: cleanName,
+
+          slug:
+            slug.trim(),
+
+          description:
+            description.trim() ||
+            null,
+
+          icon:
+            icon.trim() ||
+            '📁',
+
+          color:
+            color.trim() ||
+            '#2563eb'
+        }
+      }
+    );
+
+    alert(
+      'Catégorie créée avec succès !'
+    );
+
+    await loadAdminCategories();
+
+    await loadCategoriesSelect();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function editCategory(id) {
+  try {
+    const cats =
+      await api(
+        '/admin/categories'
+      );
+
+    const category =
+      cats.find(
+        c =>
+          Number(c.id) ===
+          Number(id)
+      );
+
+    if (!category) {
+      alert(
+        'Catégorie introuvable.'
+      );
+
+      return;
+    }
+
+    const name =
+      prompt(
+        'Nom de la catégorie :',
+        category.name || ''
+      );
+
+    if (name === null) {
+      return;
+    }
+
+    const slug =
+      prompt(
+        'Slug :',
+        category.slug || ''
+      );
+
+    if (slug === null) {
+      return;
+    }
+
+    const description =
+      prompt(
+        'Description :',
+        category.description ||
+        ''
+      );
+
+    if (description === null) {
+      return;
+    }
+
+    const icon =
+      prompt(
+        'Icône / emoji :',
+        category.icon ||
+        '📁'
+      );
+
+    if (icon === null) {
+      return;
+    }
+
+    const color =
+      prompt(
+        'Couleur hexadécimale :',
+        category.color ||
+        '#2563eb'
+      );
+
+    if (color === null) {
+      return;
+    }
+
+    await api(
+      '/admin/categories/' +
+        id,
+      {
+        method: 'PATCH',
+        body: {
+          name:
+            name.trim(),
+
+          slug:
+            slug.trim(),
+
+          description:
+            description.trim() ||
+            null,
+
+          icon:
+            icon.trim() ||
+            '📁',
+
+          color:
+            color.trim() ||
+            '#2563eb'
+        }
+      }
+    );
+
+    alert(
+      'Catégorie modifiée avec succès !'
+    );
+
+    await loadAdminCategories();
+
+    await loadCategoriesSelect();
+
+    await loadDashboard();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function deleteCategory(id) {
+  if (
+    !confirm(
+      'Voulez-vous vraiment supprimer cette catégorie ?'
+    )
+  ) {
+    return;
+  }
+
+  try {
+    await api(
+      '/admin/categories/' +
+        id,
+      {
+        method: 'DELETE'
+      }
+    );
+
+    alert(
+      'Catégorie supprimée avec succès !'
+    );
+
+    await loadAdminCategories();
+
+    await loadCategoriesSelect();
+
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+// =========================
+// AUTO REFRESH
+// =========================
+function startAutoRefresh() {
+  if (autoRefreshTimer) {
+    clearInterval(
+      autoRefreshTimer
+    );
+  }
+
+  autoRefreshTimer =
+    setInterval(
+      async () => {
+        try {
+          await loadAdminOrders(
+            true
+          );
+
+          const dashboard =
+            document.getElementById(
+              'dashboard'
+            );
+
+          if (
+            dashboard &&
+            dashboard.classList.contains(
+              'active'
+            )
+          ) {
+            await loadDashboard();
+          }
+
+        } catch (error) {
+          console.error(
+            'Auto refresh error:',
+            error
+          );
+        }
+      },
+      15000
+    );
+}
+
+// =========================
+// INIT
+// =========================
+document.addEventListener(
+  'DOMContentLoaded',
+  async () => {
+
+    const adminOk =
+      await checkAdmin();
+
+    if (!adminOk) {
+      return;
+    }
+
+    await requestNotificationPermission();
+
+    await loadDashboard();
+
+    await loadAdminOrders(
+      false
+    );
+
+    startAutoRefresh();
+  }
+);
