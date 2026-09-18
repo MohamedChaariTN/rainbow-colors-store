@@ -19,7 +19,8 @@ export const createOrder = async (req: any, res: Response) => {
     );
 
     const tax = subtotal * 0.19;
-    const total = subtotal + Number(shipping) + tax;
+    const deliveryFee = subtotal > 200 ? 0 : 7;
+    const total = subtotal + deliveryFee + tax;
 
     const order = await prisma.order.create({
       data: {
@@ -29,7 +30,7 @@ export const createOrder = async (req: any, res: Response) => {
         paymentStatus: 'PENDING',
         paymentMethod,
         subtotal,
-        shipping,
+        shipping: deliveryFee,
         tax,
         total,
         ...address,
