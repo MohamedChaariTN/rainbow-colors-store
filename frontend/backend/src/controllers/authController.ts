@@ -84,7 +84,7 @@ async function sendVerificationEmail(email: string, firstName: string, code: str
     })
   });
 
-  const result = await response.json().catch(() => ({}));
+  const result: any = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(result?.message || result?.code || 'Impossible d’envoyer le code de vérification.');
   }
