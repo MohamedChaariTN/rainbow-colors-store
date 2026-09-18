@@ -45,7 +45,8 @@
     <div style="display:grid;grid-template-columns:280px 1fr;gap:32px;align-items:start">
       <div class="account-sidebar">
         <div style="text-align:center;padding:20px 0;border-bottom:1px solid var(--rc-gray-100);margin-bottom:16px">
-          <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--rc-blue),var(--rc-purple));margin:0 auto 12px;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;font-weight:700" id="accAvatar">RC</div>
+          <div id="accAvatar" style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--rc-blue),var(--rc-purple));margin:0 auto 12px;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;font-weight:700;overflow:hidden">RC</div>
+          <label class="btn btn-secondary" style="display:inline-flex;cursor:pointer;font-size:12px;padding:8px 12px;margin-bottom:10px">📷 Choisir une photo<input type="file" id="profImage" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewProfileImage(event)"></label>
           <h4 style="font-size:16px;font-weight:700" id="accName">...</h4>
           <p style="font-size:13px;color:var(--rc-gray-400)" id="accEmail">...</p>
         </div>
@@ -77,7 +78,9 @@ async function loadProfile() {
   try {
     const data = await api('/auth/me');
     const u = data.user;
-    document.getElementById('accAvatar').textContent = (u.firstName[0]+u.lastName[0]).toUpperCase();
+    const avatar = document.getElementById('accAvatar');
+    if (u.profileImage) avatar.innerHTML = '<img src="' + u.profileImage + '" alt="Photo de profil" style="width:100%;height:100%;object-fit:cover">';
+    else avatar.textContent = (u.firstName[0]+u.lastName[0]).toUpperCase();
     document.getElementById('accName').textContent = u.firstName+' '+u.lastName;
     document.getElementById('accEmail').textContent = u.email;
     document.getElementById('profFirstName').value = u.firstName;
@@ -88,6 +91,14 @@ async function loadProfile() {
     document.getElementById('profCity').value = u.city||'';
   } catch(e){}
 }
+function previewProfileImage(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (file.size > 2000000) { showToast('La photo doit faire 2 Mo maximum.', 'error'); e.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = () => { const avatar=document.getElementById('accAvatar'); avatar.innerHTML='<img src="'+reader.result+'" alt="Photo de profil" style="width:100%;height:100%;object-fit:cover">'; window.pendingProfileImage=reader.result; };
+  reader.readAsDataURL(file);
+}
 async function updateProfile(e) {
   e.preventDefault();
   try {
@@ -97,6 +108,7 @@ async function updateProfile(e) {
       phone: document.getElementById('profPhone').value,
       address: document.getElementById('profAddress').value,
       city: document.getElementById('profCity').value,
+      profileImage: window.pendingProfileImage || undefined,
     }});
     showToast('Profil mis à jour !');
     await checkAuth();
