@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, me, updateProfile } from '../controllers/authController';
+import { register, login, me, updateProfile, verifyEmail, resendVerification } from '../controllers/authController';
 import { getProducts, getProduct, createProduct, updateProduct, deleteProduct, getCategories } from '../controllers/productController';
 import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from '../controllers/cartController';
 import { getWishlist, toggleWishlist } from '../controllers/wishlistController';
@@ -15,6 +15,8 @@ const router = Router();
 // Auth
 router.post('/auth/register', register);
 router.post('/auth/login', login);
+router.post('/auth/verify-email', verifyEmail);
+router.post('/auth/resend-verification', resendVerification);
 router.get('/auth/me', authenticate, me);
 router.patch('/auth/profile', authenticate, updateProfile);
 
