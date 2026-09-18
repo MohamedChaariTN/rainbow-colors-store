@@ -117,16 +117,32 @@ Feature 2"></textarea></div>
       </div>
     </section>
 
-    <!-- CUSTOMERS -->
-    <section id="customers" class="admin-section">
-      <h2>Gestion des clients</h2>
-      <div class="admin-card" style="overflow-x:auto">
-        <table class="admin-table" id="customersTable">
-          <thead><tr><th>ID</th><th>Nom</th><th>Email</th><th>Téléphone</th><th>Rôle</th><th>Inscription</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
+   <!-- CUSTOMERS -->
+<section id="customers" class="admin-section">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <h2>Gestion des clients</h2>
+    <span style="color:var(--gray-500);font-size:14px">
+      Modifier ou supprimer un client
+    </span>
+  </div>
+
+  <div class="admin-card" style="overflow-x:auto">
+    <table class="admin-table" id="customersTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Téléphone</th>
+          <th>Rôle</th>
+          <th>Inscription</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
 
     <!-- CATEGORIES -->
     <section id="categories" class="admin-section">
