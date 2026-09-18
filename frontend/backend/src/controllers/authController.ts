@@ -90,6 +90,109 @@ async function sendVerificationEmail(email: string, firstName: string, code: str
   }
 }
 
+export const requestPasswordReset = async (req: Request, res: Response) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!email || !z.string().email().safeParse(email).success) {
+      return res.status(400).json({ error: 'Adresse email invalide.' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Keep the response generic so the endpoint does not reveal whether an account exists.
+    if (!user) {
+      return res.json({ success: true });
+    }
+
+    const code = crypto.randomInt(100000, 1000000).toString();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verificationCode: code,
+        verificationExpiresAt: new Date(Date.now() + 10 * 60 * 1000)
+      }
+    });
+
+    try {
+      await sendVerificationEmail(
+        user.email,
+        user.firstName,
+        code
+      );
+    } catch (emailError: any) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { verificationCode: null, verificationExpiresAt: null }
+      }).catch(() => {});
+      const detail = emailError?.message ? ' ' + emailError.message : '';
+      return res.status(503).json({
+        error: 'Impossible d’envoyer le code de réinitialisation pour le moment.' + detail
+      });
+    }
+
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const code = String(req.body?.code || '').trim();
+    const password = String(req.body?.password || '');
+
+    if (!z.string().email().safeParse(email).success) {
+      return res.status(400).json({ error: 'Adresse email invalide.' });
+    }
+    if (!/^\d{6}$/.test(code)) {
+      return res.status(400).json({ error: 'Code de réinitialisation invalide.' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères.' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ error: 'Code ou email invalide.' });
+    }
+    if (
+      !user.verificationCode ||
+      !user.verificationExpiresAt ||
+      user.verificationExpiresAt.getTime() < Date.now() ||
+      user.verificationCode !== code
+    ) {
+      return res.status(400).json({ error: 'Code de réinitialisation incorrect ou expiré.' });
+    }
+
+    const hashed = await bcrypt.hash(password, 12);
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashed,
+        verificationCode: null,
+        verificationExpiresAt: null
+      }
+    });
+
+    const token = jwt.sign({ userId: updated.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+    return res.json({
+      success: true,
+      token,
+      user: {
+        id: updated.id,
+        email: updated.email,
+        firstName: updated.firstName,
+        lastName: updated.lastName,
+        role: updated.role,
+        profileImage: updated.profileImage
+      }
+    });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+};
+
 export const verifyEmail = async (req: Request, res: Response) => {
   try {
     const { email, code } = req.body;
