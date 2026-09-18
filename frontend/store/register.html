@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Créer un compte | Rainbow Colors</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <img src="images/logo ranbow colors.jpeg" alt="Rainbow Colors">
+      <span class="logo-text">Rainbow <span>Colors</span></span>
+    </a>
+    <div class="header-actions">
+      <a href="index.html" class="btn btn-outline">← Accueil</a>
+    </div>
+  </div>
+</header>
+
+<section class="section" style="min-height:70vh;display:flex;align-items:center">
+  <div class="section-inner" style="width:100%;max-width:520px">
+    <div class="checkout-form" style="padding:32px">
+      <h1 style="font-size:28px;font-weight:800;margin-bottom:8px">Créer votre compte</h1>
+      <p style="color:var(--rc-gray-500);margin-bottom:24px">Créez votre compte Rainbow Colors en quelques secondes.</p>
+
+      <form id="registerPageForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Prénom *</label>
+            <input type="text" id="rpFirstName" required>
+          </div>
+          <div class="form-group">
+            <label>Nom *</label>
+            <input type="text" id="rpLastName" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="rpEmail" placeholder="votre@email.com" required>
+        </div>
+
+        <div class="form-group">
+          <label>Téléphone</label>
+          <input type="tel" id="rpPhone" placeholder="+216 XX XXX XXX">
+        </div>
+
+        <div class="form-group">
+          <label>Mot de passe *</label>
+          <input type="password" id="rpPassword" minlength="6" placeholder="Au moins 6 caractères" required>
+        </div>
+
+        <button id="rpSubmit" type="submit" class="btn btn-primary" style="width:100%;justify-content:center">
+          Créer mon compte
+        </button>
+
+        <div id="rpMessage" style="margin-top:16px;display:none;padding:12px;border-radius:10px;font-size:14px"></div>
+      </form>
+
+      <div style="text-align:center;margin-top:18px;font-size:14px">
+        Déjà un compte ?
+        <a href="index.html" onclick="sessionStorage.setItem('openLogin','1')" style="color:var(--rc-blue);font-weight:600">Se connecter</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+const form = document.getElementById('registerPageForm');
+const submit = document.getElementById('rpSubmit');
+const message = document.getElementById('rpMessage');
+
+function showMessage(text, error) {
+  message.style.display = 'block';
+  message.textContent = text;
+  message.style.background = error ? '#fee2e2' : '#dcfce7';
+  message.style.color = error ? '#991b1b' : '#166534';
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  submit.disabled = true;
+  submit.textContent = 'Création...';
+  message.style.display = 'none';
+
+  try {
+    const res = await fetch(window.location.origin + '/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        firstName: document.getElementById('rpFirstName').value.trim(),
+        lastName: document.getElementById('rpLastName').value.trim(),
+        email: document.getElementById('rpEmail').value.trim().toLowerCase(),
+        phone: document.getElementById('rpPhone').value.trim(),
+        password: document.getElementById('rpPassword').value
+      })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Impossible de créer le compte.');
+
+    localStorage.setItem('rc_token', data.token);
+    showMessage('Compte créé avec succès ! Redirection...', false);
+    setTimeout(() => { window.location.href = 'account.html'; }, 700);
+  } catch (err) {
+    showMessage(err.message || 'Une erreur est survenue.', true);
+    submit.disabled = false;
+    submit.textContent = 'Créer mon compte';
+  }
+});
+</script>
+</body>
+</html>
