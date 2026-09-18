@@ -25,10 +25,36 @@ export const register = async (req: Request, res: Response) => {
     const data = registerSchema.parse(req.body);
     const existing = await prisma.user.findUnique({ where: { email: data.email } });
     if (existing) {
-      if (!existing.emailVerified && existing.verificationCode) {
-        return res.status(400).json({ error: 'Cet email a déjà une inscription en attente. Utilisez « Renvoyer le code » pour continuer.' });
+      if (existing.emailVerified) {
+        return res.status(400).json({ error: 'Cet email est déjà utilisé. Connectez-vous à votre compte.' });
       }
-      return res.status(400).json({ error: 'Cet email est déjà utilisé. Connectez-vous à votre compte.' });
+
+      // Allow a pending/unverified registration to be restarted with the new form data.
+      const hashed = await bcrypt.hash(data.password, 12);
+      const code = crypto.randomInt(100000, 1000000).toString();
+      const updated = await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          email: data.email,
+          password: hashed,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phone,
+          profileImage: data.profileImage,
+          verificationCode: code,
+          verificationExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+          emailVerified: false
+        }
+      });
+
+      try {
+        await sendVerificationEmail(updated.email, updated.firstName, code);
+      } catch (emailError: any) {
+        const detail = emailError?.message ? ' ' + emailError.message : '';
+        return res.status(503).json({ error: 'Impossible d’envoyer le code de vérification pour le moment.' + detail });
+      }
+
+      return res.json({ verificationRequired: true, email: updated.email });
     }
 
     const hashed = await bcrypt.hash(data.password, 12);
