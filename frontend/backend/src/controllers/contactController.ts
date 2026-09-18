@@ -104,9 +104,6 @@ export const sendContactMessage = async (req: Request, res: Response) => {
 
     if (adminEmail.error) {
       console.error('Contact admin email error:', adminEmail.error);
-      return res.status(500).json({
-        error: 'Le message n’a pas pu être envoyé. Veuillez réessayer.'
-      });
     }
 
     const customerEmail = await resend.emails.send({
@@ -123,6 +120,7 @@ export const sendContactMessage = async (req: Request, res: Response) => {
     res.json({
       success: true,
       confirmationSent: !customerEmail.error,
+      companyEmailSent: !adminEmail.error,
       messageId: savedMessage.id
     });
   } catch (err: any) {
