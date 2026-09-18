@@ -2637,7 +2637,7 @@ async function loadContactMessages() {
         '<div class="contact-message-actions">' +
           (!m.isRead ? '<button type="button" class="btn-sm btn-edit" onclick="markContactMessageRead(' + m.id + ')">✓ Marquer comme lu</button>' : '<span class="contact-read-badge">✓ Lu</span>') +
           '<button type="button" class="btn-sm btn-delete" onclick="deleteContactMessage(' + m.id + ')">🗑 Supprimer</button>' +
-          '<a class="btn-sm btn-edit" href="mailto:' + encodeURIComponent(m.email) + '?subject=' + encodeURIComponent('Re: ' + m.subject) + '">✉ Répondre</a>' +
+          '<button type="button" class="btn-sm btn-edit" onclick="replyToContactMessage(' + m.id + ', ' + JSON.stringify(m.email).replace(/'/g, '&#039;') + ', ' + JSON.stringify(m.subject).replace(/'/g, '&#039;') + ')">✉ Répondre</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -2663,4 +2663,15 @@ async function deleteContactMessage(id) {
   } catch (error) {
     alert(error.message);
   }
+}
+
+
+async function replyToContactMessage(id, email, subject) {
+  const message = prompt('Réponse à ' + email + '\n\nÉcrivez votre réponse :');
+  if (message === null || !message.trim()) return;
+  try {
+    await api('/admin/contact-messages/' + id + '/reply', { method: 'POST', body: { message: message.trim() } });
+    alert('✓ Réponse envoyée avec succès au client.');
+    loadContactMessages();
+  } catch (error) { alert('✕ ' + error.message); }
 }
