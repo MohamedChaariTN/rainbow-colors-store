@@ -1462,7 +1462,200 @@ async function loadAdminOrders(
 // =========================
 // UPDATE ORDER STATUS
 // =========================
-function generateAdminInvoice(id){viewAdminOrderForInvoice(id);}
+function generateAdminInvoice(id) {
+  // Ouvrir la fenêtre immédiatement pendant le clic utilisateur
+  // pour éviter que le navigateur bloque le popup après l'appel API.
+  const invoiceWindow = window.open('', '_blank');
+
+  if (!invoiceWindow) {
+    alert('Autorisez les fenêtres pop-up pour générer la facture.');
+    return;
+  }
+
+  invoiceWindow.document.write(`
+    <!doctype html>
+    <html lang="fr">
+      <head>
+        <meta charset="utf-8">
+        <title>Facture Rainbow Colors</title>
+        <style>
+          body{font-family:Arial,sans-serif;padding:40px;color:#172033}
+          .loading{text-align:center;margin-top:120px;font-size:18px}
+        </style>
+      </head>
+      <body>
+        <div class="loading">Préparation de la facture…</div>
+      </body>
+    </html>
+  `);
+  invoiceWindow.document.close();
+
+  viewAdminOrderForInvoice(id, invoiceWindow);
+}
+
+async function viewAdminOrderForInvoice(id, invoiceWindow) {
+  try {
+    const o = await api('/admin/orders/' + id);
+
+    const customer = [
+      o.user?.firstName,
+      o.user?.lastName
+    ].filter(Boolean).join(' ') || 'Client';
+
+    const payment =
+      o.paymentMethod === 'cod'
+        ? 'Paiement à la livraison'
+        : o.paymentMethod === 'card'
+        ? 'Carte bancaire'
+        : 'E-Dinar';
+
+    const rows = (o.items || [])
+      .map(item => {
+        const quantity = Number(item.quantity || 0);
+        const price = Number(item.price || 0);
+        const total = price * quantity;
+
+        return '<tr>' +
+          '<td>' + escapeHtml(item.name) + '</td>' +
+          '<td>' + quantity + '</td>' +
+          '<td>' + price.toFixed(3) + ' TND</td>' +
+          '<td>' + total.toFixed(3) + ' TND</td>' +
+        '</tr>';
+      })
+      .join('');
+
+    const address = [
+      o.address,
+      o.city,
+      o.governorate,
+      o.postalCode
+    ].filter(Boolean).join(', ') || '—';
+
+    invoiceWindow.document.open();
+    invoiceWindow.document.write(`
+      <!doctype html>
+      <html lang="fr">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Facture ${escapeHtml(o.orderNumber || '')}</title>
+        <style>
+          @page{size:A4;margin:16mm}
+          *{box-sizing:border-box}
+          body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff}
+          .top{display:flex;justify-content:space-between;gap:30px;border-bottom:3px solid #2563eb;padding-bottom:18px}
+          .brand{font-size:25px;font-weight:900;color:#2563eb}
+          .brand span{color:#7c3aed}
+          .muted{color:#64748b;font-size:12px;margin-top:5px}
+          .invoice-title{text-align:right}
+          .invoice-title strong{font-size:20px}
+          .box{margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+          .box>div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;line-height:1.7}
+          .title{margin-top:28px;font-size:20px;font-weight:800}
+          table{width:100%;border-collapse:collapse;margin-top:14px}
+          th{background:#f1f5f9;text-align:left;padding:11px;font-size:12px}
+          td{padding:11px;border-bottom:1px solid #e2e8f0;font-size:13px}
+          .totals{width:320px;max-width:100%;margin:22px 0 0 auto}
+          .line{display:flex;justify-content:space-between;padding:6px 0}
+          .grand{border-top:2px solid #172033;margin-top:6px;padding-top:10px;font-size:18px;font-weight:900}
+          .footer{text-align:center;margin-top:45px;color:#64748b;font-size:11px;border-top:1px solid #e2e8f0;padding-top:15px}
+          @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+        </style>
+      </head>
+      <body>
+        <div class="top">
+          <div>
+            <div class="brand">Rainbow <span>Colors</span></div>
+            <div class="muted">Peintures et matériaux de construction</div>
+          </div>
+          <div class="invoice-title">
+            <strong>FACTURE</strong>
+            <div>${escapeHtml(o.orderNumber || '')}</div>
+            <div class="muted">${new Date(o.createdAt).toLocaleDateString('fr-FR')}</div>
+          </div>
+        </div>
+
+        <div class="box">
+          <div>
+            <strong>Client</strong><br>
+            ${escapeHtml(customer)}<br>
+            ${escapeHtml(o.user?.email || '')}<br>
+            ${escapeHtml(o.user?.phone || '')}
+          </div>
+          <div>
+            <strong>Adresse de livraison</strong><br>
+            ${escapeHtml(address)}<br><br>
+            <strong>Paiement</strong><br>
+            ${escapeHtml(payment)}
+          </div>
+        </div>
+
+        <div class="title">Détail de la commande</div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Produit</th>
+              <th>Qté</th>
+              <th>Prix unitaire</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+
+        <div class="totals">
+          <div class="line">
+            <span>Sous-total</span>
+            <strong>${Number(o.subtotal || 0).toFixed(3)} TND</strong>
+          </div>
+          <div class="line">
+            <span>Livraison</span>
+            <strong>${Number(o.shipping || 0).toFixed(3)} TND</strong>
+          </div>
+          <div class="line">
+            <span>TVA</span>
+            <strong>${Number(o.tax || 0).toFixed(3)} TND</strong>
+          </div>
+          <div class="line grand">
+            <span>Total</span>
+            <strong>${Number(o.total || 0).toFixed(3)} TND</strong>
+          </div>
+        </div>
+
+        <div class="footer">
+          Rainbow Colors — Sfax, Tunisie — +216 29 253 908<br>
+          Document généré depuis le Dashboard Admin
+        </div>
+      </body>
+      </html>
+    `);
+    invoiceWindow.document.close();
+
+    // Lancer l'impression seulement après que le contenu est chargé.
+    setTimeout(() => {
+      try {
+        invoiceWindow.focus();
+        invoiceWindow.print();
+      } catch (printError) {
+        console.error('Invoice print error:', printError);
+      }
+    }, 500);
+
+  } catch (error) {
+    console.error('Invoice generation error:', error);
+    try {
+      invoiceWindow.document.open();
+      invoiceWindow.document.write(
+        '<p style="font-family:Arial;padding:30px;color:#dc2626">' +
+        '<strong>Impossible de générer la facture.</strong><br><br>' +
+        escapeHtml(error.message || 'Erreur inconnue') +
+        '</p>'
+      );
+      invoiceWindow.document.close();
+    } catch (_) {}
+  }
+}
 async function viewAdminOrderForInvoice(id){
  try{
   const o=await api('/admin/orders/'+id);
