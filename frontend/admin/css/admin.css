@@ -1,80 +1,121 @@
 /* =========================================
-   DASHBOARD SIZE IMPROVEMENTS
-   يحافظ على التصميم الحالي ويكبر المحتوى فقط
+   RAINBOW COLORS ADMIN - EASY DASHBOARD
 ========================================= */
 
+/* مساحة أكبر للمحتوى */
 .admin-main {
-  padding: 30px 36px;
+  margin-left: 260px;
+  padding: 32px 40px;
 }
 
+/* العنوان */
 .admin-header h1 {
-  font-size: 28px;
+  font-size: 30px;
+  font-weight: 800;
 }
 
+/* بطاقات الإحصائيات */
 .stats-grid {
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
   gap: 24px;
 }
 
 .stat-card {
+  min-height: 130px;
   padding: 28px;
-  min-height: 125px;
+  border: 1px solid var(--gray-100);
 }
 
 .stat-icon {
-  width: 58px;
-  height: 58px;
-  font-size: 27px;
+  width: 60px;
+  height: 60px;
+  font-size: 28px;
 }
 
 .stat-value {
-  font-size: 32px;
+  font-size: 34px;
+  line-height: 1;
 }
 
 .stat-label {
   font-size: 14px;
+  margin-top: 8px;
 }
 
+/* الكروت الكبيرة */
 .admin-card {
   padding: 28px;
+  border: 1px solid var(--gray-100);
 }
 
 .admin-card h3 {
-  font-size: 18px;
+  font-size: 19px;
+  margin-bottom: 20px;
+}
+
+/* الجداول أسهل للقراءة */
+.admin-table {
+  min-width: 900px;
 }
 
 .admin-table th {
-  padding: 14px;
+  padding: 15px 14px;
   font-size: 13px;
 }
 
 .admin-table td {
-  padding: 16px 14px;
+  padding: 17px 14px;
   font-size: 15px;
 }
 
-.admin-table {
-  min-width: 850px;
+/* الأزرار */
+.btn-primary {
+  padding: 13px 22px;
+  font-size: 15px;
 }
 
-/* يجعل الكروت بجانب بعضها بشكل مريح */
-#dashboard > div:last-child {
-  gap: 28px !important;
+.btn-sm {
+  padding: 8px 12px;
+  font-size: 14px;
 }
 
-/* على الشاشات الأصغر */
+/* الحالات */
+.badge {
+  padding: 6px 11px;
+  font-size: 12px;
+}
+
+/* على الشاشات المتوسطة */
 @media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+  }
+}
+
+/* على التابلت */
+@media (max-width: 900px) {
+  .admin-main {
+    margin-left: 0;
+    padding: 24px;
+  }
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 768px) {
+/* على الهاتف */
+@media (max-width: 600px) {
   .admin-main {
-    padding: 20px 14px;
+    padding: 18px 14px;
   }
 
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .admin-table {
+    min-width: 850px;
   }
 
   .admin-header h1 {
@@ -82,10 +123,6 @@
   }
 
   .stat-value {
-    font-size: 28px;
-  }
-
-  .admin-card {
-    padding: 20px;
+    font-size: 29px;
   }
 }
