@@ -241,11 +241,19 @@ function renderProductCard(product, inWishlist = false) {
 }
 
 function renderCategoryCard(cat) {
+  const count = cat._count?.products || 0;
   return `
-    <a href="products.html?category=${cat.slug}" class="category-card animate-fadeInUp" style="border-top:4px solid ${cat.color}">
-      <div class="category-icon" style="background:${cat.color}15;color:${cat.color}">${cat.icon}</div>
-      <h3>${cat.name}</h3>
-      <p>${cat._count?.products || 0} produits</p>
+    <a href="products.html?category=${cat.slug}" class="category-card premium-category-card animate-fadeInUp" style="--category-color:${cat.color}">
+      <div class="category-card-top">
+        <span class="category-eyebrow">COLLECTION</span>
+        <span class="category-number">${String(count).padStart(2, '0')}</span>
+      </div>
+      <div class="category-accent"></div>
+      <div class="category-card-content">
+        <h3>${cat.name}</h3>
+        <p>${count} produits disponibles</p>
+      </div>
+      <span class="category-arrow" aria-hidden="true">↗</span>
     </a>
   `;
 }
