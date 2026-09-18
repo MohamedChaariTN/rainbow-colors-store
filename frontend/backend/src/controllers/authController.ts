@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import crypto from 'crypto';
-import nodemailer = require('nodemailer');
+const nodemailer = require('nodemailer');
 import { prisma } from '../config/prisma';
 
 const registerSchema = z.object({
