@@ -342,7 +342,49 @@
 
       animation: adminFade 0.25s ease;
     }
+/* =========================
+   PRODUCT MODAL
+========================= */
 
+.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+
+  display: none !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 24px !important;
+
+  background: rgba(15, 23, 42, 0.65) !important;
+
+  z-index: 9999 !important;
+}
+
+.modal-overlay.open {
+  display: flex !important;
+}
+
+.modal {
+  background: #ffffff !important;
+
+  width: 100% !important;
+  max-width: 680px !important;
+
+  max-height: 92vh !important;
+
+  overflow-y: auto !important;
+
+  padding: 32px !important;
+
+  border-radius: 20px !important;
+
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.28) !important;
+
+  position: relative !important;
+}
     @keyframes adminFade {
       from {
         opacity: 0;
