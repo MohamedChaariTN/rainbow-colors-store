@@ -1550,3 +1550,4 @@ document.addEventListener(
     startAutoRefresh();
   }
 );
+Update admin.js
