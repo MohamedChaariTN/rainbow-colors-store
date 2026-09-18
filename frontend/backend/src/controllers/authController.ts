@@ -102,10 +102,10 @@ export const me = async (req: any, res: Response) => {
 
 export const updateProfile = async (req: any, res: Response) => {
   try {
-    const { firstName, lastName, phone, address, city } = req.body;
+    const { firstName, lastName, phone, address, city, profileImage } = req.body;
     const user = await prisma.user.update({
       where: { id: req.user.id },
-      data: { firstName, lastName, phone, address, city }
+      data: { firstName, lastName, phone, address, city, profileImage }
     });
     res.json({ user });
   } catch (err: any) {
