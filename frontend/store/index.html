@@ -149,6 +149,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       <form onsubmit="handleLogin(event)">
         <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="votre@email.com" required></div>
         <div class="form-group"><label>Mot de passe</label><input type="password" id="loginPassword" placeholder="••••••••" required></div>
+        <div style="text-align:right;margin-top:-8px;margin-bottom:14px">
+          <a href="https://wa.me/21629253908?text=Bonjour%20Rainbow%20Colors%2C%20j%27ai%20oublié%20mon%20mot%20de%20passe.%20Merci%20de%20m%27aider%20à%20le%20réinitialiser." target="_blank" rel="noopener" style="font-size:13px;color:var(--rc-blue);font-weight:600">Mot de passe oublié ?</a>
+        </div>
         <button type="submit" class="btn btn-primary">Se connecter</button>
       </form>
       <div class="switch">Pas encore de compte ? <a onclick="openAuthModal('register')">Créer un compte</a></div>
