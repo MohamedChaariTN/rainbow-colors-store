@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import crypto from 'crypto';
+import { Resend } from 'resend';
 import { prisma } from '../config/prisma';
 
 const registerSchema = z.object({
@@ -10,6 +12,7 @@ const registerSchema = z.object({
   firstName: z.string().min(2),
   lastName: z.string().min(2),
   phone: z.string().optional(),
+  profileImage: z.string().max(2800000).optional(),
 });
 
 const loginSchema = z.object({
@@ -24,15 +27,56 @@ export const register = async (req: Request, res: Response) => {
     if (existing) return res.status(400).json({ error: 'Email already registered' });
 
     const hashed = await bcrypt.hash(data.password, 12);
+    const code = crypto.randomInt(100000, 1000000).toString();
     const user = await prisma.user.create({
-      data: { ...data, password: hashed }
+      data: { ...data, password: hashed, verificationCode: code, verificationExpiresAt: new Date(Date.now() + 10 * 60 * 1000), emailVerified: false }
     });
-
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
-    res.json({ token, user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role } });
+    await sendVerificationEmail(user.email, user.firstName, code);
+    res.json({ verificationRequired: true, email: user.email });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
+};
+
+
+async function sendVerificationEmail(email: string, firstName: string, code: string) {
+  if (!process.env.RESEND_API_KEY) throw new Error('Le service email n’est pas configuré.');
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const result = await resend.emails.send({
+    from: 'Rainbow Colors <onboarding@resend.dev>',
+    to: email,
+    subject: 'Votre code de vérification — Rainbow Colors',
+    html: '<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;color:#172033"><div style="padding:24px;background:#101a33;color:#fff;border-radius:14px 14px 0 0;font-size:26px;font-weight:900">Rainbow <span style="color:#ffd400">Colors</span></div><div style="padding:30px;background:#f8fafc"><h2>Vérification de votre email</h2><p>Bonjour ' + firstName.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + ',</p><p>Voici votre code de vérification :</p><div style="font-size:36px;font-weight:900;letter-spacing:8px;text-align:center;background:#fff;border:1px solid #dbe3ef;border-radius:14px;padding:18px;margin:24px 0">' + code + '</div><p>Ce code est valable pendant 10 minutes.</p><p>Si vous n’avez pas demandé cette inscription, ignorez cet email.</p></div></div>'
+  });
+  if (result.error) throw new Error(result.error.message || 'Impossible d’envoyer le code de vérification.');
+}
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !/^\d{6}$/.test(String(code || ''))) return res.status(400).json({ error: 'Code de vérification invalide.' });
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return res.status(404).json({ error: 'Compte introuvable.' });
+    if (user.emailVerified) return res.status(400).json({ error: 'Email déjà vérifié.' });
+    if (!user.verificationCode || !user.verificationExpiresAt || user.verificationExpiresAt.getTime() < Date.now()) return res.status(400).json({ error: 'Le code a expiré. Demandez un nouveau code.' });
+    if (user.verificationCode !== String(code)) return res.status(400).json({ error: 'Code de vérification incorrect.' });
+    const updated = await prisma.user.update({ where: { id: user.id }, data: { emailVerified: true, verificationCode: null, verificationExpiresAt: null } });
+    const token = jwt.sign({ userId: updated.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+    res.json({ token, user: { id: updated.id, email: updated.email, firstName: updated.firstName, lastName: updated.lastName, role: updated.role, profileImage: updated.profileImage } });
+  } catch (err: any) { res.status(400).json({ error: err.message }); }
+};
+
+export const resendVerification = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return res.status(404).json({ error: 'Compte introuvable.' });
+    if (user.emailVerified) return res.status(400).json({ error: 'Email déjà vérifié.' });
+    const code = crypto.randomInt(100000, 1000000).toString();
+    await prisma.user.update({ where: { id: user.id }, data: { verificationCode: code, verificationExpiresAt: new Date(Date.now() + 10 * 60 * 1000) } });
+    await sendVerificationEmail(user.email, user.firstName, code);
+    res.json({ success: true });
+  } catch (err: any) { res.status(400).json({ error: err.message }); }
 };
 
 export const login = async (req: Request, res: Response) => {
@@ -44,8 +88,9 @@ export const login = async (req: Request, res: Response) => {
     const valid = await bcrypt.compare(data.password, user.password);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
 
+    if (!user.emailVerified) return res.status(403).json({ error: 'Veuillez vérifier votre email avant de vous connecter.' });
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
-    res.json({ token, user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role } });
+    res.json({ token, user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role, profileImage: user.profileImage } });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
