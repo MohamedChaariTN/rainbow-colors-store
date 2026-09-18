@@ -129,7 +129,59 @@
   // API
   // ---------------------------------------------------------
 
-  async function api(url, options = {}) {
+  async function api(endpoint, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+
+    ...(authToken
+      ? {
+          Authorization: 'Bearer ' + authToken
+        }
+      : {}),
+
+    ...(options.headers || {})
+  };
+
+  const fetchOptions = {
+    ...options,
+    headers
+  };
+
+  if (
+    options.body &&
+    typeof options.body === 'object' &&
+    !(options.body instanceof FormData)
+  ) {
+    fetchOptions.body = JSON.stringify(options.body);
+  }
+
+  const res = await fetch(
+    API_URL + endpoint,
+    fetchOptions
+  );
+
+  const text = await res.text();
+
+  let data = {};
+
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (error) {
+    data = {
+      error: text || 'Réponse invalide du serveur'
+    };
+  }
+
+  if (!res.ok) {
+    throw new Error(
+      data.error ||
+      data.message ||
+      `HTTP ${res.status}`
+    );
+  }
+
+  return data;
+}
     const headers = Object.assign(
       {
         "Content-Type": "application/json"
