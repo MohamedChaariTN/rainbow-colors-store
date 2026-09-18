@@ -1,4 +1,4 @@
-```javascript
+
 const API_URL = window.location.origin + '/api';
 
 let authToken = localStorage.getItem('rc_token');
