@@ -900,3 +900,103 @@ input, textarea, select { font-family: inherit; }
   .hero-trust{display:none}
   .paint-one{left:-160px}.paint-two{right:-180px}
 }
+
+
+
+/* ===== PREMIUM CATEGORY COLLECTION ===== */
+.section:has(#homeCategories){
+  background:linear-gradient(180deg,#f7f9fc 0%,#ffffff 100%);
+}
+.section:has(#homeCategories) .section-header{
+  max-width:900px;margin-left:auto;margin-right:auto;
+}
+.section:has(#homeCategories) .section-header .subtitle{
+  color:#9a6700;background:rgba(234,179,8,.10);border:1px solid rgba(234,179,8,.20);
+  letter-spacing:2.5px;font-size:10px;font-weight:800;padding:8px 13px;border-radius:999px;
+}
+.section:has(#homeCategories) .section-header h2{
+  color:#0b1730;font-size:clamp(34px,4vw,52px);letter-spacing:-1.8px;margin-top:16px;
+}
+.section:has(#homeCategories) .section-header h2 span{
+  background:linear-gradient(90deg,#b77900,#eab308,#8b5cf6,#06b6d4);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.section:has(#homeCategories) .section-header p{
+  color:#718096;font-size:15px;margin-top:12px;
+}
+#homeCategories.categories-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:18px;margin-top:42px;
+}
+.premium-category-card{
+  position:relative;display:flex;flex-direction:column;min-height:245px;
+  padding:25px 24px 23px!important;overflow:hidden;
+  background:rgba(255,255,255,.92)!important;
+  border:1px solid #e6ebf2!important;border-top:1px solid #e6ebf2!important;
+  border-radius:18px!important;
+  box-shadow:0 8px 30px rgba(15,23,42,.055)!important;
+  transition:transform .4s cubic-bezier(.2,.7,.2,1),box-shadow .4s,border-color .4s;
+}
+.premium-category-card::before{
+  content:'';position:absolute;inset:0 0 auto 0;height:3px;
+  background:var(--category-color);opacity:.9;
+}
+.premium-category-card::after{
+  content:'';position:absolute;width:150px;height:150px;right:-75px;bottom:-85px;
+  border-radius:50%;background:var(--category-color);opacity:.055;
+  transition:transform .5s,opacity .5s;
+}
+.premium-category-card:hover{
+  transform:translateY(-8px);border-color:rgba(15,23,42,.12)!important;
+  box-shadow:0 20px 50px rgba(15,23,42,.12)!important;
+}
+.premium-category-card:hover::after{transform:scale(1.5);opacity:.10}
+.category-card-top{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.category-eyebrow{
+  font-size:9px;line-height:1;font-weight:800;letter-spacing:2px;color:#94a3b8;
+}
+.category-number{
+  font-size:11px;font-weight:800;letter-spacing:1px;color:var(--category-color);
+  background:color-mix(in srgb,var(--category-color) 9%,white);
+  padding:7px 9px;border-radius:8px;
+}
+.category-accent{
+  width:46px;height:4px;margin-top:34px;border-radius:999px;background:var(--category-color);
+  box-shadow:0 0 22px color-mix(in srgb,var(--category-color) 40%,transparent);
+}
+.category-card-content{margin-top:auto;padding-right:18px}
+.premium-category-card h3{
+  color:#14213d!important;font-size:19px!important;line-height:1.25!important;
+  font-weight:750!important;letter-spacing:-.35px!important;margin:0 0 8px!important;
+}
+.premium-category-card p{
+  color:#8a96a8!important;font-size:12px!important;margin:0!important;
+}
+.category-arrow{
+  position:absolute;right:21px;bottom:21px;width:34px;height:34px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:#14213d;border:1px solid #e2e8f0;background:#fff;
+  font-size:17px;transition:all .35s;
+}
+.premium-category-card:hover .category-arrow{
+  color:#fff;border-color:var(--category-color);background:var(--category-color);
+  transform:translate(2px,-2px);
+}
+/* Remove the old playful icon treatment from the premium collection cards */
+.premium-category-card .category-icon{display:none}
+
+@media(max-width:1100px){
+  #homeCategories.categories-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+  #homeCategories.categories-grid{grid-template-columns:1fr 1fr;gap:12px;margin-top:30px}
+  .premium-category-card{min-height:205px;padding:20px 18px 19px!important;border-radius:15px!important}
+  .premium-category-card h3{font-size:16px!important}
+  .category-accent{margin-top:26px;width:38px;height:3px}
+  .category-arrow{width:30px;height:30px;right:15px;bottom:15px}
+}
+@media(max-width:420px){
+  #homeCategories.categories-grid{grid-template-columns:1fr}
+}
