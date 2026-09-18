@@ -570,126 +570,243 @@ async function loadDashboard() {
 // =========================
 let editingProductId = null;
 
-async function loadAdminProducts() {
+let adminProductsCache = [];
+let adminProductsPage = 1;
+let adminProductsSearch = '';
+const ADMIN_PRODUCTS_PER_PAGE = 12;
+
+async function loadAdminProducts(force = false) {
+  const tbody = document.querySelector('#productsTable tbody');
+
+  if (!tbody) {
+    return;
+  }
+
+  if (!force && adminProductsCache.length) {
+    renderAdminProductsPage();
+    return;
+  }
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="7" style="text-align:center;padding:45px;">
+        <div class="admin-loading-inline">
+          <span class="admin-loading-spinner"></span>
+          <span>Chargement du catalogue…</span>
+        </div>
+      </td>
+    </tr>
+  `;
+
   try {
-    const data =
-      await api('/admin/products/all');
+    const data = await api('/admin/products/all');
 
-    const tbody =
-      document.querySelector(
-        '#productsTable tbody'
-      );
+    adminProductsCache = Array.isArray(data) ? data : [];
+    adminProductsPage = 1;
 
-    if (!tbody) {
-      return;
-    }
-
-    tbody.innerHTML =
-      data
-        .map(
-          p => `
-            <tr>
-
-              <td>
-                <img
-                  src="${escapeHtml(
-                    p.image || ''
-                  )}"
-                  alt="${escapeHtml(
-                    p.name
-                  )}"
-                  onerror="
-                    this.src=
-                    '../store/images/logo ranbow colors.jpeg'
-                  "
-                >
-              </td>
-
-              <td>
-                <strong>
-                  ${escapeHtml(p.name)}
-                </strong>
-              </td>
-
-              <td>
-                ${escapeHtml(
-                  p.category?.name || ''
-                )}
-              </td>
-
-              <td>
-                ${Number(
-                  p.price || 0
-                ).toFixed(2)} TND
-              </td>
-
-              <td>
-                ${p.stock}
-              </td>
-
-              <td>
-
-                <span class="
-                  badge
-                  badge-${
-                    p.stockStatus === 'IN_STOCK'
-                      ? 'new'
-                      : p.stockStatus === 'LOW_STOCK'
-                      ? 'sale'
-                      : 'eco'
-                  }
-                ">
-                  ${escapeHtml(
-                    String(
-                      p.stockStatus || ''
-                    ).replace(
-                      '_',
-                      ' '
-                    )
-                  )}
-                </span>
-
-              </td>
-
-              <td>
-
-                <button
-                  class="btn-sm btn-edit"
-                  onclick='editProduct(
-                    ${JSON.stringify(p)
-                      .replace(
-                        /'/g,
-                        '&#39;'
-                      )}
-                  )'
-                >
-                  ✏️
-                </button>
-
-                <button
-                  class="btn-sm btn-delete"
-                  onclick="
-                    deleteProduct(${p.id})
-                  "
-                >
-                  🗑️
-                </button>
-
-              </td>
-
-            </tr>
-          `
-        )
-        .join('');
+    renderAdminProductsPage();
 
   } catch (error) {
-    console.error(
-      'Products error:',
-      error
-    );
+    console.error('Products error:', error);
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center;padding:40px;">
+          <div style="color:#dc2626;font-weight:700;">
+            Impossible de charger les produits.
+          </div>
+          <button
+            class="btn-sm btn-edit"
+            style="margin-top:12px;"
+            onclick="loadAdminProducts(true)"
+          >
+            Réessayer
+          </button>
+        </td>
+      </tr>
+    `;
   }
 }
 
+function getFilteredAdminProducts() {
+  const query = adminProductsSearch.trim().toLowerCase();
+
+  if (!query) {
+    return adminProductsCache;
+  }
+
+  return adminProductsCache.filter(product => {
+    const name = String(product.name || '').toLowerCase();
+    const category = String(product.category?.name || '').toLowerCase();
+    const slug = String(product.slug || '').toLowerCase();
+
+    return (
+      name.includes(query) ||
+      category.includes(query) ||
+      slug.includes(query)
+    );
+  });
+}
+
+function renderAdminProductsPage() {
+  const tbody = document.querySelector('#productsTable tbody');
+
+  if (!tbody) {
+    return;
+  }
+
+  const filtered = getFilteredAdminProducts();
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filtered.length / ADMIN_PRODUCTS_PER_PAGE)
+  );
+
+  if (adminProductsPage > totalPages) {
+    adminProductsPage = totalPages;
+  }
+
+  const startIndex =
+    (adminProductsPage - 1) * ADMIN_PRODUCTS_PER_PAGE;
+
+  const pageProducts =
+    filtered.slice(
+      startIndex,
+      startIndex + ADMIN_PRODUCTS_PER_PAGE
+    );
+
+  const countEl =
+    document.getElementById('adminProductsCount');
+
+  if (countEl) {
+    countEl.textContent =
+      adminProductsSearch.trim()
+        ? `${filtered.length} / ${adminProductsCache.length} produits`
+        : `${adminProductsCache.length} produits`;
+  }
+
+  const pageInfo =
+    document.getElementById('productsPageInfo');
+
+  if (pageInfo) {
+    pageInfo.textContent =
+      `${adminProductsPage} / ${totalPages}`;
+  }
+
+  const prev =
+    document.getElementById('productsPrev');
+
+  const next =
+    document.getElementById('productsNext');
+
+  if (prev) {
+    prev.disabled = adminProductsPage <= 1;
+  }
+
+  if (next) {
+    next.disabled = adminProductsPage >= totalPages;
+  }
+
+  if (!pageProducts.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center;padding:45px;">
+          <div style="font-size:28px;margin-bottom:8px;">⌕</div>
+          <strong>Aucun produit trouvé</strong>
+          <div style="margin-top:5px;color:var(--admin-muted);">
+            Modifiez votre recherche puis réessayez.
+          </div>
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  tbody.innerHTML = pageProducts
+    .map(p => `
+      <tr>
+        <td>
+          <img
+            src="${escapeHtml(p.image || '')}"
+            alt="${escapeHtml(p.name)}"
+            loading="lazy"
+            decoding="async"
+            onerror="this.src='../store/images/logo ranbow colors.jpeg'"
+          >
+        </td>
+
+        <td>
+          <strong>${escapeHtml(p.name)}</strong>
+        </td>
+
+        <td>
+          ${escapeHtml(p.category?.name || '')}
+        </td>
+
+        <td>
+          <strong>${Number(p.price || 0).toFixed(2)} TND</strong>
+        </td>
+
+        <td>
+          ${p.stock}
+        </td>
+
+        <td>
+          <span class="badge ${
+            p.stockStatus === 'IN_STOCK'
+              ? 'badge-new'
+              : p.stockStatus === 'LOW_STOCK'
+              ? 'badge-sale'
+              : 'badge-eco'
+          }">
+            ${escapeHtml(
+              String(p.stockStatus || '').replace('_', ' ')
+            )}
+          </span>
+        </td>
+
+        <td style="white-space:nowrap;">
+          <button
+            class="btn-sm btn-edit"
+            onclick='editProduct(${JSON.stringify(p).replace(/'/g, '&#39;')})'
+            title="Modifier"
+          >
+            ✏️
+          </button>
+
+          <button
+            class="btn-sm btn-delete"
+            onclick="deleteProduct(${p.id})"
+            title="Supprimer"
+          >
+            🗑️
+          </button>
+        </td>
+      </tr>
+    `)
+    .join('');
+}
+
+function filterAdminProducts(value) {
+  adminProductsSearch = String(value || '');
+  adminProductsPage = 1;
+  renderAdminProductsPage();
+}
+
+function changeAdminProductsPage(direction) {
+  const filtered = getFilteredAdminProducts();
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filtered.length / ADMIN_PRODUCTS_PER_PAGE)
+  );
+
+  adminProductsPage = Math.min(
+    totalPages,
+    Math.max(1, adminProductsPage + direction)
+  );
+
+  renderAdminProductsPage();
+}
 async function loadCategoriesSelect() {
   try {
     const cats =
@@ -997,7 +1114,7 @@ async function saveProduct(event) {
 
     closeProductModal();
 
-    await loadAdminProducts();
+    await loadAdminProducts(true);
 
     await loadDashboard();
 
