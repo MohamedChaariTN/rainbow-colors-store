@@ -169,6 +169,28 @@ async function resendVerificationCode() {
   catch(err){ showToast(err.message,'error'); }
 }
 
+function ensureAuthVerificationUI() {
+  const registerForm = document.getElementById('registerForm');
+  if (registerForm && !document.getElementById('regProfileImage')) {
+    const passwordGroup = document.getElementById('regPassword')?.closest('.form-group');
+    if (passwordGroup) {
+      const group = document.createElement('div');
+      group.className = 'form-group';
+      group.innerHTML = '<label>Photo de profil <span style="color:var(--rc-gray-400)">(optionnelle)</span></label><input type="file" id="regProfileImage" accept="image/jpeg,image/png,image/webp">';
+      passwordGroup.insertAdjacentElement('afterend', group);
+    }
+  }
+  if (!document.getElementById('verificationForm') && document.getElementById('authModal')) {
+    const modal = document.querySelector('#authModal .modal');
+    const form = document.createElement('div');
+    form.id = 'verificationForm';
+    form.style.display = 'none';
+    form.innerHTML = '<h2>Vérifiez votre email</h2><p>Nous avons envoyé un code à <strong id="verificationEmail"></strong></p><form onsubmit="handleVerifyEmail(event)"><div class="form-group"><label>Code de vérification</label><input type="text" id="verificationCode" inputmode="numeric" maxlength="6" placeholder="000000" required></div><button type="submit" class="btn btn-primary">Vérifier mon email</button></form><button type="button" class="btn btn-secondary" style="margin-top:10px;width:100%" onclick="resendVerificationCode()">Renvoyer le code</button>';
+    const closeBtn = modal?.querySelector('.close-btn');
+    if (modal) closeBtn ? closeBtn.insertAdjacentElement('afterend', form) : modal.appendChild(form);
+  }
+}
+
 // ===== CART =====
 async function addToCart(productId, qty = 1) {
   if (!authToken) { openAuthModal(); return; }
@@ -297,6 +319,7 @@ function showToast(message, type = 'success') {
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
+  ensureAuthVerificationUI();
   checkAuth();
   loadCart();
 });
