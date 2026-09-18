@@ -1226,6 +1226,48 @@
 
       </div>
 
+      <div class="products-toolbar">
+        <div class="products-toolbar-info">
+          <span class="products-toolbar-label">Catalogue</span>
+          <strong id="adminProductsCount">0 produits</strong>
+          <span class="products-toolbar-muted">• affichage rapide</span>
+        </div>
+
+        <div class="products-toolbar-actions">
+          <div class="products-search">
+            <span aria-hidden="true">⌕</span>
+            <input
+              id="adminProductsSearch"
+              type="search"
+              placeholder="Rechercher un produit…"
+              autocomplete="off"
+              oninput="filterAdminProducts(this.value)"
+            >
+          </div>
+
+          <div class="products-pagination">
+            <button
+              type="button"
+              class="products-page-btn"
+              id="productsPrev"
+              onclick="changeAdminProductsPage(-1)"
+              aria-label="Page précédente"
+            >
+              ←
+            </button>
+            <span id="productsPageInfo">1 / 1</span>
+            <button
+              type="button"
+              class="products-page-btn"
+              id="productsNext"
+              onclick="changeAdminProductsPage(1)"
+              aria-label="Page suivante"
+            >
+              →
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div
         class="admin-card"
