@@ -65,7 +65,40 @@
       font-family: inherit;
     }
 
-    /* =========================
+    .admin-message-badge:empty { display:none; }
+    .admin-message-badge {
+      min-width:20px;
+      height:20px;
+      padding:0 6px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      margin-left:auto;
+      border-radius:999px;
+      background:#dc2626;
+      color:#fff;
+      font-size:10px;
+      font-weight:900;
+    }
+    .contact-messages-list { display:grid; gap:14px; }
+    .contact-message-card {
+      background:#fff;
+      border:1px solid var(--admin-border);
+      border-radius:16px;
+      padding:20px;
+      box-shadow:var(--admin-shadow);
+    }
+    .contact-message-card.unread { border-left:4px solid var(--admin-blue); background:#fbfdff; }
+    .contact-message-head { display:flex;justify-content:space-between;gap:15px;align-items:flex-start; }
+    .contact-message-name { font-size:16px;font-weight:850; }
+    .contact-message-email { margin-top:4px;color:#64748b;font-size:12px; }
+    .contact-message-date { color:#94a3b8;font-size:11px;white-space:nowrap; }
+    .contact-message-subject { margin-top:14px;font-weight:800;color:#1556a6; }
+    .contact-message-body { margin-top:10px;padding:14px;background:#f8fafc;border-radius:10px;color:#334155;line-height:1.7;white-space:normal; }
+    .contact-message-actions { display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center; }
+    .contact-read-badge { color:#16a34a;font-size:12px;font-weight:800; }
+    @media(max-width:700px){ .contact-message-head{flex-direction:column;} .contact-message-date{white-space:normal;} }
+\n    /* =========================
        LAYOUT
     ========================= */
 
@@ -961,6 +994,13 @@
 
       <a
         href="javascript:void(0)"
+        onclick="showSection('contactMessages'); loadContactMessages(); return false;"
+      >
+        ✉️ Messages <span id="contactMessagesBadge" class="admin-message-badge"></span>
+      </a>
+
+      <a
+        href="javascript:void(0)"
         onclick="showSection('categories'); return false;"
       >
         📁 Catégories
@@ -1688,6 +1728,28 @@
 
 
     <!-- =======================
+         CONTACT MESSAGES
+    ======================== -->
+    <section id="contactMessages" class="admin-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:20px;">
+        <div>
+          <h2>Messages reçus</h2>
+          <p style="margin:5px 0 0;color:var(--admin-muted);font-size:13px;">
+            Tous les messages envoyés depuis la page Contact du site.
+          </p>
+        </div>
+        <strong id="contactMessagesCount" style="color:var(--admin-blue);">0 non lu</strong>
+      </div>
+
+      <div id="contactMessagesList" class="contact-messages-list">
+        <div class="admin-card" style="padding:40px;text-align:center;color:var(--admin-muted);">
+          Cliquez sur « Messages » pour charger votre boîte de réception.
+        </div>
+      </div>
+    </section>
+
+
+    <!-- =======================
          CATEGORIES
     ======================== -->
     <section
@@ -1720,7 +1782,7 @@
 
 
 <!-- VERSIONED JS -->
-<script src="js/admin.js?v=9"></script>\n<script src="js/invoice.js?v=2"></script>
+<script src="js/admin.js?v=10"></script>\n<script src="js/invoice.js?v=2"></script>
 
 </body>
 </html>
