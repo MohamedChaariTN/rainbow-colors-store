@@ -2604,3 +2604,63 @@ document.addEventListener(
     startAutoRefresh();
   }
 );
+
+
+async function loadContactMessages() {
+  const container = document.getElementById('contactMessagesList');
+  const count = document.getElementById('contactMessagesCount');
+  if (!container) return;
+
+  container.innerHTML = '<div style="padding:40px;text-align:center;color:#718096;">Chargement des messages...</div>';
+
+  try {
+    const messages = await api('/admin/contact-messages');
+    const unread = messages.filter(m => !m.isRead).length;
+
+    if (count) count.textContent = unread + ' non lu' + (unread > 1 ? 's' : '');
+
+    if (!messages.length) {
+      container.innerHTML = '<div style="padding:50px;text-align:center;color:#718096;">📭 Aucun message reçu.</div>';
+      return;
+    }
+
+    container.innerHTML = messages.map(m => {
+      const date = new Date(m.createdAt).toLocaleString('fr-FR');
+      return '<div class="contact-message-card ' + (!m.isRead ? 'unread' : '') + '">' +
+        '<div class="contact-message-head">' +
+          '<div><div class="contact-message-name">' + escapeHtml(m.name) + '</div>' +
+          '<div class="contact-message-email">' + escapeHtml(m.email) + (m.phone ? ' · ' + escapeHtml(m.phone) : '') + '</div></div>' +
+          '<div class="contact-message-date">' + date + '</div>' +
+        '</div>' +
+        '<div class="contact-message-subject">' + escapeHtml(m.subject) + '</div>' +
+        '<div class="contact-message-body">' + escapeHtml(m.message).replace(/\n/g, '<br>') + '</div>' +
+        '<div class="contact-message-actions">' +
+          (!m.isRead ? '<button type="button" class="btn-sm btn-edit" onclick="markContactMessageRead(' + m.id + ')">✓ Marquer comme lu</button>' : '<span class="contact-read-badge">✓ Lu</span>') +
+          '<button type="button" class="btn-sm btn-delete" onclick="deleteContactMessage(' + m.id + ')">🗑 Supprimer</button>' +
+          '<a class="btn-sm btn-edit" href="mailto:' + encodeURIComponent(m.email) + '?subject=' + encodeURIComponent('Re: ' + m.subject) + '">✉ Répondre</a>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch (error) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:#dc2626;">Impossible de charger les messages.<br><button type="button" class="btn-sm btn-edit" onclick="loadContactMessages()" style="margin-top:12px;">Réessayer</button></div>';
+  }
+}
+
+async function markContactMessageRead(id) {
+  try {
+    await api('/admin/contact-messages/' + id + '/read', { method: 'PATCH' });
+    loadContactMessages();
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function deleteContactMessage(id) {
+  if (!confirm('Supprimer ce message ?')) return;
+  try {
+    await api('/admin/contact-messages/' + id, { method: 'DELETE' });
+    loadContactMessages();
+  } catch (error) {
+    alert(error.message);
+  }
+}
