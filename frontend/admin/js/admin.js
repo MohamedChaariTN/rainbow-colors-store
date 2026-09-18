@@ -1350,6 +1350,8 @@ async function loadAdminOrders(
 
               <td>
 
+                <button class="btn-sm btn-edit" onclick="viewAdminOrder(${o.id})" title="Voir les détails de la commande">👁️</button>
+
                 <select
                   onchange="
                     updateOrderStatus(
@@ -1460,6 +1462,22 @@ async function loadAdminOrders(
 // =========================
 // UPDATE ORDER STATUS
 // =========================
+async function viewAdminOrder(id) {
+  try {
+    const o = await api('/admin/orders/' + id);
+    const old = document.getElementById('adminOrderDetailsModal');
+    if (old) old.remove();
+    const paymentLabel = o.paymentMethod === 'cod' ? '💵 Paiement à la livraison' : o.paymentMethod === 'card' ? '💳 Carte bancaire' : '📮 E-Dinar';
+    const customer = [o.user?.firstName, o.user?.lastName].filter(Boolean).join(' ') || 'Client';
+    const items = (o.items || []).map(item => '<div class="admin-order-detail-item"><div><strong>' + escapeHtml(item.name) + '</strong><small>Quantité : ' + Number(item.quantity || 0) + '</small></div><strong>' + (Number(item.price || 0) * Number(item.quantity || 0)).toFixed(2) + ' TND</strong></div>').join('');
+    const modal = document.createElement('div');
+    modal.id = 'adminOrderDetailsModal';
+    modal.className = 'customer-details-modal';
+    modal.innerHTML = '<div class="customer-details-backdrop" onclick="this.parentElement.remove()"></div><div class="customer-details-panel"><button class="customer-details-close" onclick="document.getElementById(\'adminOrderDetailsModal\').remove()">×</button><div class="customer-details-header"><div><span class="customer-details-kicker">DÉTAILS DE LA COMMANDE</span><h2>' + escapeHtml(o.orderNumber || '') + '</h2><p>' + escapeHtml(customer) + ' · ' + escapeHtml(o.user?.email || '') + '</p></div><div class="customer-details-avatar">🧾</div></div><div class="customer-details-grid"><div><span>Date</span><strong>' + new Date(o.createdAt).toLocaleString('fr-FR') + '</strong></div><div><span>Total</span><strong>' + Number(o.total || 0).toFixed(2) + ' TND</strong></div><div><span>Paiement</span><strong>' + paymentLabel + '</strong></div><div><span>Statut</span><strong>' + escapeHtml(o.status || '') + '</strong></div><div><span>Adresse</span><strong>' + escapeHtml([o.address,o.city,o.governorate,o.postalCode].filter(Boolean).join(', ') || '—') + '</strong></div><div><span>Téléphone</span><strong>' + escapeHtml(o.user?.phone || '—') + '</strong></div></div><div class="customer-history-title"><h3>Produits commandés</h3><span>' + (o.items || []).length + ' article(s)</span></div><div class="customer-history-list">' + (items || '<div class="customer-empty-history">Aucun produit.</div>') + '</div><div class="admin-order-totals"><div><span>Sous-total</span><strong>' + Number(o.subtotal || 0).toFixed(2) + ' TND</strong></div><div><span>Livraison</span><strong>' + Number(o.shipping || 0).toFixed(2) + ' TND</strong></div><div><span>TVA</span><strong>' + Number(o.tax || 0).toFixed(2) + ' TND</strong></div><div class="grand"><span>Total</span><strong>' + Number(o.total || 0).toFixed(2) + ' TND</strong></div></div></div>';
+    document.body.appendChild(modal);
+  } catch (error) { alert(error.message); }
+}
+
 async function updateOrderStatus(
   id,
   status,
