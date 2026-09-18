@@ -28,57 +28,33 @@ export const register = async (req: Request, res: Response) => {
       if (existing.emailVerified) {
         return res.status(400).json({ error: 'Cet email est déjà utilisé. Connectez-vous à votre compte.' });
       }
-
-      // Allow a pending/unverified registration to be restarted with the new form data.
-      const hashed = await bcrypt.hash(data.password, 12);
-      const code = crypto.randomInt(100000, 1000000).toString();
-      const updated = await prisma.user.update({
-        where: { id: existing.id },
-        data: {
-          email: data.email,
-          password: hashed,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          phone: data.phone,
-          profileImage: data.profileImage,
-          verificationCode: code,
-          verificationExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
-          emailVerified: false
-        }
-      });
-
-      try {
-        await sendVerificationEmail(updated.email, updated.firstName, code);
-      } catch (emailError: any) {
-        const detail = emailError?.message ? ' ' + emailError.message : '';
-        return res.status(503).json({ error: 'Impossible d’envoyer le code de vérification pour le moment.' + detail });
-      }
-
-      return res.json({ verificationRequired: true, email: updated.email });
+      await prisma.user.delete({ where: { id: existing.id } });
     }
 
     const hashed = await bcrypt.hash(data.password, 12);
-    const code = crypto.randomInt(100000, 1000000).toString();
     const user = await prisma.user.create({
       data: {
         ...data,
         password: hashed,
-        verificationCode: code,
-        verificationExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
-        emailVerified: false
+        verificationCode: null,
+        verificationExpiresAt: null,
+        emailVerified: true
       }
     });
 
-    try {
-      await sendVerificationEmail(user.email, user.firstName, code);
-    } catch (emailError: any) {
-      // Do not leave a blocked, unverified account when the email provider fails.
-      await prisma.user.delete({ where: { id: user.id } }).catch(() => {});
-      const detail = emailError?.message ? ' ' + emailError.message : '';
-      return res.status(503).json({ error: 'Impossible d’envoyer le code de vérification pour le moment.' + detail });
-    }
-
-    res.json({ verificationRequired: true, email: user.email });
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+    res.json({
+      verificationRequired: false,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        profileImage: user.profileImage
+      }
+    });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
