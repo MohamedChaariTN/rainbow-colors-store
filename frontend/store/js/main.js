@@ -96,18 +96,52 @@ function openAuthModal(mode = 'login') {
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
   const verificationForm = document.getElementById('verificationForm');
+  const forgotPasswordForm = document.getElementById('forgotPasswordForm');
   if (mode === 'login') {
-    loginForm.style.display = 'block'; registerForm.style.display = 'none'; verificationForm.style.display = 'none';
+    loginForm.style.display = 'block'; registerForm.style.display = 'none'; verificationForm.style.display = 'none'; forgotPasswordForm.style.display = 'none';
   } else if (mode === 'register') {
-    loginForm.style.display = 'none'; registerForm.style.display = 'block'; verificationForm.style.display = 'none';
+    loginForm.style.display = 'none'; registerForm.style.display = 'block'; verificationForm.style.display = 'none'; forgotPasswordForm.style.display = 'none';
   } else if (mode === 'verify') {
-    loginForm.style.display = 'none'; registerForm.style.display = 'none'; verificationForm.style.display = 'block';
+    loginForm.style.display = 'none'; registerForm.style.display = 'none'; verificationForm.style.display = 'block'; forgotPasswordForm.style.display = 'none';
+  } else if (mode === 'forgot') {
+    loginForm.style.display = 'none'; registerForm.style.display = 'none'; verificationForm.style.display = 'none'; forgotPasswordForm.style.display = 'block';
   }
   overlay.classList.add('open');
 }
 
 function closeAuthModal() {
   document.getElementById('authModal').classList.remove('open');
+}
+
+async function handleForgotPasswordRequest(e) {
+  e.preventDefault();
+  try {
+    const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+    await api('/auth/forgot-password', { method: 'POST', body: { email } });
+    document.getElementById('forgotRequestStep').style.display = 'none';
+    document.getElementById('forgotResetStep').style.display = 'block';
+    showToast('Si ce compte existe, un code a été envoyé à votre email !');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function handleResetPassword(e) {
+  e.preventDefault();
+  try {
+    const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
+    const code = document.getElementById('resetCode').value.trim();
+    const password = document.getElementById('resetPassword').value;
+    const data = await api('/auth/reset-password', {
+      method: 'POST',
+      body: { email, code, password }
+    });
+    setAuth(data.token, data.user);
+    closeAuthModal();
+    showToast('Mot de passe modifié avec succès !');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 }
 
 async function handleLogin(e) {
@@ -186,6 +220,16 @@ function ensureAuthVerificationUI() {
       passwordGroup.insertAdjacentElement('afterend', group);
     }
   }
+  if (!document.getElementById('forgotPasswordForm') && document.getElementById('authModal')) {
+    const modal = document.querySelector('#authModal .modal');
+    const form = document.createElement('div');
+    form.id = 'forgotPasswordForm';
+    form.style.display = 'none';
+    form.innerHTML = '<div id="forgotRequestStep"><h2>Mot de passe oublié ?</h2><p>Entrez votre email. Nous vous enverrons un code pour choisir un nouveau mot de passe.</p><form onsubmit="handleForgotPasswordRequest(event)"><div class="form-group"><label>Email</label><input type="email" id="forgotEmail" placeholder="votre@email.com" required></div><button type="submit" class="btn btn-primary">Envoyer le code</button></form></div><div id="forgotResetStep" style="display:none"><h2>Nouveau mot de passe</h2><p>Entrez le code reçu par email puis votre nouveau mot de passe.</p><form onsubmit="handleResetPassword(event)"><div class="form-group"><label>Code</label><input type="text" id="resetCode" inputmode="numeric" maxlength="6" placeholder="000000" required></div><div class="form-group"><label>Nouveau mot de passe</label><input type="password" id="resetPassword" minlength="6" placeholder="Au moins 6 caractères" required></div><button type="submit" class="btn btn-primary">Changer mon mot de passe</button></form></div><div class="switch" style="margin-top:16px"><a href="#" onclick="openAuthModal('login');return false">Retour à la connexion</a></div>';
+    const closeBtn = modal?.querySelector('.close-btn');
+    if (modal) closeBtn ? closeBtn.insertAdjacentElement('afterend', form) : modal.appendChild(form);
+  }
+
   if (!document.getElementById('verificationForm') && document.getElementById('authModal')) {
     const modal = document.querySelector('#authModal .modal');
     const form = document.createElement('div');
