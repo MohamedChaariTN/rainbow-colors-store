@@ -1,118 +1,758 @@
-:root {
-  --primary: #1a3a7a; --primary-light: #2563eb; --success: #16a34a;
-  --warning: #d97706; --danger: #dc2626; --gray-50: #f8fafc;
-  --gray-100: #f1f5f9; --gray-200: #e2e8f0; --gray-300: #cbd5e1;
-  --gray-400: #94a3b8; --gray-500: #64748b; --gray-600: #475569;
-  --gray-700: #334155; --gray-800: #1e293b; --gray-900: #0f172a;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--gray-50); color: var(--gray-800); }
+```html
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | Rainbow Colors</title>
+<link rel="stylesheet" href="css/admin.css">
+</head>
 
-.admin-layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
-.admin-sidebar {
-  background: var(--gray-900); color: white; padding: 20px;
-  display: flex; flex-direction: column; position: fixed; width: 260px; height: 100vh;
-  overflow-y: auto;
-}
-.admin-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--gray-700); }
-.admin-brand img { height: 40px; border-radius: 8px; }
-.admin-brand span { font-size: 18px; font-weight: 700; }
-.admin-brand strong { color: #fbbf24; }
-.admin-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-.admin-nav a {
-  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
-  border-radius: 10px; color: var(--gray-400); font-size: 14px; font-weight: 500;
-  transition: all 0.2s; cursor: pointer; text-decoration: none;
-}
-.admin-nav a:hover, .admin-nav a.active { background: var(--primary); color: white; }
-.admin-sidebar-bottom { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--gray-700); display: flex; flex-direction: column; gap: 4px; }
-.admin-sidebar-bottom a { color: var(--gray-400); padding: 10px 16px; border-radius: 8px; font-size: 14px; text-decoration: none; }
-.admin-sidebar-bottom a:hover { color: white; background: var(--gray-800); }
+<body>
 
-.admin-main { margin-left: 260px; padding: 24px 32px; min-height: 100vh; }
-.admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.admin-header h1 { font-size: 24px; font-weight: 800; }
-.admin-user { display: flex; align-items: center; gap: 12px; }
-.admin-avatar {
-  width: 40px; height: 40px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), #7c3aed);
-  display: flex; align-items: center; justify-content: center;
-  color: white; font-weight: 700;
-}
+<div class="admin-layout">
 
-.admin-section { display: none; }
-.admin-section.active { display: block; animation: fadeIn 0.3s; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
 
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 24px; }
-.stat-card {
-  background: white; border-radius: 16px; padding: 24px;
-  display: flex; align-items: center; gap: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-.stat-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-.stat-value { font-size: 28px; font-weight: 800; color: var(--gray-900); }
-.stat-label { font-size: 13px; color: var(--gray-500); }
+    <div class="admin-brand">
+      <img
+        src="../store/images/logo ranbow colors.jpeg"
+        alt="Logo"
+      >
+      <span>
+        Rainbow <strong>Admin</strong>
+      </span>
+    </div>
 
-.admin-card {
-  background: white; border-radius: 16px; padding: 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-.admin-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--gray-700); }
+    <nav class="admin-nav">
 
-.admin-table { width: 100%; border-collapse: collapse; }
-.admin-table th { text-align: left; padding: 12px; font-size: 12px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--gray-200); }
-.admin-table td { padding: 14px 12px; border-bottom: 1px solid var(--gray-100); font-size: 14px; vertical-align: middle; }
-.admin-table tr:hover { background: var(--gray-50); }
-.admin-table img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; }
+      <a
+        href="javascript:void(0)"
+        class="active"
+        onclick="showSection('dashboard'); return false;"
+      >
+        📊 Tableau de bord
+      </a>
 
-.btn-sm { padding: 6px 14px; font-size: 13px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; }
-.btn-edit { background: #dbeafe; color: var(--primary-light); }
-.btn-delete { background: #fee2e2; color: var(--danger); }
-.btn-primary { background: var(--primary); color: white; padding: 12px 24px; border-radius: 10px; font-weight: 600; border: none; cursor: pointer; }
-.btn-primary:hover { background: var(--primary-light); }
+      <a
+        href="javascript:void(0)"
+        onclick="showSection('products'); return false;"
+      >
+        🎨 Produits
+      </a>
 
-.badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-.badge-new { background: #dcfce7; color: var(--success); }
-.badge-sale { background: #fee2e2; color: var(--danger); }
-.badge-eco { background: #ccfbf1; color: #0d9488; }
-.badge-premium { background: #fef3c7; color: var(--warning); }
+      <a
+        href="javascript:void(0)"
+        onclick="showSection('orders'); return false;"
+      >
+        📦 Commandes
+      </a>
 
-.status-pending { background: #fef3c7; color: var(--warning); }
-.status-confirmed { background: #dbeafe; color: var(--primary-light); }
-.status-processing { background: #e0e7ff; color: #4f46e5; }
-.status-shipped { background: #dcfce7; color: var(--success); }
-.status-delivered { background: #dcfce7; color: var(--success); }
-.status-cancelled { background: #fee2e2; color: var(--danger); }
+      <a
+        href="javascript:void(0)"
+        onclick="showSection('customers'); return false;"
+      >
+        👥 Clients
+      </a>
 
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
-.modal-overlay.open { display: flex; }
-.modal { background: white; border-radius: 16px; padding: 32px; width: 100%; position: relative; }
-.close-btn { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--gray-100); cursor: pointer; font-size: 18px; }
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
-.form-group input, .form-group textarea, .form-group select {
-  width: 100%; padding: 10px 14px; border: 1px solid var(--gray-300);
-  border-radius: 10px; font-size: 14px; font-family: inherit;
-}
-.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-  outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
-}
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      <a
+        href="javascript:void(0)"
+        onclick="showSection('categories'); return false;"
+      >
+        📁 Catégories
+      </a>
 
-.loading-skeleton {
-  background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
-  background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px;
-}
-@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </nav>
 
-@media (max-width: 1024px) {
-  .admin-layout { grid-template-columns: 1fr; }
-  .admin-sidebar { position: relative; width: 100%; height: auto; }
-  .admin-main { margin-left: 0; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 768px) {
-  .stats-grid { grid-template-columns: 1fr; }
-  .form-row { grid-template-columns: 1fr; }
-}
+    <div class="admin-sidebar-bottom">
+
+      <a href="../store/index.html">
+        🌐 Voir le site
+      </a>
+
+      <a
+        href="javascript:void(0)"
+        onclick="logoutAdmin(); return false;"
+      >
+        🚪 Déconnexion
+      </a>
+
+    </div>
+
+  </aside>
+
+
+  <!-- MAIN -->
+  <main class="admin-main">
+
+    <!-- HEADER -->
+    <header class="admin-header">
+
+      <h1 id="pageTitle">
+        Tableau de bord
+      </h1>
+
+      <div class="admin-user">
+
+        <span id="adminName">
+          Admin
+        </span>
+
+        <div class="admin-avatar">
+          A
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- ========================= -->
+    <!-- DASHBOARD -->
+    <!-- ========================= -->
+
+    <section
+      id="dashboard"
+      class="admin-section active"
+    >
+
+      <div class="stats-grid">
+
+        <div class="stat-card">
+
+          <div
+            class="stat-icon"
+            style="background:#dbeafe;color:#2563eb"
+          >
+            🎨
+          </div>
+
+          <div>
+            <div
+              class="stat-value"
+              id="statProducts"
+            >
+              -
+            </div>
+
+            <div class="stat-label">
+              Produits
+            </div>
+          </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <div
+            class="stat-icon"
+            style="background:#dcfce7;color:#16a34a"
+          >
+            📦
+          </div>
+
+          <div>
+            <div
+              class="stat-value"
+              id="statOrders"
+            >
+              -
+            </div>
+
+            <div class="stat-label">
+              Commandes
+            </div>
+          </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <div
+            class="stat-icon"
+            style="background:#fef3c7;color:#d97706"
+          >
+            👥
+          </div>
+
+          <div>
+            <div
+              class="stat-value"
+              id="statUsers"
+            >
+              -
+            </div>
+
+            <div class="stat-label">
+              Clients
+            </div>
+          </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <div
+            class="stat-icon"
+            style="background:#fce7f3;color:#db2777"
+          >
+            💰
+          </div>
+
+          <div>
+
+            <div
+              class="stat-value"
+              id="statRevenue"
+            >
+              -
+            </div>
+
+            <div class="stat-label">
+              Revenus (TND)
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        style="
+          display:grid;
+          grid-template-columns:2fr 1fr;
+          gap:24px;
+          margin-top:24px
+        "
+      >
+
+        <div class="admin-card">
+
+          <h3>
+            📦 Commandes récentes
+          </h3>
+
+          <div id="recentOrders">
+
+            <div
+              class="loading-skeleton"
+              style="height:40px;margin-bottom:8px"
+            ></div>
+
+          </div>
+
+        </div>
+
+
+        <div class="admin-card">
+
+          <h3>
+            ⚠️ Stock faible
+          </h3>
+
+          <div id="lowStock">
+
+            <div
+              class="loading-skeleton"
+              style="height:40px;margin-bottom:8px"
+            ></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================= -->
+    <!-- PRODUCTS -->
+    <!-- ========================= -->
+
+    <section
+      id="products"
+      class="admin-section"
+    >
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          margin-bottom:20px
+        "
+      >
+
+        <h2>
+          Gestion des produits
+        </h2>
+
+        <button
+          class="btn btn-primary"
+          onclick="openProductModal()"
+        >
+          + Ajouter un produit
+        </button>
+
+      </div>
+
+
+      <div
+        class="admin-card"
+        style="overflow-x:auto"
+      >
+
+        <table
+          class="admin-table"
+          id="productsTable"
+        >
+
+          <thead>
+
+            <tr>
+              <th>Image</th>
+              <th>Nom</th>
+              <th>Catégorie</th>
+              <th>Prix</th>
+              <th>Stock</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+
+          </thead>
+
+          <tbody></tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================= -->
+    <!-- PRODUCT MODAL -->
+    <!-- ========================= -->
+
+    <div
+      class="modal-overlay"
+      id="productModal"
+    >
+
+      <div
+        class="modal"
+        style="
+          max-width:600px;
+          max-height:90vh;
+          overflow-y:auto
+        "
+      >
+
+        <button
+          class="close-btn"
+          onclick="closeProductModal()"
+        >
+          ✕
+        </button>
+
+
+        <h2 id="productModalTitle">
+          Ajouter un produit
+        </h2>
+
+
+        <form
+          id="productForm"
+          onsubmit="saveProduct(event)"
+        >
+
+          <input
+            type="hidden"
+            id="prodId"
+          >
+
+
+          <div class="form-row">
+
+            <div class="form-group">
+
+              <label>
+                Nom *
+              </label>
+
+              <input
+                type="text"
+                id="prodName"
+                required
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>
+                Slug *
+              </label>
+
+              <input
+                type="text"
+                id="prodSlug"
+                required
+              >
+
+            </div>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Description
+            </label>
+
+            <textarea
+              id="prodDesc"
+              rows="3"
+            ></textarea>
+
+          </div>
+
+
+          <div class="form-row">
+
+            <div class="form-group">
+
+              <label>
+                Prix (TND) *
+              </label>
+
+              <input
+                type="number"
+                step="0.01"
+                id="prodPrice"
+                required
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>
+                Ancien prix
+              </label>
+
+              <input
+                type="number"
+                step="0.01"
+                id="prodOldPrice"
+              >
+
+            </div>
+
+          </div>
+
+
+          <div class="form-row">
+
+            <div class="form-group">
+
+              <label>
+                Stock *
+              </label>
+
+              <input
+                type="number"
+                id="prodStock"
+                required
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>
+                Statut stock
+              </label>
+
+              <select id="prodStockStatus">
+
+                <option value="IN_STOCK">
+                  En stock
+                </option>
+
+                <option value="LOW_STOCK">
+                  Stock limité
+                </option>
+
+                <option value="OUT_OF_STOCK">
+                  Rupture
+                </option>
+
+              </select>
+
+            </div>
+
+          </div>
+
+
+          <div class="form-row">
+
+            <div class="form-group">
+
+              <label>
+                Catégorie
+              </label>
+
+              <select id="prodCategory"></select>
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>
+                Badge
+              </label>
+
+              <select id="prodBadge">
+
+                <option value="">
+                  Aucun
+                </option>
+
+                <option value="new">
+                  Nouveau
+                </option>
+
+                <option value="sale">
+                  Promo
+                </option>
+
+                <option value="eco">
+                  Éco
+                </option>
+
+                <option value="premium">
+                  Premium
+                </option>
+
+              </select>
+
+            </div>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Image
+            </label>
+
+            <input
+              type="file"
+              id="prodImage"
+              accept="image/*"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Caractéristiques (une par ligne)
+            </label>
+
+            <textarea
+              id="prodFeatures"
+              rows="3"
+              placeholder="Feature 1
+Feature 2"
+            ></textarea>
+
+          </div>
+
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="width:100%"
+          >
+            Enregistrer
+          </button>
+
+        </form>
+
+      </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- ORDERS -->
+    <!-- ========================= -->
+
+    <section
+      id="orders"
+      class="admin-section"
+    >
+
+      <h2>
+        Gestion des commandes
+      </h2>
+
+
+      <div
+        class="admin-card"
+        style="overflow-x:auto"
+      >
+
+        <table
+          class="admin-table"
+          id="ordersTable"
+        >
+
+          <thead>
+
+            <tr>
+              <th>N°</th>
+              <th>Client</th>
+              <th>Date</th>
+              <th>Total</th>
+              <th>Paiement</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+
+          </thead>
+
+          <tbody></tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================= -->
+    <!-- CUSTOMERS -->
+    <!-- ========================= -->
+
+    <section
+      id="customers"
+      class="admin-section"
+    >
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          margin-bottom:20px
+        "
+      >
+
+        <h2>
+          Gestion des clients
+        </h2>
+
+        <span
+          style="
+            color:var(--gray-500);
+            font-size:14px
+          "
+        >
+          Modifier ou supprimer un client
+        </span>
+
+      </div>
+
+
+      <div
+        class="admin-card"
+        style="overflow-x:auto"
+      >
+
+        <table
+          class="admin-table"
+          id="customersTable"
+        >
+
+          <thead>
+
+            <tr>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Email</th>
+              <th>Téléphone</th>
+              <th>Rôle</th>
+              <th>Inscription</th>
+              <th>Actions</th>
+            </tr>
+
+          </thead>
+
+          <tbody></tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================= -->
+    <!-- CATEGORIES -->
+    <!-- ========================= -->
+
+    <section
+      id="categories"
+      class="admin-section"
+    >
+
+      <div
+        class="admin-card"
+        id="categoriesList"
+      >
+
+        <div
+          style="
+            padding:30px;
+            text-align:center;
+            color:var(--gray-400)
+          "
+        >
+          Chargement des catégories...
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<!-- IMPORTANT:
+     v=4 force le navigateur à charger
+     la nouvelle version de admin.js
+-->
+<script src="js/admin.js?v=4"></script>
+
+</body>
+</html>
+```
