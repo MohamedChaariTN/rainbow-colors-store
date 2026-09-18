@@ -14,6 +14,10 @@ model User {
   firstName String
   lastName  String
   phone     String?
+  profileImage String?
+  emailVerified Boolean @default(false)
+  verificationCode String?
+  verificationExpiresAt DateTime?
   address   String?
   city      String?
   role      String     @default("CUSTOMER")
