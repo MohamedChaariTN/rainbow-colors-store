@@ -7,6 +7,7 @@ import { createOrder, getOrders, getOrder } from '../controllers/orderController
 import { processPayment, getPaymentMethods } from '../controllers/paymentController';
 import { getDashboard, getAllOrders, updateOrderStatus, getAllUsers, getUserDetails, getAdminOrder, updateUser, deleteUser, getAllProducts } from '../controllers/adminController';
 import { authenticate, requireAdmin } from '../middleware/auth';
+import { sendContactMessage } from '../controllers/contactController';
 import { upload } from '../config/upload';
 
 const router = Router();
@@ -16,6 +17,9 @@ router.post('/auth/register', register);
 router.post('/auth/login', login);
 router.get('/auth/me', authenticate, me);
 router.patch('/auth/profile', authenticate, updateProfile);
+
+// Contact
+router.post('/contact', sendContactMessage);
 
 // Products (public)
 router.get('/products', getProducts);
