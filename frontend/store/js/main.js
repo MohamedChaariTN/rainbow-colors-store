@@ -97,15 +97,27 @@ function openAuthModal(mode = 'login') {
   const registerForm = document.getElementById('registerForm');
   const verificationForm = document.getElementById('verificationForm');
   const forgotPasswordForm = document.getElementById('forgotPasswordForm');
-  if (mode === 'login') {
-    loginForm.style.display = 'block'; registerForm.style.display = 'none'; verificationForm.style.display = 'none'; forgotPasswordForm.style.display = 'none';
-  } else if (mode === 'register') {
-    loginForm.style.display = 'none'; registerForm.style.display = 'block'; verificationForm.style.display = 'none'; forgotPasswordForm.style.display = 'none';
+
+  if (!overlay || !loginForm || !registerForm) return;
+
+  const hide = (el) => { if (el) el.style.display = 'none'; };
+  const show = (el) => { if (el) el.style.display = 'block'; };
+
+  hide(loginForm);
+  hide(registerForm);
+  hide(verificationForm);
+  hide(forgotPasswordForm);
+
+  if (mode === 'register') {
+    show(registerForm);
   } else if (mode === 'verify') {
-    loginForm.style.display = 'none'; registerForm.style.display = 'none'; verificationForm.style.display = 'block'; forgotPasswordForm.style.display = 'none';
+    show(verificationForm);
   } else if (mode === 'forgot') {
-    loginForm.style.display = 'none'; registerForm.style.display = 'none'; verificationForm.style.display = 'none'; forgotPasswordForm.style.display = 'block';
+    show(forgotPasswordForm);
+  } else {
+    show(loginForm);
   }
+
   overlay.classList.add('open');
 }
 
