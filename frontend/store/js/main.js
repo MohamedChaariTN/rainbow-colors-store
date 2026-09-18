@@ -142,10 +142,16 @@ async function handleRegister(e) {
         profileImage: await readProfileImage()
       }
     });
-    pendingVerificationEmail = data.email;
-    document.getElementById('verificationEmail').textContent = data.email;
-    openAuthModal('verify');
-    showToast('Code de vérification envoyé à votre email !');
+    if (data.token && data.user) {
+      setAuth(data.token, data.user);
+      closeAuthModal();
+      showToast('Compte créé avec succès !');
+    } else {
+      pendingVerificationEmail = data.email;
+      document.getElementById('verificationEmail').textContent = data.email;
+      openAuthModal('verify');
+      showToast('Code de vérification envoyé à votre email !');
+    }
   } catch (err) {
     showToast(err.message, 'error');
   }
