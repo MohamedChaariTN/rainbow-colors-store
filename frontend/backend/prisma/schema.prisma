@@ -141,3 +141,14 @@ model Review {
   user      User     @relation(fields: [userId], references: [id])
 }
 
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
