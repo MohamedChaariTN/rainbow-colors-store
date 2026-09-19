@@ -1000,3 +1000,96 @@ input, textarea, select { font-family: inherit; }
 @media(max-width:420px){
   #homeCategories.categories-grid{grid-template-columns:1fr}
 }
+
+/* ===== MOBILE APP SHOWCASE — RAINBOW COLORS ===== */
+.app-download-hero{
+  position:relative;overflow:hidden;
+  background:linear-gradient(120deg,#f7f9fc 0%,#eef4ff 48%,#fff8e7 100%);
+  border-top:1px solid #e7edf5;border-bottom:1px solid #e7edf5;
+}
+.app-download-hero::before{
+  content:'';position:absolute;width:520px;height:520px;right:-180px;top:-250px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(37,99,235,.16),rgba(168,85,247,.10),rgba(234,179,8,.13));
+  filter:blur(2px);
+}
+.app-download-inner{
+  max-width:1400px;margin:0 auto;min-height:410px;padding:48px 34px;
+  display:grid;grid-template-columns:1.15fr .85fr;align-items:center;gap:50px;
+  position:relative;z-index:1;
+}
+.app-download-copy{max-width:720px}
+.app-download-kicker{
+  display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;
+  background:#fff;border:1px solid #e2e8f0;color:#1a3a7a;font-size:10px;font-weight:850;letter-spacing:1.5px;
+  box-shadow:0 5px 18px rgba(15,23,42,.05);
+}
+.app-download-copy h2{
+  margin:17px 0 12px;color:#0b1730;font-size:clamp(30px,3.5vw,46px);line-height:1.08;
+  letter-spacing:-1.6px;font-weight:850;
+}
+.app-download-copy p{margin:0 0 22px;color:#64748b;font-size:15px;line-height:1.7;max-width:610px}
+.app-store-actions{display:flex;flex-wrap:wrap;gap:12px}
+.store-badge{
+  display:flex;align-items:center;gap:11px;min-width:188px;padding:11px 16px;
+  border-radius:12px;color:#fff!important;box-shadow:0 10px 25px rgba(15,23,42,.12);
+  transition:transform .25s,box-shadow .25s;
+}
+.store-badge:hover{transform:translateY(-3px);box-shadow:0 16px 32px rgba(15,23,42,.18)}
+.google-badge{background:#111827}
+.apple-badge{background:#050505}
+.store-badge-icon{font-size:25px;line-height:1;width:28px;text-align:center}
+.store-badge small{display:block;font-size:8px;letter-spacing:.7px;opacity:.68;font-weight:700;line-height:1.2}
+.store-badge strong{display:block;font-size:17px;line-height:1.25;margin-top:2px}
+.app-download-note{margin-top:13px;color:#94a3b8;font-size:11px;font-weight:600}
+.app-device-showcase{height:330px;display:flex;align-items:center;justify-content:center;position:relative}
+.app-glow{
+  position:absolute;width:250px;height:250px;border-radius:50%;
+  background:conic-gradient(#f59e0b,#ec4899,#8b5cf6,#06b6d4,#22c55e,#f59e0b);
+  filter:blur(32px);opacity:.22;
+}
+.phone-mockup{
+  position:relative;width:190px;height:345px;padding:7px;border-radius:32px;
+  background:linear-gradient(145deg,#0f172a,#334155);box-shadow:0 28px 55px rgba(15,23,42,.28),0 0 0 2px rgba(255,255,255,.5);
+  transform:rotate(5deg);z-index:2;
+}
+.phone-mockup::before{
+  content:'';position:absolute;inset:4px;border-radius:28px;border:1px solid rgba(255,255,255,.16);pointer-events:none;z-index:3;
+}
+.phone-speaker{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:55px;height:14px;border-radius:20px;background:#020617;z-index:5}
+.phone-screen{
+  height:100%;border-radius:26px;overflow:hidden;background:linear-gradient(180deg,#fff 0%,#f7f9fc 100%);
+  padding:25px 12px 12px;position:relative;
+}
+.phone-status{display:flex;justify-content:space-between;font-size:7px;color:#475569;font-weight:800;margin-bottom:18px}
+.phone-status span{letter-spacing:2px}
+.phone-screen>img{width:62px;height:28px;object-fit:contain;margin:0 auto 9px;border-radius:4px}
+.phone-app-title{text-align:center;font-size:13px;font-weight:850;color:#12213c}
+.phone-app-subtitle{text-align:center;font-size:7px;color:#94a3b8;margin-top:2px}
+.phone-product-card{
+  margin-top:22px;background:#fff;border:1px solid #e8edf4;border-radius:13px;padding:8px;
+  box-shadow:0 8px 18px rgba(15,23,42,.07)
+}
+.phone-product-card>img{width:100%;height:118px;object-fit:cover;border-radius:9px}
+.phone-product-card strong{display:block;color:#1e293b;font-size:8px;margin-top:7px}
+.phone-product-card small{display:block;color:#94a3b8;font-size:6px;margin-top:2px}
+.phone-nav{
+  position:absolute;left:9px;right:9px;bottom:9px;height:31px;border-radius:11px;background:#fff;
+  border:1px solid #e8edf4;box-shadow:0 5px 12px rgba(15,23,42,.07);
+  display:flex;align-items:center;justify-content:space-around;color:#64748b;font-size:12px
+}
+.phone-nav span:first-child{color:#2563eb}
+@media(max-width:900px){
+  .app-download-inner{grid-template-columns:1fr;text-align:center;gap:20px;padding:42px 20px}
+  .app-download-copy{margin:0 auto}
+  .app-download-copy p{margin-left:auto;margin-right:auto}
+  .app-store-actions{justify-content:center}
+  .app-device-showcase{height:315px}
+}
+@media(max-width:480px){
+  .app-download-copy h2{font-size:29px}
+  .store-badge{min-width:165px;padding:10px 12px}
+  .store-badge strong{font-size:15px}
+  .phone-mockup{transform:rotate(3deg) scale(.9)}
+  .app-device-showcase{height:285px}
+}
+/* ========================================================= */
