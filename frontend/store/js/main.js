@@ -385,3 +385,78 @@ document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
   loadCart();
 });
+
+
+/* ===== RAINBOW COLORS MOTION ENGINE ===== */
+(function initRainbowMotion() {
+  try {
+    const logoSrc = '/images/logo ranbow colors.jpeg';
+
+    const loader = document.createElement('div');
+    loader.id = 'rcPageLoader';
+    loader.innerHTML = `
+      <div class="rc-loader-inner">
+        <div class="rc-loader-logo"><img src="${logoSrc}" alt="Rainbow Colors"></div>
+        <div class="rc-loader-title">Rainbow Colors</div>
+        <div class="rc-loader-subtitle">PEINTURES &amp; REVÊTEMENTS</div>
+        <div class="rc-loader-bar"><span></span></div>
+      </div>
+    `;
+    document.body.prepend(loader);
+
+    const revealTargets = [
+      '.section-header',
+      '.category-card',
+      '.product-card',
+      '.promo-card',
+      '.feature-item',
+      '.review-card',
+      '.contact-info-card',
+      '.app-download-copy',
+      '.app-device-showcase',
+      '.checkout-form',
+      '.cart-summary',
+      '.account-sidebar',
+      '.account-content',
+      '.page-header',
+      '.pd-grid'
+    ];
+
+    let revealIndex = 0;
+    const elements = document.querySelectorAll(revealTargets.join(','));
+    elements.forEach((el) => {
+      if (el.classList.contains('rc-reveal')) return;
+      el.classList.add('rc-reveal');
+      el.style.setProperty('--rc-delay', Math.min((revealIndex % 6) * 55, 275) + 'ms');
+      revealIndex += 1;
+    });
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('rc-visible');
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+      elements.forEach((el) => observer.observe(el));
+    } else {
+      elements.forEach((el) => el.classList.add('rc-visible'));
+    }
+
+    const hideLoader = () => {
+      setTimeout(() => loader.classList.add('is-hidden'), 260);
+      setTimeout(() => loader.remove(), 950);
+      document.documentElement.classList.add('rc-ready');
+    };
+
+    if (document.readyState === 'complete') {
+      hideLoader();
+    } else {
+      window.addEventListener('load', hideLoader, { once: true });
+    }
+  } catch (error) {
+    console.warn('Rainbow motion init skipped:', error);
+  }
+})();
