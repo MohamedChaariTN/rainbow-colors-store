@@ -42,7 +42,11 @@
     },
     "extra": {
       "apiBaseUrl": "https://rainbow-colors-store.onrender.com/api",
-      "privacyUrl": "https://rainbow-colors-store.onrender.com/privacy.html"
+      "privacyUrl": "https://rainbow-colors-store.onrender.com/privacy.html",
+      "router": {},
+      "eas": {
+        "projectId": "126295ed-2893-4e43-8172-edda3fe916c6"
+      }
     }
   }
 }
