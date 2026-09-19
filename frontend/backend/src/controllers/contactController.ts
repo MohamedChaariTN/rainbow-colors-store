@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Resend } from 'resend';
 import { prisma } from '../config/prisma';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const escapeHtml = (value: any) =>
   String(value ?? '')
@@ -22,9 +22,22 @@ export const sendContactMessage = async (req: Request, res: Response) => {
       });
     }
 
-    if (!process.env.RESEND_API_KEY) {
-      return res.status(500).json({
-        error: 'Le service email n’est pas configuré.'
+    if (!resend) {
+      const savedMessage = await prisma.contactMessage.create({
+        data: {
+          name: String(name).trim(),
+          email: String(email).trim(),
+          phone: phone ? String(phone).trim() : null,
+          subject: String(subject || 'Message depuis le site').trim(),
+          message: String(message).trim()
+        }
+      });
+      return res.json({
+        success: true,
+        confirmationSent: false,
+        companyEmailSent: false,
+        messageId: savedMessage.id,
+        emailConfigured: false
       });
     }
 
