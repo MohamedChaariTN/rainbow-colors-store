@@ -12,6 +12,10 @@ import { upload } from '../config/upload';
 
 const router = Router();
 
+router.get('/health', (_req, res) => {
+  res.json({ ok: true, service: 'rainbow-colors-api' });
+});
+
 // Auth
 router.post('/auth/register', register);
 router.post('/auth/login', login);
