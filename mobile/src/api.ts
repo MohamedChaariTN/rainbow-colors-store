@@ -226,4 +226,7 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     }, token),
+
+  paymentStatus: (orderId: number, token: string) =>
+    request<{ order: Order; paymentStatus: string }>('/payment/status/' + orderId, {}, token),
 };
