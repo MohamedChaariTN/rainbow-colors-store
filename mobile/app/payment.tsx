@@ -15,11 +15,11 @@ export default function PaymentStatus(){
   const check=async()=>{if(!token||!orderId)return;try{const r=await api.paymentStatus(Number(orderId),token);setOrder(r.order);}catch{}finally{setChecking(false);}};
   useEffect(()=>{check();const timer=setInterval(check,5000);return()=>clearInterval(timer);},[token,orderId]);
 
-  const paid=order?.paymentStatus==='PAID';
+  const paid=order?.paymentStatus==='PAID' || (order?.paymentMethod==='cod' && order?.status==='CONFIRMED');
   return <View style={s.container}>
     <View style={[s.icon,{backgroundColor:paid?'#DCFCE7':'#FFF7CC'}]}><Text style={{fontSize:42}}>{paid?'✓':'⌛'}</Text></View>
     <Text style={s.title}>{paid?'Paiement confirmé':'Paiement en attente'}</Text>
-    <Text style={s.text}>{paid?'Votre commande est confirmée et sera traitée par Rainbow Colors.':'Terminez le paiement sur la page Konnect. Cette page vérifie automatiquement la confirmation.'}</Text>
+    <Text style={s.text}>{paid?'Votre commande est confirmée et sera traitée par Rainbow Colors.':order?.paymentMethod==='cod'?'Votre commande à paiement à la livraison est confirmée.':'Terminez le paiement sur la page Konnect. Cette page vérifie automatiquement la confirmation.'}</Text>
     {order?<><Text style={s.order}>Commande {order.orderNumber}</Text><Text style={s.total}>{Number(order.total).toFixed(2)} TND</Text></>:null}
     {paymentRef?<Text style={s.ref}>Référence : {paymentRef}</Text>:null}
     {checking&&!paid?<ActivityIndicator color={colors.blue} style={{marginTop:18}}/>:null}
