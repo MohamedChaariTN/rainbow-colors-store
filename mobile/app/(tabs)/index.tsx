@@ -20,8 +20,7 @@ export default function Home(){
     <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
       <View style={s.hero}>
         <View style={s.badge}><Text style={s.badgeText}>RAINBOW COLORS</Text></View>
-        <Text style={s.title}>Des couleurs pour{'
-'}tous vos projets.</Text>
+        <Text style={s.title}>Des couleurs pour{`\n`}tous vos projets.</Text>
         <Text style={s.subtitle}>Peintures & revêtements professionnels, directement en Tunisie.</Text>
         <Pressable style={s.primary} onPress={()=>router.push('/products')}><Text style={s.primaryText}>Découvrir les produits  →</Text></Pressable>
       </View>
