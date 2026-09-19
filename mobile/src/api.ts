@@ -168,6 +168,12 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
+  deleteAccount: (password: string, token: string) =>
+    request<{ success: boolean }>('/auth/account', {
+      method: 'DELETE',
+      body: JSON.stringify({ password }),
+    }, token),
+
   products: (params: { search?: string; category?: string; page?: number; limit?: number } = {}) => {
     const q = new URLSearchParams();
     if (params.search) q.set('search', params.search);
