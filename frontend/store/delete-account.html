@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Suppression de compte | Rainbow Colors</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f7f9fc;color:#172033;margin:0}
+main{max-width:720px;margin:0 auto;padding:50px 20px}.card{background:#fff;border:1px solid #e5eaf1;border-radius:18px;padding:28px;box-shadow:0 12px 30px rgba(15,23,42,.06)}
+h1{color:#153ea8}p{line-height:1.7;color:#4b5563}.danger{background:#dc2626;color:#fff;border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer}
+input{width:100%;box-sizing:border-box;padding:13px;border:1px solid #dbe3ef;border-radius:12px;margin:8px 0 14px}
+.note{font-size:13px;color:#6b7280}.ok{color:#15803d;font-weight:700}.err{color:#b91c1c;font-weight:700}
+</style></head>
+<body><main><div class="card">
+<h1>Supprimer mon compte Rainbow Colors</h1>
+<p>Cette page permet de demander la suppression définitive d’un compte Rainbow Colors et des données associées.</p>
+<p class="note">Pour une suppression immédiate depuis le site, connectez-vous d’abord à votre compte sur Rainbow Colors dans ce même navigateur. Votre session est conservée dans le stockage local du navigateur.</p>
+<label>Mot de passe</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="Votre mot de passe">
+<button class="danger" id="deleteBtn">Supprimer définitivement</button>
+<p id="status"></p>
+<p><a href="/privacy.html">Consulter la politique de confidentialité</a></p>
+<script>
+const statusEl=document.getElementById('status');
+document.getElementById('deleteBtn').addEventListener('click',async()=>{
+  const token=localStorage.getItem('rc_token');
+  const password=document.getElementById('password').value;
+  if(!token){statusEl.className='err';statusEl.textContent='Veuillez vous connecter à votre compte sur le site Rainbow Colors dans ce navigateur, puis revenir sur cette page.';return;}
+  if(!password){statusEl.className='err';statusEl.textContent='Veuillez entrer votre mot de passe.';return;}
+  if(!confirm('Confirmer la suppression définitive du compte et des données associées ?'))return;
+  try{
+    const response=await fetch('/api/auth/account',{method:'DELETE',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({password})});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.error||'Suppression impossible.');
+    localStorage.removeItem('rc_token');
+    statusEl.className='ok';
+    statusEl.textContent='Votre compte et les données associées ont été supprimés.';
+  }catch(error){
+    statusEl.className='err';
+    statusEl.textContent=error.message||'Une erreur est survenue.';
+  }
+});
+</script>
+</div></main></body></html>

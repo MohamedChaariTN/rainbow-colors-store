@@ -1,16 +1,20 @@
 import { Router } from 'express';
-import { register, login, me, updateProfile, verifyEmail, resendVerification, requestPasswordReset, resetPassword } from '../controllers/authController';
+import { register, login, me, updateProfile, verifyEmail, resendVerification, requestPasswordReset, resetPassword, deleteAccount } from '../controllers/authController';
 import { getProducts, getProduct, createProduct, updateProduct, deleteProduct, getCategories } from '../controllers/productController';
 import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from '../controllers/cartController';
 import { getWishlist, toggleWishlist } from '../controllers/wishlistController';
 import { createOrder, getOrders, getOrder } from '../controllers/orderController';
-import { processPayment, getPaymentMethods, konnectWebhook } from '../controllers/paymentController';
+import { processPayment, getPaymentMethods, getPaymentStatus, konnectWebhook } from '../controllers/paymentController';
 import { getDashboard, getAllOrders, updateOrderStatus, getAllUsers, getUserDetails, getAdminOrder, updateUser, deleteUser, getAllProducts, getContactMessages, markContactMessageRead, deleteContactMessage, replyToContactMessage } from '../controllers/adminController';
 import { authenticate, requireAdmin } from '../middleware/auth';
 import { sendContactMessage } from '../controllers/contactController';
 import { upload } from '../config/upload';
 
 const router = Router();
+
+router.get('/health', (_req, res) => {
+  res.json({ ok: true, service: 'rainbow-colors-api' });
+});
 
 // Auth
 router.post('/auth/register', register);
@@ -21,6 +25,7 @@ router.post('/auth/forgot-password', requestPasswordReset);
 router.post('/auth/reset-password', resetPassword);
 router.get('/auth/me', authenticate, me);
 router.patch('/auth/profile', authenticate, updateProfile);
+router.delete('/auth/account', authenticate, deleteAccount);
 
 // Contact
 router.post('/contact', sendContactMessage);
@@ -60,6 +65,7 @@ router.get('/orders/:id', authenticate, getOrder);
 // Payment
 router.get('/payment/methods', getPaymentMethods);
 router.post('/payment/process', authenticate, processPayment);
+router.get('/payment/status/:orderId', authenticate, getPaymentStatus);
 router.get('/payment/konnect/webhook', konnectWebhook);
 
 // Admin
