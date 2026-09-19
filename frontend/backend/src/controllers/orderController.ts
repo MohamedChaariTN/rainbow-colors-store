@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { z } from 'zod';
 import { prisma } from '../config/prisma';
 import { Resend } from 'resend';
 
@@ -8,64 +9,122 @@ function generateOrderNumber() {
   return 'RC-' + Date.now().toString(36).toUpperCase();
 }
 
+const orderSchema = z.object({
+  items: z.array(z.object({
+    productId: z.coerce.number().int().positive(),
+    quantity: z.coerce.number().int().positive().max(100),
+  })).min(1).max(100),
+  paymentMethod: z.enum(['cod', 'card', 'edinar']),
+  firstName: z.string().min(2).max(80),
+  lastName: z.string().min(2).max(80),
+  email: z.string().email(),
+  phone: z.string().min(6).max(40),
+  address: z.string().min(3).max(300),
+  city: z.string().min(2).max(100),
+  governorate: z.string().min(2).max(100),
+  postalCode: z.string().max(20).optional().nullable(),
+  notes: z.string().max(500).optional().nullable(),
+});
+
 export const createOrder = async (req: any, res: Response) => {
   try {
-    const { items, shipping, paymentMethod, ...address } = req.body;
+    const data = orderSchema.parse(req.body);
+    const uniqueProductIds = [...new Set(data.items.map((item) => item.productId))];
 
-    const subtotal = items.reduce(
-      (s: number, i: any) =>
-        s + Number(i.price) * Number(i.quantity),
-      0
-    );
+    const products = await prisma.product.findMany({
+      where: { id: { in: uniqueProductIds }, isActive: true }
+    });
+    const byId = new Map(products.map((product) => [product.id, product]));
 
-    const tax = subtotal * 0.19;
-    const deliveryFee = subtotal > 200 ? 0 : 7;
-    const total = subtotal + deliveryFee + tax;
-
-    const order = await prisma.order.create({
-      data: {
-        orderNumber: generateOrderNumber(),
-        userId: req.user.id,
-        status: 'PENDING',
-        paymentStatus: 'PENDING',
-        paymentMethod,
-        subtotal,
-        shipping: deliveryFee,
-        tax,
-        total,
-        ...address,
-        items: {
-          create: items.map((i: any) => ({
-            productId: i.productId,
-            name: i.name,
-            price: i.price,
-            quantity: i.quantity
-          }))
-        }
-      },
-      include: {
-        items: true
+    const normalizedItems = data.items.map((item) => {
+      const product = byId.get(item.productId);
+      if (!product) throw new Error('Un produit demandé est indisponible.');
+      if (product.stock < item.quantity) {
+        throw new Error('Stock insuffisant pour ' + product.name + '.');
       }
+      return {
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: item.quantity
+      };
     });
 
-    // Reserve stock and clear the cart immediately only for cash-on-delivery.
-    // Card/e-Dinar orders stay pending until Konnect confirms payment.
-    if (paymentMethod === 'cod') {
-      for (const item of items) {
-        const product = await prisma.product.findUnique({ where: { id: item.productId } });
-        if (product) {
-          const newStock = Math.max(0, product.stock - Number(item.quantity));
-          const newStatus = newStock === 0 ? 'OUT_OF_STOCK' : newStock <= 5 ? 'LOW_STOCK' : 'IN_STOCK';
-          await prisma.product.update({
-            where: { id: product.id },
-            data: { stock: newStock, stockStatus: newStatus }
+    const subtotal = normalizedItems.reduce(
+      (sum, item) => sum + Number(item.price) * item.quantity,
+      0
+    );
+    const deliveryFee = subtotal > 200 ? 0 : 7;
+    const tax = subtotal * 0.19;
+    const total = subtotal + deliveryFee + tax;
+
+    const order = await prisma.$transaction(async (tx) => {
+      const created = await tx.order.create({
+        data: {
+          orderNumber: generateOrderNumber(),
+          userId: req.user.id,
+          status: 'PENDING',
+          paymentStatus: 'PENDING',
+          paymentMethod: data.paymentMethod,
+          subtotal,
+          shipping: deliveryFee,
+          tax,
+          total,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          city: data.city,
+          governorate: data.governorate,
+          postalCode: data.postalCode || null,
+          notes: data.notes || null,
+          items: {
+            create: normalizedItems
+          }
+        },
+        include: { items: true }
+      });
+
+      if (data.paymentMethod === 'cod') {
+        for (const item of normalizedItems) {
+          const updated = await tx.product.updateMany({
+            where: { id: item.productId, stock: { gte: item.quantity }, isActive: true },
+            data: { stock: { decrement: item.quantity } }
           });
+          if (updated.count !== 1) {
+            throw new Error('Le stock a changé. Veuillez vérifier votre panier et réessayer.');
+          }
+
+          const product = await tx.product.findUnique({
+            where: { id: item.productId },
+            select: { stock: true }
+          });
+          if (product) {
+            const stockStatus = product.stock === 0
+              ? 'OUT_OF_STOCK'
+              : product.stock <= 5
+                ? 'LOW_STOCK'
+                : 'IN_STOCK';
+
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { stockStatus }
+            });
+          }
+        }
+
+        const cart = await tx.cart.findUnique({
+          where: { userId: req.user.id },
+          select: { id: true }
+        });
+        if (cart) {
+          await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
         }
       }
 
-      const cart = await prisma.cart.findUnique({ where: { userId: req.user.id } });
-      if (cart) await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
-    }
+      return created;
+    });
 
     // Send confirmation email
     if (order.email && process.env.RESEND_API_KEY) {
