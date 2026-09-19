@@ -39,6 +39,7 @@ export default function Account(){
     <TextInput value={address} onChangeText={setAddress} placeholder="Adresse" style={s.input}/>
     <TextInput value={city} onChangeText={setCity} placeholder="Ville" style={s.input}/>
     <Pressable style={s.primary} onPress={save} disabled={saving}><Text style={s.primaryText}>{saving?'Enregistrement...':'Enregistrer'}</Text></Pressable>
+    <Pressable style={s.deleteLink} onPress={()=>router.push('/delete-account')}><Text style={s.deleteText}>Supprimer mon compte</Text></Pressable>
     <Pressable style={s.logout} onPress={()=>signOut()}><Text style={s.logoutText}>Se déconnecter</Text></Pressable>
     <Text style={s.version}>Rainbow Colors · application officielle</Text>
   </ScrollView>;
@@ -50,5 +51,5 @@ const s=StyleSheet.create({
   primary:{backgroundColor:colors.blue,padding:15,borderRadius:15,alignItems:'center',marginTop:18,width:'100%'},primaryText:{color:'#fff',fontWeight:'900'},title:{fontSize:28,fontWeight:'900',color:colors.text},email:{color:colors.muted,marginTop:4},
   secondary:{marginTop:16,padding:13,borderRadius:14,backgroundColor:'#FFF1F2',alignItems:'center'},secondaryText:{color:colors.red,fontWeight:'900'},
   section:{fontSize:19,fontWeight:'900',color:colors.text,marginTop:24,marginBottom:10},input:{height:50,borderRadius:14,borderWidth:1,borderColor:colors.border,backgroundColor:'#fff',paddingHorizontal:14,marginBottom:10,color:colors.text},
-  logout:{padding:14,alignItems:'center',marginTop:6},logoutText:{color:colors.red,fontWeight:'900'},version:{textAlign:'center',color:'#9CA3AF',fontSize:11,marginTop:18}
+  deleteLink:{padding:12,alignItems:'center',marginTop:8},deleteText:{color:colors.red,fontWeight:'900'},logout:{padding:14,alignItems:'center',marginTop:2},logoutText:{color:colors.red,fontWeight:'900'},version:{textAlign:'center',color:'#9CA3AF',fontSize:11,marginTop:18}
 });
