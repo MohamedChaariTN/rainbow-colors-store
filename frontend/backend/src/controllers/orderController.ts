@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../config/prisma';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 function generateOrderNumber() {
   return 'RC-' + Date.now().toString(36).toUpperCase();
@@ -127,7 +127,7 @@ export const createOrder = async (req: any, res: Response) => {
     });
 
     // Send confirmation email
-    if (order.email && process.env.RESEND_API_KEY) {
+    if (order.email && resend) {
       try {
         const itemsHtml = order.items
           .map((item: any) => {
