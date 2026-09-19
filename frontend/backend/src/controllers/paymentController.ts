@@ -25,48 +25,72 @@ async function konnectRequest(path: string, init: RequestInit = {}) {
 }
 
 async function markOrderPaid(orderId: number, payment: any) {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: { items: true }
-  });
-
-  if (!order) return null;
-  if (order.paymentStatus === 'PAID') return order;
-
-  const expectedMillimes = Math.round(Number(order.total) * 1000);
-  const receivedAmount = Number(payment?.amount ?? payment?.reachedAmount ?? 0);
-
-  if (receivedAmount > 0 && receivedAmount !== expectedMillimes) {
-    throw new Error('Le montant du paiement ne correspond pas au montant de la commande.');
-  }
-
-  const updated = await prisma.order.update({
-    where: { id: order.id },
-    data: { paymentStatus: 'PAID', status: 'CONFIRMED' },
-    include: { items: true }
-  });
-
-  for (const item of updated.items) {
-    const product = await prisma.product.findUnique({ where: { id: item.productId } });
-    if (!product) continue;
-
-    const newStock = Math.max(0, product.stock - Number(item.quantity));
-    const newStatus = newStock === 0
-      ? 'OUT_OF_STOCK'
-      : newStock <= 5
-        ? 'LOW_STOCK'
-        : 'IN_STOCK';
-
-    await prisma.product.update({
-      where: { id: product.id },
-      data: { stock: newStock, stockStatus: newStatus }
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      include: { items: true }
     });
-  }
 
-  const cart = await prisma.cart.findUnique({ where: { userId: updated.userId } });
-  if (cart) await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+    if (!order) return null;
+    if (order.paymentStatus === 'PAID') return order;
 
-  return updated;
+    const expectedMillimes = Math.round(Number(order.total) * 1000);
+    const receivedAmount = Number(payment?.reachedAmount ?? payment?.amount ?? 0);
+    const receivedToken = String(payment?.token || 'TND');
+
+    if (receivedToken !== 'TND') {
+      throw new Error('La devise du paiement est invalide.');
+    }
+
+    if (receivedAmount !== expectedMillimes) {
+      throw new Error('Le montant du paiement ne correspond pas au montant de la commande.');
+    }
+
+    const updatedOrder = await tx.order.updateMany({
+      where: { id: order.id, paymentStatus: { not: 'PAID' } },
+      data: { paymentStatus: 'PAID', status: 'CONFIRMED' }
+    });
+
+    if (updatedOrder.count === 0) {
+      return tx.order.findUnique({ where: { id: order.id }, include: { items: true } });
+    }
+
+    for (const item of order.items) {
+      const stockUpdate = await tx.product.updateMany({
+        where: { id: item.productId, stock: { gte: item.quantity } },
+        data: { stock: { decrement: item.quantity } }
+      });
+
+      if (stockUpdate.count !== 1) {
+        throw new Error('Stock insuffisant pour finaliser la commande payée.');
+      }
+
+      const product = await tx.product.findUnique({
+        where: { id: item.productId },
+        select: { stock: true }
+      });
+
+      if (product) {
+        const stockStatus = product.stock === 0
+          ? 'OUT_OF_STOCK'
+          : product.stock <= 5
+            ? 'LOW_STOCK'
+            : 'IN_STOCK';
+
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stockStatus }
+        });
+      }
+    }
+
+    const cart = await tx.cart.findUnique({ where: { userId: order.userId } });
+    if (cart) {
+      await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+    }
+
+    return tx.order.findUnique({ where: { id: order.id }, include: { items: true } });
+  });
 }
 
 export const processPayment = async (req: any, res: Response) => {
@@ -123,7 +147,7 @@ export const processPayment = async (req: any, res: Response) => {
 
       await prisma.order.update({
         where: { id: order.id },
-        data: { paymentStatus: 'PENDING', status: 'PENDING' }
+        data: { paymentStatus: 'PENDING', status: 'PENDING', stripeSessionId: payment.paymentRef }
       });
 
       return res.json({
@@ -137,6 +161,48 @@ export const processPayment = async (req: any, res: Response) => {
     return res.status(400).json({ error: 'Invalid payment method' });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+
+export const getPaymentStatus = async (req: any, res: Response) => {
+  try {
+    const orderId = Number(req.params.orderId);
+    if (!Number.isInteger(orderId) || orderId <= 0) {
+      return res.status(400).json({ error: 'Invalid order id' });
+    }
+
+    const order = await prisma.order.findFirst({
+      where: { id: orderId, userId: req.user.id },
+      include: { items: true }
+    });
+
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (order.paymentStatus === 'PAID' || !order.stripeSessionId) {
+      return res.json({ order, paymentStatus: order.paymentStatus === 'PAID' ? 'completed' : 'pending' });
+    }
+
+    const paymentData = await konnectRequest(
+      '/payments/' + encodeURIComponent(order.stripeSessionId),
+      { method: 'GET' }
+    );
+    const payment = paymentData?.payment || paymentData;
+
+    if (payment?.status === 'completed') {
+      await markOrderPaid(order.id, payment);
+    }
+
+    const updated = await prisma.order.findUnique({
+      where: { id: order.id },
+      include: { items: true }
+    });
+
+    return res.json({
+      order: updated,
+      paymentStatus: payment?.status || 'pending'
+    });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message || 'Payment status unavailable.' });
   }
 };
 
