@@ -12,7 +12,7 @@ export default function PaymentStatus(){
   const [order,setOrder]=useState<Order|null>(null);
   const [checking,setChecking]=useState(true);
 
-  const check=async()=>{if(!token||!orderId)return;try{const r=await api.order(Number(orderId),token);setOrder(r);}catch{}finally{setChecking(false);}};
+  const check=async()=>{if(!token||!orderId)return;try{const r=await api.paymentStatus(Number(orderId),token);setOrder(r.order);}catch{}finally{setChecking(false);}};
   useEffect(()=>{check();const timer=setInterval(check,5000);return()=>clearInterval(timer);},[token,orderId]);
 
   const paid=order?.paymentStatus==='PAID';
