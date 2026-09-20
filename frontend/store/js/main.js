@@ -390,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ===== RAINBOW COLORS MOTION ENGINE ===== */
 (function initRainbowMotion() {
   try {
-    const logoSrc = '/images/logo ranbow colors.jpeg';
+    const logoSrc = '/images/rainbow-colors-app-icon.jpg';
 
     const loader = document.createElement('div');
     loader.id = 'rcPageLoader';
