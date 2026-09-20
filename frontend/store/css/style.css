@@ -1517,3 +1517,24 @@ body::after {
   }
   .rc-reveal { opacity: 1; transform: none; }
 }
+
+
+/* ===== RAINBOW COLORS — NEW BRAND ICON ===== */
+.logo img,
+.rc-loader-logo img,
+.footer-brand img {
+  content: url('../images/rainbow-colors-app-icon.jpg');
+}
+.logo img {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(15,23,42,.14);
+}
+.footer-brand img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 16px;
+}
