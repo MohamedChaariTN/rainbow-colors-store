@@ -19,6 +19,22 @@ const loginSchema = z.object({
   password: z.string(),
 });
 
+function publicUser(user: any) {
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    phone: user.phone ?? null,
+    profileImage: user.profileImage ?? null,
+    emailVerified: Boolean(user.emailVerified),
+    address: user.address ?? null,
+    city: user.city ?? null,
+    role: user.role,
+    createdAt: user.createdAt,
+  };
+}
+
 export const register = async (req: Request, res: Response) => {
   try {
     const data = registerSchema.parse(req.body);
@@ -238,7 +254,36 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const me = async (req: any, res: Response) => {
-  res.json({ user: req.user });
+  res.json({ user: publicUser(req.user) });
+};
+
+export const deleteAccount = async (req: any, res: Response) => {
+  try {
+    const password = String(req.body?.password || '');
+    if (!password) return res.status(400).json({ error: 'Mot de passe requis.' });
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) return res.status(404).json({ error: 'Compte introuvable.' });
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return res.status(400).json({ error: 'Mot de passe incorrect.' });
+
+    await prisma.$transaction(async (tx) => {
+      await tx.review.deleteMany({ where: { userId: user.id } });
+      const orders = await tx.order.findMany({ where: { userId: user.id }, select: { id: true } });
+      if (orders.length) await tx.orderItem.deleteMany({ where: { orderId: { in: orders.map((o) => o.id) } } });
+      await tx.order.deleteMany({ where: { userId: user.id } });
+      await tx.wishlist.deleteMany({ where: { userId: user.id } });
+      const cart = await tx.cart.findUnique({ where: { userId: user.id }, select: { id: true } });
+      if (cart) await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+      await tx.cart.deleteMany({ where: { userId: user.id } });
+      await tx.user.delete({ where: { id: user.id } });
+    });
+
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
 };
 
 export const updateProfile = async (req: any, res: Response) => {
@@ -248,7 +293,7 @@ export const updateProfile = async (req: any, res: Response) => {
       where: { id: req.user.id },
       data: { firstName, lastName, phone, address, city, profileImage }
     });
-    res.json({ user });
+    res.json({ user: publicUser(user) });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }

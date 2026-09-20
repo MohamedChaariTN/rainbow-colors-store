@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#f8fbff"/><stop offset=".55" stop-color="#ffffff"/><stop offset="1" stop-color="#eef6ff"/>
+  </linearGradient>
+  <linearGradient id="rainbow" x1="0" x2="1">
+    <stop offset="0" stop-color="#ff2d55"/><stop offset=".2" stop-color="#ff8a00"/><stop offset=".42" stop-color="#ffd60a"/><stop offset=".62" stop-color="#22c55e"/><stop offset=".82" stop-color="#1687ff"/><stop offset="1" stop-color="#8b3dff"/>
+  </linearGradient>
+  <linearGradient id="navy" x1="0" x2="1"><stop stop-color="#07142f"/><stop offset="1" stop-color="#15376f"/></linearGradient>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="18" flood-opacity=".18"/></filter>
+</defs>
+
+<rect width="1200" height="630" rx="36" fill="url(#bg)"/>
+<path d="M0 0H430L290 155H0Z" fill="url(#rainbow)" opacity=".95"/>
+<path d="M1200 630H820L930 500H1200Z" fill="url(#rainbow)" opacity=".92"/>
+
+<!-- premium paint ribbon -->
+<path d="M515 155 C650 70 820 85 910 160 C820 235 650 235 540 180" fill="none" stroke="url(#rainbow)" stroke-width="30" stroke-linecap="round"/>
+<path d="M570 183 C690 135 795 140 850 182" fill="none" stroke="#102d5e" stroke-width="8" stroke-linecap="round"/>
+
+<!-- house icon -->
+<path d="M665 120 L765 55 L865 120 V185 H665 Z" fill="white" stroke="#102d5e" stroke-width="10"/>
+<rect x="710" y="130" width="34" height="40" fill="#102d5e"/>
+<rect x="770" y="130" width="34" height="40" fill="#102d5e"/>
+<rect x="742" y="88" width="16" height="38" fill="#102d5e"/>
+
+<!-- paint can -->
+<g filter="url(#shadow)">
+  <path d="M90 430 Q90 398 122 390 L300 390 Q332 398 332 430 L318 555 Q315 580 286 588 L136 588 Q107 580 104 555Z" fill="url(#navy)"/>
+  <ellipse cx="211" cy="390" rx="121" ry="26" fill="#173c75"/>
+  <ellipse cx="211" cy="390" rx="95" ry="17" fill="#0a1838"/>
+</g>
+<path d="M115 438 Q210 470 305 438" fill="none" stroke="url(#rainbow)" stroke-width="18"/>
+<text x="211" y="505" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#fff">Rainbow</text>
+<text x="211" y="540" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="url(#rainbow)">COLORS</text>
+
+<!-- brush -->
+<g transform="translate(180 360) rotate(-23)" filter="url(#shadow)">
+  <rect x="0" y="18" width="210" height="34" rx="17" fill="#9aa6b6"/>
+  <rect x="188" y="0" width="155" height="70" rx="18" fill="url(#rainbow)"/>
+  <rect x="300" y="12" width="120" height="46" rx="23" fill="#102d5e"/>
+</g>
+
+<!-- brand -->
+<text x="410" y="300" font-family="Arial, sans-serif" font-size="92" font-weight="800" fill="#0c1f45">Rainbow</text>
+<text x="420" y="372" font-family="Arial, sans-serif" font-size="78" font-weight="800" letter-spacing="11" fill="url(#rainbow)">COLORS</text>
+<text x="422" y="420" font-family="Arial, sans-serif" font-size="23" letter-spacing="5" fill="#243c66">PAINTS • COATINGS • BUILDING MATERIALS</text>
+<text x="420" y="470" font-family="Georgia, serif" font-size="30" font-style="italic" fill="#17376f">More Colors, Better Spaces</text>
+<path d="M420 485 C530 510 690 510 805 485" fill="none" stroke="url(#rainbow)" stroke-width="8" stroke-linecap="round"/>
+
+<!-- trust badges -->
+<g font-family="Arial, sans-serif" fill="#17376f" text-anchor="middle">
+  <circle cx="540" cy="550" r="28" fill="#fff" stroke="#20a86b" stroke-width="4"/><text x="540" y="558" font-size="25">✓</text><text x="540" y="601" font-size="15" font-weight="700">HIGH QUALITY</text>
+  <circle cx="700" cy="550" r="28" fill="#fff" stroke="#20a86b" stroke-width="4"/><text x="700" y="558" font-size="22">♻</text><text x="700" y="601" font-size="15" font-weight="700">ECO FRIENDLY</text>
+  <circle cx="860" cy="550" r="28" fill="#fff" stroke="#1687ff" stroke-width="4"/><text x="860" y="558" font-size="22">⌂</text><text x="860" y="601" font-size="15" font-weight="700">DURABLE</text>
+  <circle cx="1020" cy="550" r="28" fill="#fff" stroke="#8b3dff" stroke-width="4"/><text x="1020" y="558" font-size="22">✦</text><text x="1020" y="601" font-size="15" font-weight="700">WIDE RANGE</text>
+</g>
+</svg>

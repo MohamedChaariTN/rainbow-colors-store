@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Rainbow Colors",
+    "slug": "rainbow-colors",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "rainbowcolors",
+    "description": "Rainbow Colors — peintures et matériaux de construction en Tunisie.",
+    "icon": "./assets/rainbow-colors-icon.jpg",
+    "primaryColor": "#1D4ED8",
+    "backgroundColor": "#FFFFFF",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "tn.rainbowcolors.store",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false
+        }
+      }
+    },
+    "android": {
+      "package": "tn.rainbowcolors.store",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/rainbow-colors-adaptive.jpg",
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "apiBaseUrl": "https://rainbow-colors-store.onrender.com/api",
+      "privacyUrl": "https://rainbow-colors-store.onrender.com/privacy.html",
+      "router": {},
+      "eas": {
+        "projectId": "126295ed-2893-4e43-8172-edda3fe916c6"
+      }
+    }
+  }
+}
