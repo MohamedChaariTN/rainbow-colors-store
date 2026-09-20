@@ -7,7 +7,7 @@
     "userInterfaceStyle": "light",
     "scheme": "rainbowcolors",
     "description": "Rainbow Colors — peintures et matériaux de construction en Tunisie.",
-    "icon": "https://rainbow-colors-store.onrender.com/images/logo%20ranbow%20colors.jpeg",
+    "icon": "./assets/rainbow-colors-icon.jpg",
     "primaryColor": "#1D4ED8",
     "backgroundColor": "#FFFFFF",
     "ios": {
@@ -24,7 +24,7 @@
       "package": "tn.rainbowcolors.store",
       "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "https://rainbow-colors-store.onrender.com/images/logo%20ranbow%20colors.jpeg",
+        "foregroundImage": "./assets/rainbow-colors-adaptive.jpg",
         "backgroundColor": "#FFFFFF"
       }
     },
