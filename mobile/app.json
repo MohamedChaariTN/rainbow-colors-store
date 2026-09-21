@@ -6,8 +6,8 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "rainbowcolors",
-    "description": "Rainbow Colors — peintures et matériaux de construction en Tunisie.",
-    "icon": "./assets/rainbow-colors-icon.jpg",
+    "description": "Rainbow Colors â€” peintures et matÃ©riaux de construction en Tunisie.",
+    "icon": "./assets/rainbow-colors-icon.png",
     "primaryColor": "#1D4ED8",
     "backgroundColor": "#FFFFFF",
     "ios": {
@@ -24,7 +24,7 @@
       "package": "tn.rainbowcolors.store",
       "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/rainbow-colors-adaptive.jpg",
+        "foregroundImage": "./assets/rainbow-colors-adaptive.png",
         "backgroundColor": "#FFFFFF"
       }
     },
