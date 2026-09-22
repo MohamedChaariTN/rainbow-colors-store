@@ -1,5 +1,5 @@
 // ===== RAINBOW COLORS STORE - API CLIENT =====
-const API_URL = window.location.origin + '/api';
+const API_URL = 'https://rainbow-colors-store.onrender.com/api';
 
 // ===== AUTH =====
 let currentUser = null;
