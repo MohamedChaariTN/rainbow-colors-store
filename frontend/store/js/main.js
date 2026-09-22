@@ -59,7 +59,7 @@ function updateAuthUI() {
     const initials = (currentUser.firstName[0] + currentUser.lastName[0]).toUpperCase();
     const avatarContent = currentUser.profileImage ? '<img src="' + currentUser.profileImage + '" alt="Photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">' : initials;
     const isAdmin = currentUser.role === 'ADMIN';
-    const adminLink = isAdmin ? '<a href="/admin">⚙️ Dashboard Admin</a>' : '';
+    const adminLink = isAdmin ? '<a href="/admin">Dashboard Admin</a>' : '';
     authBtn.innerHTML = `
       <div class="user-menu" style="position:relative">
         <button class="icon-btn" style="background:linear-gradient(135deg,var(--rc-blue),var(--rc-purple));color:white;font-weight:700;font-size:13px;overflow:hidden;padding:0" onclick="toggleUserMenu()">${avatarContent}</button>
@@ -68,11 +68,11 @@ function updateAuthUI() {
             <div style="font-weight:700;font-size:14px">${currentUser.firstName} ${currentUser.lastName}</div>
             <div style="font-size:12px;color:var(--rc-gray-400)">${currentUser.email}</div>
           </div>
-          <a href="account.html">👤 Mon Compte</a>
-          <a href="orders.html">📦 Mes Commandes</a>
-          <a href="wishlist.html">❤️ Favoris</a>
+          <a href="account.html">Mon Compte</a>
+          <a href="orders.html">Mes Commandes</a>
+          <a href="wishlist.html">Favoris</a>
           ${adminLink}
-          <a href="#" onclick="logout();return false" style="color:var(--rc-red)">🚪 Déconnexion</a>
+          <a href="#" onclick="logout();return false" style="color:var(--rc-red)">Déconnexion</a>
         </div>
       </div>
     `;
@@ -346,20 +346,41 @@ function renderProductCard(product, inWishlist = false) {
   `;
 }
 
+const CATEGORY_VISUALS = {
+    "peintures-sols": { title: "Solutions pour Sols", desc: "Revêtements résistants pour sols, ateliers et espaces professionnels.", image: "images/produit 3.jpg" },
+    "peintures-bois": { title: "Finitions Bois", desc: "Laques et peintures pour sublimer et protéger vos surfaces en bois.", image: "images/batou.jpg" },
+    "enduits": { title: "Préparation & Enduits", desc: "Enduits et solutions de préparation pour une surface prête à la finition.", image: "images/megma 1.jpg" },
+    "enduits-traditionnels": { title: "Enduits Traditionnels", desc: "Des finitions authentiques inspirées des techniques traditionnelles.", image: "images/megma 2.jpg" },
+    "vernis": { title: "Vernis & Protection", desc: "Protection et finition durable pour des surfaces soignées.", image: "images/produit 4.jpg" },
+    "traitements-metal": { title: "Protection Métal", desc: "Solutions anticorrosion et traitements pour métaux et structures.", image: "images/produit 5.jpg" },
+    "etancheite": { title: "Étanchéité & Protection", desc: "Solutions professionnelles contre l'humidité et les infiltrations.", image: "images/megma 3.jpg" },
+    "enduits-finition": { title: "Finition & Lissage", desc: "Préparez vos murs pour obtenir une finition régulière et élégante.", image: "images/megma 4.jpg" },
+    "colles": { title: "Colles & Pose", desc: "Colles et solutions fiables pour vos travaux de pose et de rénovation.", image: "images/produit 6.jpg" },
+    "enduits-facade": { title: "Façades & Extérieur", desc: "Solutions de finition et de protection pour façades durables.", image: "images/megma 5.jpg" },
+    "peintures-murales": { title: "Peintures Murales", desc: "Des peintures pour transformer vos murs avec une finition professionnelle.", image: "images/djur 1.jpg" }
+};
+
 function renderCategoryCard(cat) {
   const count = cat._count?.products || 0;
+  const visual = CATEGORY_VISUALS[cat.slug] || {
+    title: cat.name,
+    desc: cat.description || "Solutions professionnelles Rainbow Colors.",
+    image: "images/rainbow-colors-social-preview.jpg"
+  };
+
   return `
     <a href="products.html?category=${cat.slug}" class="category-card premium-category-card animate-fadeInUp" style="--category-color:${cat.color}">
-      <div class="category-card-top">
-        <span class="category-eyebrow">COLLECTION</span>
+      <div class="category-media">
+        <img src="${visual.image}" alt="${visual.title}" loading="lazy" onerror="this.src='images/rainbow-colors-social-preview.jpg'">
+        <div class="category-media-overlay"></div>
         <span class="category-number">${String(count).padStart(2, '0')}</span>
       </div>
-      <div class="category-accent"></div>
-      <div class="category-card-content">
-        <h3>${cat.name}</h3>
-        <p>${count} produits disponibles</p>
+      <div class="category-card-body">
+        <div class="category-eyebrow">RAINBOW COLORS</div>
+        <h3>${visual.title}</h3>
+        <p>${visual.desc}</p>
+        <span class="category-cta">Découvrir la collection <span aria-hidden="true">→</span></span>
       </div>
-      <span class="category-arrow" aria-hidden="true">↗</span>
     </a>
   `;
 }
