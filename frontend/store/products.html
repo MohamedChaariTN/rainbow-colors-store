@@ -63,12 +63,43 @@ document.getElementById('searchInput')?.addEventListener('keypress', e => { if(e
 async function loadProducts(params={}) {
   try {
     const data = await fetchProducts(params);
-    document.getElementById('productList').innerHTML = data.products.length 
+    document.getElementById('productList').innerHTML = data.products.length
       ? data.products.map(p => renderProductCard(p)).join('')
       : '<div style="text-align:center;padding:60px;color:var(--rc-gray-500)"><h3>Aucun produit trouvé</h3></div>';
-  } catch(e) { console.error(e); }
+
+    const heading = document.querySelector('.page-header h1');
+    const description = document.querySelector('.page-header p');
+    const category = params.category || '';
+
+    if (heading && category) {
+      const categories = await fetchCategories();
+      const selected = categories.find(c => c.slug === category);
+      if (selected) {
+        heading.textContent = selected.name;
+        if (description) description.textContent = selected.description || 'Produits disponibles dans cette collection.';
+        document.title = selected.name + ' | Rainbow Colors';
+      }
+    }
+  } catch(e) {
+    console.error(e);
+  }
 }
-document.addEventListener('DOMContentLoaded', () => loadProducts());
+
+document.addEventListener('DOMContentLoaded', () => {
+  const params = {};
+  const urlParams = new URLSearchParams(window.location.search);
+  const category = urlParams.get('category');
+  const search = urlParams.get('search');
+
+  if (category) params.category = category;
+  if (search) {
+    params.search = search;
+    const input = document.getElementById('searchInput');
+    if (input) input.value = search;
+  }
+
+  loadProducts(params);
+});
 </script>
 
 
