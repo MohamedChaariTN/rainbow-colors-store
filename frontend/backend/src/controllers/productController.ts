@@ -22,11 +22,20 @@ export const getProducts = async (req: Request, res: Response) => {
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
     const where: any = { isActive: true };
-    if (category) where.category = { slug: category };
-    if (search) {
+    if (category) where.category = { slug: String(category).trim() };
+
+    // Recherche souple: nom, slug, description, catégorie et nom du fichier image.
+    // Cela permet aussi de trouver un produit en tapant seulement le début du mot
+    // (ex: "meg" pour "megma") ou le nom associé à son image.
+    const searchTerm = typeof search === 'string' ? search.trim() : '';
+    if (searchTerm) {
       where.OR = [
-        { name: { contains: search as string, mode: 'insensitive' } },
-        { description: { contains: search as string, mode: 'insensitive' } },
+        { name: { contains: searchTerm, mode: 'insensitive' } },
+        { slug: { contains: searchTerm, mode: 'insensitive' } },
+        { description: { contains: searchTerm, mode: 'insensitive' } },
+        { image: { contains: searchTerm, mode: 'insensitive' } },
+        { category: { name: { contains: searchTerm, mode: 'insensitive' } } },
+        { category: { slug: { contains: searchTerm, mode: 'insensitive' } } },
       ];
     }
 
