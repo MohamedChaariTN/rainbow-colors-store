@@ -288,13 +288,37 @@ export const deleteAccount = async (req: any, res: Response) => {
 
 export const updateProfile = async (req: any, res: Response) => {
   try {
-    const { firstName, lastName, phone, address, city, profileImage } = req.body;
+    const firstName = String(req.body?.firstName ?? '').trim();
+    const lastName = String(req.body?.lastName ?? '').trim();
+    const phone = String(req.body?.phone ?? '').trim();
+    const address = String(req.body?.address ?? '').trim();
+    const city = String(req.body?.city ?? '').trim();
+    const profileImage = typeof req.body?.profileImage === 'string' && req.body.profileImage.trim()
+      ? req.body.profileImage.trim()
+      : undefined;
+
+    if (firstName.length < 2 || lastName.length < 2) {
+      return res.status(400).json({ error: 'Le prénom et le nom doivent contenir au moins 2 caractères.' });
+    }
+
+    const data: any = {
+      firstName,
+      lastName,
+      phone: phone || null,
+      address: address || null,
+      city: city || null,
+    };
+
+    if (profileImage !== undefined) data.profileImage = profileImage;
+
     const user = await prisma.user.update({
       where: { id: req.user.id },
-      data: { firstName, lastName, phone, address, city, profileImage }
+      data
     });
-    res.json({ user: publicUser(user) });
+
+    return res.json({ user: publicUser(user) });
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    console.error('PATCH /api/auth/profile failed:', err);
+    return res.status(400).json({ error: err?.message || 'Impossible de mettre à jour le profil.' });
   }
 };
