@@ -183,7 +183,40 @@ document.addEventListener('DOMContentLoaded', loadProfile);
   </div>
 </div>
 
-<script src="js/main.js"></script>
+<script src="js/main.js?v=20261005-logout"></script>
+<script>
+/* Final account-page logout fallback: independent from cached main.js handlers. */
+window.logout = function(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+  try {
+    localStorage.removeItem('rc_token');
+    sessionStorage.removeItem('rc_token');
+  } catch (_) {}
+  if (typeof authToken !== 'undefined') authToken = null;
+  if (typeof currentUser !== 'undefined') currentUser = null;
+  document.querySelectorAll('.user-dropdown').forEach(function(el) { el.classList.remove('open'); });
+  var modal = document.getElementById('authModal');
+  if (modal) {
+    modal.classList.add('open');
+    var login = document.getElementById('loginForm');
+    var register = document.getElementById('registerForm');
+    if (login) login.style.display = 'block';
+    if (register) register.style.display = 'none';
+  }
+  var name = document.getElementById('accName');
+  var email = document.getElementById('accEmail');
+  var avatar = document.getElementById('accAvatar');
+  if (name) name.textContent = 'Visiteur';
+  if (email) email.textContent = '';
+  if (avatar) avatar.textContent = '👤';
+  var authBtn = document.querySelector('.auth-btn');
+  if (authBtn) authBtn.innerHTML = '<button class="icon-btn" onclick="openAuthModal(\'login\')" title="Connexion">👤</button>';
+  return false;
+};
+</script>
 
 </body>
 </html>
