@@ -40,13 +40,22 @@ function logout() {
 }
 
 async function checkAuth() {
-  if (!authToken) return;
+  if (!authToken) {
+    currentUser = null;
+    updateAuthUI();
+    return false;
+  }
   try {
     const data = await api('/auth/me');
     currentUser = data.user;
     updateAuthUI();
+    return true;
   } catch {
-    logout();
+    authToken = null;
+    currentUser = null;
+    localStorage.removeItem('rc_token');
+    updateAuthUI();
+    return false;
   }
 }
 
@@ -162,7 +171,7 @@ async function handleLogin(e) {
     const data = await api('/auth/login', {
       method: 'POST',
       body: {
-        email: document.getElementById('loginEmail').value,
+        email: document.getElementById('loginEmail').value.trim().toLowerCase(),
         password: document.getElementById('loginPassword').value
       }
     });
@@ -180,7 +189,7 @@ async function handleRegister(e) {
     const data = await api('/auth/register', {
       method: 'POST',
       body: {
-        email: document.getElementById('regEmail').value,
+        email: document.getElementById('regEmail').value.trim().toLowerCase(),
         password: document.getElementById('regPassword').value,
         firstName: document.getElementById('regFirstName').value,
         lastName: document.getElementById('regLastName').value,
