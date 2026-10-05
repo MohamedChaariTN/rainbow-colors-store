@@ -18,16 +18,20 @@ const productSchema = z.object({
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const { category, search, page = '1', limit = '20' } = req.query;
-    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+    const category = typeof req.query.category === 'string' ? req.query.category.trim() : '';
+    const searchTerm = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+    const pageRaw = Number.parseInt(String(req.query.page ?? '1'), 10);
+    const limitRaw = Number.parseInt(String(req.query.limit ?? '20'), 10);
+    const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 100) : 20;
+    const skip = (page - 1) * limit;
 
     const where: any = { isActive: true };
-    if (category) where.category = { slug: String(category).trim() };
 
-    // Recherche souple: nom, slug, description, catégorie et nom du fichier image.
-    // Cela permet aussi de trouver un produit en tapant seulement le début du mot
-    // (ex: "meg" pour "megma") ou le nom associé à son image.
-    const searchTerm = typeof search === 'string' ? search.trim() : '';
+    if (category) {
+      where.category = { slug: category };
+    }
+
     if (searchTerm) {
       where.OR = [
         { name: { contains: searchTerm, mode: 'insensitive' } },
@@ -44,18 +48,27 @@ export const getProducts = async (req: Request, res: Response) => {
         where,
         include: { category: true },
         skip,
-        take: parseInt(limit as string),
+        take: limit,
         orderBy: { createdAt: 'desc' }
       }),
       prisma.product.count({ where })
     ]);
 
-    res.json({ products, total, pages: Math.ceil(total / parseInt(limit as string)) });
+    res.json({
+      products,
+      total,
+      pages: Math.ceil(total / limit),
+      page,
+      limit
+    });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('GET /api/products failed:', err);
+    res.status(500).json({
+      error: 'Impossible de charger le catalogue.',
+      details: process.env.NODE_ENV === 'production' ? undefined : err?.message
+    });
   }
 };
-
 export const getProduct = async (req: Request, res: Response) => {
   try {
     const product = await prisma.product.findUnique({
