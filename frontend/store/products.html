@@ -82,6 +82,10 @@ async function loadProducts(params={}) {
     }
   } catch(e) {
     console.error(e);
+    const list = document.getElementById('productList');
+    if (list) {
+      list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--rc-gray-500)"><h3 style="color:var(--rc-gray-800);margin-bottom:10px">Catalogue temporairement indisponible</h3><p>Veuillez actualiser la page dans quelques instants.</p><button class="btn btn-primary" style="margin-top:18px" onclick="loadProducts(params)">Réessayer</button></div>';
+    }
   }
 }
 
