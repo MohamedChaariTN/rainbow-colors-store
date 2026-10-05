@@ -33,14 +33,27 @@ function setAuth(token, user) {
 
 let authSessionVersion = 0;
 
-function logout() {
+function logout(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
   authSessionVersion += 1;
   authToken = null;
   currentUser = null;
-  localStorage.removeItem('rc_token');
-  sessionStorage.removeItem('rc_token');
+
+  try {
+    localStorage.removeItem('rc_token');
+    sessionStorage.removeItem('rc_token');
+  } catch (_) {}
+
+  document.querySelectorAll('.user-dropdown').forEach(el => el.classList.remove('open'));
   updateAuthUI();
-  window.location.replace('account.html');
+
+  // Force a clean navigation after clearing the session.
+  window.location.href = '/account.html';
+  return false;
 }
 
 async function checkAuth() {
@@ -92,7 +105,7 @@ function updateAuthUI() {
           <a href="orders.html">Mes Commandes</a>
           <a href="wishlist.html">Favoris</a>
           ${adminLink}
-          <a href="#" onclick="logout();return false" style="color:var(--rc-red)">Déconnexion</a>
+          <a href="#" onclick="return logout(event)" style="color:var(--rc-red)">Déconnexion</a>
         </div>
       </div>
     `;
