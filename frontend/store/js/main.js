@@ -31,29 +31,40 @@ function setAuth(token, user) {
   updateAuthUI();
 }
 
+let authSessionVersion = 0;
+
 function logout() {
+  authSessionVersion += 1;
   authToken = null;
   currentUser = null;
   localStorage.removeItem('rc_token');
+  sessionStorage.removeItem('rc_token');
   updateAuthUI();
-  location.reload();
+  window.location.replace('account.html');
 }
 
 async function checkAuth() {
-  if (!authToken) {
+  const version = authSessionVersion;
+  const token = authToken;
+
+  if (!token) {
     currentUser = null;
     updateAuthUI();
     return false;
   }
+
   try {
     const data = await api('/auth/me');
+    if (version !== authSessionVersion || token !== authToken) return false;
     currentUser = data.user;
     updateAuthUI();
     return true;
   } catch {
+    if (version !== authSessionVersion || token !== authToken) return false;
     authToken = null;
     currentUser = null;
     localStorage.removeItem('rc_token');
+    sessionStorage.removeItem('rc_token');
     updateAuthUI();
     return false;
   }
