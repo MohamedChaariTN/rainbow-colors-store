@@ -104,18 +104,56 @@ function previewProfileImage(e) {
 }
 async function updateProfile(e) {
   e.preventDefault();
+
+  const firstName = document.getElementById('profFirstName').value.trim();
+  const lastName = document.getElementById('profLastName').value.trim();
+  const phone = document.getElementById('profPhone').value.trim();
+  const address = document.getElementById('profAddress').value.trim();
+  const city = document.getElementById('profCity').value.trim();
+
+  if (firstName.length < 2 || lastName.length < 2) {
+    showToast('Le prénom et le nom doivent contenir au moins 2 caractères.', 'error');
+    return;
+  }
+
+  const button = e.submitter || e.target.querySelector('button[type="submit"]');
+  const originalText = button?.textContent;
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Enregistrement...';
+  }
+
   try {
-    await api('/auth/profile', { method: 'PATCH', body: {
-      firstName: document.getElementById('profFirstName').value,
-      lastName: document.getElementById('profLastName').value,
-      phone: document.getElementById('profPhone').value,
-      address: document.getElementById('profAddress').value,
-      city: document.getElementById('profCity').value,
-      profileImage: window.pendingProfileImage || undefined,
-    }});
-    showToast('Profil mis à jour !');
-    await checkAuth();
-  } catch(err){ showToast(err.message,'error'); }
+    const data = await api('/auth/profile', {
+      method: 'PATCH',
+      body: {
+        firstName,
+        lastName,
+        phone: phone || null,
+        address: address || null,
+        city: city || null,
+        ...(window.pendingProfileImage ? { profileImage: window.pendingProfileImage } : {})
+      }
+    });
+
+    // Use the server response immediately instead of relying on a second auth request.
+    if (data.user) {
+      currentUser = data.user;
+      updateAuthUI();
+      document.getElementById('accName').textContent = data.user.firstName + ' ' + data.user.lastName;
+      document.getElementById('accEmail').textContent = data.user.email;
+      window.pendingProfileImage = null;
+    }
+
+    showToast('Profil mis à jour avec succès !');
+  } catch(err) {
+    showToast(err.message || 'Impossible de mettre à jour le profil.', 'error');
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalText || 'Enregistrer les modifications';
+    }
+  }
 }
 document.addEventListener('DOMContentLoaded', loadProfile);
 </script>
