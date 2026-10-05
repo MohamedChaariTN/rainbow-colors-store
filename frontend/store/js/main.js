@@ -93,7 +93,9 @@ function updateAuthUI() {
   if (!authBtn) return;
 
   if (currentUser) {
-    const initials = (currentUser.firstName[0] + currentUser.lastName[0]).toUpperCase();
+    const firstName = String(currentUser.firstName || '').trim();
+    const lastName = String(currentUser.lastName || '').trim();
+    const initials = ((firstName[0] || 'R') + (lastName[0] || 'C')).toUpperCase();
     const avatarContent = currentUser.profileImage ? '<img src="' + currentUser.profileImage + '" alt="Photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">' : initials;
     const isAdmin = currentUser.role === 'ADMIN';
     const adminLink = isAdmin ? '<a href="/admin">Dashboard Admin</a>' : '';
@@ -102,7 +104,7 @@ function updateAuthUI() {
         <button class="icon-btn" style="background:linear-gradient(135deg,var(--rc-blue),var(--rc-purple));color:white;font-weight:700;font-size:13px;overflow:hidden;padding:0" onclick="toggleUserMenu()">${avatarContent}</button>
         <div class="user-dropdown" id="userDropdown">
           <div style="padding:10px 14px;border-bottom:1px solid var(--rc-gray-100);margin-bottom:4px">
-            <div style="font-weight:700;font-size:14px">${currentUser.firstName} ${currentUser.lastName}</div>
+            <div style="font-weight:700;font-size:14px">${firstName} ${lastName}</div>
             <div style="font-size:12px;color:var(--rc-gray-400)">${currentUser.email}</div>
           </div>
           <a href="account.html">Mon Compte</a>
