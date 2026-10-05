@@ -39,6 +39,7 @@ function logout(event) {
     event.stopPropagation();
   }
 
+  // Invalidate every pending auth check before clearing the session.
   authSessionVersion += 1;
   authToken = null;
   currentUser = null;
@@ -51,8 +52,11 @@ function logout(event) {
   document.querySelectorAll('.user-dropdown').forEach(el => el.classList.remove('open'));
   updateAuthUI();
 
-  // Force a clean navigation after clearing the session.
-  window.location.href = '/account.html';
+  // Stay on the current page. On the account page, immediately show the login form.
+  if (document.getElementById('authModal')) {
+    openAuthModal('login');
+  }
+
   return false;
 }
 
