@@ -227,11 +227,15 @@ export const konnectWebhook = async (req: any, res: Response) => {
 };
 
 export const getPaymentMethods = async (req: any, res: Response) => {
-  res.json({
-    methods: [
-      { id: 'cod', name: 'Paiement à la livraison (COD)', icon: '💵', description: 'Payez en espèces à la réception de votre commande' },
+  const konnectReady = Boolean(process.env.KONNECT_API_KEY && process.env.KONNECT_WALLET_ID);
+  const methods = [
+    { id: 'cod', name: 'Paiement à la livraison (COD)', icon: '💵', description: 'Payez en espèces à la réception de votre commande' }
+  ];
+  if (konnectReady) {
+    methods.push(
       { id: 'card', name: 'Carte bancaire', icon: '💳', description: 'Visa / Mastercard via Konnect — paiement sécurisé 3-D Secure' },
       { id: 'edinar', name: 'E-Dinar', icon: '📮', description: 'Paiement E-Dinar via Konnect' }
-    ]
-  });
+    );
+  }
+  res.json({ methods });
 };
