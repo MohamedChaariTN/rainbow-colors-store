@@ -42,6 +42,16 @@
 </section>
 <section class="section">
   <div class="section-inner">
+    <div id="accountAuthGate" style="display:none;max-width:620px;margin:0 auto 28px;padding:28px;border:1px solid var(--rc-gray-100);border-radius:16px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.06);text-align:center">
+      <div style="font-size:42px;margin-bottom:10px">👤</div>
+      <h2 style="font-size:24px;font-weight:800;margin-bottom:8px">Connectez-vous à votre compte</h2>
+      <p style="color:var(--rc-gray-500);margin-bottom:20px">Pour consulter et modifier votre profil, connectez-vous ou créez votre compte Rainbow Colors.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button type="button" class="btn btn-primary" onclick="openAuthModal('login')">Se connecter</button>
+        <a href="register.html" class="btn btn-outline">Créer un compte</a>
+      </div>
+      <p id="accountAuthError" style="display:none;color:#b91c1c;margin-top:16px;font-size:14px"></p>
+    </div>
     <div style="display:grid;grid-template-columns:280px 1fr;gap:32px;align-items:start">
       <div class="account-sidebar">
         <div style="text-align:center;padding:20px 0;border-bottom:1px solid var(--rc-gray-100);margin-bottom:16px">
@@ -74,7 +84,15 @@
 </section>
 <script>
 async function loadProfile() {
-  if(!authToken){ openAuthModal(); return; }
+  const gate = document.getElementById('accountAuthGate');
+  const content = document.querySelector('.account-sidebar')?.parentElement;
+  if(!authToken){
+    if (gate) gate.style.display = 'block';
+    if (content) content.style.display = 'none';
+    return;
+  }
+  if (gate) gate.style.display = 'none';
+  if (content) content.style.display = 'grid';
   try {
     const data = await api('/auth/me');
     const u = data.user;
@@ -89,7 +107,14 @@ async function loadProfile() {
     document.getElementById('profPhone').value = u.phone||'';
     document.getElementById('profAddress').value = u.address||'';
     document.getElementById('profCity').value = u.city||'';
-  } catch(e){}
+  } catch(e){
+    if (gate) gate.style.display = 'block';
+    if (content) content.style.display = 'none';
+    const error = document.getElementById('accountAuthError');
+    if (error) { error.textContent = 'Impossible de charger votre compte. Veuillez vous reconnecter.'; error.style.display = 'block'; }
+    localStorage.removeItem('rc_token');
+    authToken = null;
+  }
 }
 function previewProfileImage(e) {
   const file = e.target.files?.[0];
