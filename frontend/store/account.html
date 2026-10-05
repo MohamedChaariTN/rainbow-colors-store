@@ -74,10 +74,13 @@
 </section>
 <script>
 async function loadProfile() {
-  if(!authToken){ openAuthModal(); return; }
+  const ok = await checkAuth();
+  if (!ok || !currentUser) {
+    openAuthModal('login');
+    return;
+  }
   try {
-    const data = await api('/auth/me');
-    const u = data.user;
+    const u = currentUser;
     const avatar = document.getElementById('accAvatar');
     if (u.profileImage) avatar.innerHTML = '<img src="' + u.profileImage + '" alt="Photo de profil" style="width:100%;height:100%;object-fit:cover">';
     else avatar.textContent = (u.firstName[0]+u.lastName[0]).toUpperCase();
@@ -89,7 +92,7 @@ async function loadProfile() {
     document.getElementById('profPhone').value = u.phone||'';
     document.getElementById('profAddress').value = u.address||'';
     document.getElementById('profCity').value = u.city||'';
-  } catch(e){}
+  } catch(e){ showToast(e.message || 'Impossible de charger votre profil.', 'error'); }
 }
 function previewProfileImage(e) {
   const file = e.target.files?.[0];
