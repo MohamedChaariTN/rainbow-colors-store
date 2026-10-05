@@ -81,6 +81,9 @@ async function loadProfile() {
   }
   try {
     const u = currentUser;
+    if (!u || !u.firstName || !u.lastName || !u.email) {
+      throw new Error('Les informations de votre compte sont incomplètes.');
+    }
     const avatar = document.getElementById('accAvatar');
     if (u.profileImage) avatar.innerHTML = '<img src="' + u.profileImage + '" alt="Photo de profil" style="width:100%;height:100%;object-fit:cover">';
     else avatar.textContent = (u.firstName[0]+u.lastName[0]).toUpperCase();
