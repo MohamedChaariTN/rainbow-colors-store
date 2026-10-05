@@ -72,36 +72,51 @@
     </div>
   </div>
 </section>
-<script src="js/main.js"></script>
 <script>
 async function loadProfile() {
-  if (!authToken) {
-    openAuthModal('login');
-    return;
-  }
+  if(!authToken){ openAuthModal(); return; }
   try {
     const data = await api('/auth/me');
     const u = data.user;
     const avatar = document.getElementById('accAvatar');
-    if (u.profileImage) avatar.innerHTML = '<img src="' + u.profileImage + '" alt="Photo" style="width:100%;height:100%;object-fit:cover">';
-    else avatar.textContent = (u.firstName[0] + u.lastName[0]).toUpperCase();
-    document.getElementById('accName').textContent = u.firstName + ' ' + u.lastName;
+    if (u.profileImage) avatar.innerHTML = '<img src="' + u.profileImage + '" alt="Photo de profil" style="width:100%;height:100%;object-fit:cover">';
+    else avatar.textContent = (u.firstName[0]+u.lastName[0]).toUpperCase();
+    document.getElementById('accName').textContent = u.firstName+' '+u.lastName;
     document.getElementById('accEmail').textContent = u.email;
-    document.getElementById('profFirstName').value = u.firstName || '';
-    document.getElementById('profLastName').value = u.lastName || '';
-    document.getElementById('profEmail').value = u.email || '';
-    document.getElementById('profPhone').value = u.phone || '';
-    document.getElementById('profAddress').value = u.address || '';
-    document.getElementById('profCity').value = u.city || '';
-  } catch (e) {
-    localStorage.removeItem('rc_token');
-    authToken = null;
-    openAuthModal('login');
-    showToast('Votre session a expiré. Veuillez vous reconnecter.', 'error');
-  }
+    document.getElementById('profFirstName').value = u.firstName;
+    document.getElementById('profLastName').value = u.lastName;
+    document.getElementById('profEmail').value = u.email;
+    document.getElementById('profPhone').value = u.phone||'';
+    document.getElementById('profAddress').value = u.address||'';
+    document.getElementById('profCity').value = u.city||'';
+  } catch(e){}
+}
+function previewProfileImage(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (file.size > 2000000) { showToast('La photo doit faire 2 Mo maximum.', 'error'); e.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = () => { const avatar=document.getElementById('accAvatar'); avatar.innerHTML='<img src="'+reader.result+'" alt="Photo de profil" style="width:100%;height:100%;object-fit:cover">'; window.pendingProfileImage=reader.result; };
+  reader.readAsDataURL(file);
+}
+async function updateProfile(e) {
+  e.preventDefault();
+  try {
+    await api('/auth/profile', { method: 'PATCH', body: {
+      firstName: document.getElementById('profFirstName').value,
+      lastName: document.getElementById('profLastName').value,
+      phone: document.getElementById('profPhone').value,
+      address: document.getElementById('profAddress').value,
+      city: document.getElementById('profCity').value,
+      profileImage: window.pendingProfileImage || undefined,
+    }});
+    showToast('Profil mis à jour !');
+    await checkAuth();
+  } catch(err){ showToast(err.message,'error'); }
 }
 document.addEventListener('DOMContentLoaded', loadProfile);
 </script>
+
 
 <footer class="footer">
   <div class="footer-inner">
@@ -165,6 +180,7 @@ document.addEventListener('DOMContentLoaded', loadProfile);
   </div>
 </div>
 
+<script src="js/main.js"></script>
 
 </body>
 </html>
