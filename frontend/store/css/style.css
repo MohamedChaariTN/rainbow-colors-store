@@ -2031,8 +2031,8 @@ section:not(.hero):not(.premium-hero):not(.promo-section):not(.app-download-hero
 }
 .header .logo img, .premium-header .logo img {
   position:absolute !important;
-  left:-76px !important;
-  top:-100px !important;
+  left:-67px !important;
+  top:-95px !important;
   display:block !important;
   width:310px !important;
   max-width:none !important;
@@ -2060,8 +2060,8 @@ section:not(.hero):not(.premium-hero):not(.promo-section):not(.app-download-hero
 }
 .footer-brand .rc-logo-crop img {
   position:absolute !important;
-  left:-76px !important;
-  top:-100px !important;
+  left:-67px !important;
+  top:-95px !important;
   width:310px !important;
   max-width:none !important;
   height:auto !important;
@@ -2081,8 +2081,8 @@ section:not(.hero):not(.premium-hero):not(.promo-section):not(.app-download-hero
   }
   .header .logo img, .premium-header .logo img,
   .footer-brand .rc-logo-crop img {
-    left:-64px !important;
-    top:-84px !important;
+    left:-57px !important;
+    top:-80px !important;
     width:262px !important;
   }
   .footer-brand .rc-logo-crop {
