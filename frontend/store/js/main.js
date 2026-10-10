@@ -1,18 +1,17 @@
-// ===== RAINBOW COLORS STORE - API CLIENT =====
+// ===== RAINBOW COLORS PUBLIC CATALOGUE =====
 const API_URL = (window.RAINBOW_COLORS_API_URL || (window.location.origin + '/api')).replace(/\/$/, '');
 
-// ===== AUTH =====
-let currentUser = null;
-let authToken = localStorage.getItem('rc_token');
+// Public read-only catalogue: no customer account, cart, wishlist, checkout or order workflow.
+// Clear any legacy customer session left in this browser.
+try {
+  localStorage.removeItem('rc_token');
+  sessionStorage.removeItem('rc_token');
+} catch (_) {}
 
 async function api(endpoint, options = {}) {
   const url = API_URL + endpoint;
   const opts = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(authToken && { 'Authorization': 'Bearer ' + authToken }),
-      ...options.headers
-    },
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options
   };
   if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
@@ -24,287 +23,19 @@ async function api(endpoint, options = {}) {
   return data;
 }
 
-function setAuth(token, user) {
-  authToken = token;
-  currentUser = user;
-  localStorage.setItem('rc_token', token);
-  updateAuthUI();
-}
-
-let authSessionVersion = 0;
-
-function logout(event) {
-  if (event) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-
-  // Invalidate every pending auth check before clearing the session.
-  authSessionVersion += 1;
-  authToken = null;
-  currentUser = null;
-
-  try {
-    localStorage.removeItem('rc_token');
-    sessionStorage.removeItem('rc_token');
-  } catch (_) {}
-
-  document.querySelectorAll('.user-dropdown').forEach(el => el.classList.remove('open'));
-  updateAuthUI();
-
-  // Stay on the current page. On the account page, immediately show the login form.
-  if (document.getElementById('authModal')) {
-    openAuthModal('login');
-  }
-
-  return false;
-}
-
-async function checkAuth() {
-  const version = authSessionVersion;
-  const token = authToken;
-
-  if (!token) {
-    currentUser = null;
-    updateAuthUI();
-    return false;
-  }
-
-  try {
-    const data = await api('/auth/me');
-    if (version !== authSessionVersion || token !== authToken) return false;
-    currentUser = data.user;
-    updateAuthUI();
-    return true;
-  } catch {
-    if (version !== authSessionVersion || token !== authToken) return false;
-    authToken = null;
-    currentUser = null;
-    localStorage.removeItem('rc_token');
-    sessionStorage.removeItem('rc_token');
-    updateAuthUI();
-    return false;
-  }
-}
-
-function updateAuthUI() {
-  const authBtn = document.querySelector('.auth-btn');
-  const userMenu = document.querySelector('.user-menu');
-  if (!authBtn) return;
-
-  if (currentUser) {
-    const firstName = String(currentUser.firstName || '').trim();
-    const lastName = String(currentUser.lastName || '').trim();
-    const initials = ((firstName[0] || 'R') + (lastName[0] || 'C')).toUpperCase();
-    const avatarContent = currentUser.profileImage ? '<img src="' + currentUser.profileImage + '" alt="Photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%">' : initials;
-    const isAdmin = currentUser.role === 'ADMIN';
-    const adminLink = isAdmin ? '<a href="/admin">Dashboard Admin</a>' : '';
-    authBtn.innerHTML = `
-      <div class="user-menu" style="position:relative">
-        <button class="icon-btn" style="background:linear-gradient(135deg,var(--rc-blue),var(--rc-purple));color:white;font-weight:700;font-size:13px;overflow:hidden;padding:0" onclick="toggleUserMenu()">${avatarContent}</button>
-        <div class="user-dropdown" id="userDropdown">
-          <div style="padding:10px 14px;border-bottom:1px solid var(--rc-gray-100);margin-bottom:4px">
-            <div style="font-weight:700;font-size:14px">${firstName} ${lastName}</div>
-            <div style="font-size:12px;color:var(--rc-gray-400)">${currentUser.email}</div>
-          </div>
-          <a href="account.html">Mon Compte</a>
-          <a href="orders.html">Mes Commandes</a>
-          <a href="wishlist.html">Favoris</a>
-          ${adminLink}
-          <a href="#" onclick="return logout(event)" style="color:var(--rc-red)">Déconnexion</a>
-        </div>
-      </div>
-    `;
-  } else {
-    authBtn.innerHTML = `<button class="icon-btn" onclick="openAuthModal()" title="Connexion">👤</button>`;
-  }
-}
-
-function toggleUserMenu() {
-  document.getElementById('userDropdown').classList.toggle('open');
-}
-
-document.addEventListener('click', (e) => {
-  const dropdown = document.getElementById('userDropdown');
-  if (dropdown && !e.target.closest('.user-menu')) dropdown.classList.remove('open');
-});
-
-// ===== AUTH MODAL =====
-function openAuthModal(mode = 'login') {
-  const overlay = document.getElementById('authModal');
-  const loginForm = document.getElementById('loginForm');
-  const registerForm = document.getElementById('registerForm');
-  const verificationForm = document.getElementById('verificationForm');
-  const forgotPasswordForm = document.getElementById('forgotPasswordForm');
-
-  if (!overlay || !loginForm || !registerForm) return;
-
-  const hide = (el) => { if (el) el.style.display = 'none'; };
-  const show = (el) => { if (el) el.style.display = 'block'; };
-
-  hide(loginForm);
-  hide(registerForm);
-  hide(verificationForm);
-  hide(forgotPasswordForm);
-
-  if (mode === 'register') {
-    show(registerForm);
-  } else if (mode === 'verify') {
-    show(verificationForm);
-  } else if (mode === 'forgot') {
-    show(forgotPasswordForm);
-  } else {
-    show(loginForm);
-  }
-
-  overlay.classList.add('open');
-}
-
-function closeAuthModal() {
-  document.getElementById('authModal').classList.remove('open');
-}
-
-async function handleForgotPasswordRequest(e) {
-  e.preventDefault();
-  try {
-    const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
-    await api('/auth/forgot-password', { method: 'POST', body: { email } });
-    document.getElementById('forgotRequestStep').style.display = 'none';
-    document.getElementById('forgotResetStep').style.display = 'block';
-    showToast('Si ce compte existe, un code a été envoyé à votre email !');
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
-}
-
-async function handleResetPassword(e) {
-  e.preventDefault();
-  try {
-    const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
-    const code = document.getElementById('resetCode').value.trim();
-    const password = document.getElementById('resetPassword').value;
-    const data = await api('/auth/reset-password', {
-      method: 'POST',
-      body: { email, code, password }
-    });
-    setAuth(data.token, data.user);
-    closeAuthModal();
-    showToast('Mot de passe modifié avec succès !');
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
-}
-
-async function handleLogin(e) {
-  e.preventDefault();
-  try {
-    const data = await api('/auth/login', {
-      method: 'POST',
-      body: {
-        email: document.getElementById('loginEmail').value.trim().toLowerCase(),
-        password: document.getElementById('loginPassword').value
-      }
-    });
-    setAuth(data.token, data.user);
-    closeAuthModal();
-    showToast('Connexion réussie !');
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
-}
-
-async function handleRegister(e) {
-  e.preventDefault();
-  try {
-    const data = await api('/auth/register', {
-      method: 'POST',
-      body: {
-        email: document.getElementById('regEmail').value.trim().toLowerCase(),
-        password: document.getElementById('regPassword').value,
-        firstName: document.getElementById('regFirstName').value,
-        lastName: document.getElementById('regLastName').value,
-        phone: document.getElementById('regPhone').value,
-        profileImage: await readProfileImage()
-      }
-    });
-    if (data.token && data.user) {
-      setAuth(data.token, data.user);
-      closeAuthModal();
-      showToast('Compte créé avec succès !');
-    } else {
-      pendingVerificationEmail = data.email;
-      document.getElementById('verificationEmail').textContent = data.email;
-      openAuthModal('verify');
-      showToast('Code de vérification envoyé à votre email !');
-    }
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
-}
-
-let pendingVerificationEmail = null;
-async function readProfileImage() {
-  const file = document.getElementById('regProfileImage')?.files?.[0];
-  if (!file) return undefined;
-  if (file.size > 2000000) throw new Error('La photo doit faire 2 Mo maximum.');
-  return new Promise((resolve, reject) => { const reader=new FileReader(); reader.onload=()=>resolve(reader.result); reader.onerror=()=>reject(new Error('Impossible de lire la photo.')); reader.readAsDataURL(file); });
-}
-
-async function handleVerifyEmail(e) {
-  e.preventDefault();
-  try { const data=await api('/auth/verify-email',{method:'POST',body:{email:pendingVerificationEmail,code:document.getElementById('verificationCode').value.trim()}}); setAuth(data.token,data.user); closeAuthModal(); showToast('Email vérifié et compte activé !'); }
-  catch(err){ showToast(err.message,'error'); }
-}
-async function resendVerificationCode() {
-  try { await api('/auth/resend-verification',{method:'POST',body:{email:pendingVerificationEmail}}); showToast('Nouveau code envoyé !'); }
-  catch(err){ showToast(err.message,'error'); }
-}
-
-function ensureAuthVerificationUI() {
-  const registerForm = document.getElementById('registerForm');
-  if (registerForm && !document.getElementById('regProfileImage')) {
-    const passwordGroup = document.getElementById('regPassword')?.closest('.form-group');
-    if (passwordGroup) {
-      const group = document.createElement('div');
-      group.className = 'form-group';
-      group.innerHTML = '<label>Photo de profil <span style="color:var(--rc-gray-400)">(optionnelle)</span></label><input type="file" id="regProfileImage" accept="image/jpeg,image/png,image/webp">';
-      passwordGroup.insertAdjacentElement('afterend', group);
-    }
-  }
-  if (!document.getElementById('forgotPasswordForm') && document.getElementById('authModal')) {
-    const modal = document.querySelector('#authModal .modal');
-    const form = document.createElement('div');
-    form.id = 'forgotPasswordForm';
-    form.style.display = 'none';
-    form.innerHTML = '<div id="forgotRequestStep"><h2>Mot de passe oublié ?</h2><p>Entrez votre email. Nous vous enverrons un code pour choisir un nouveau mot de passe.</p><form onsubmit="handleForgotPasswordRequest(event)"><div class="form-group"><label>Email</label><input type="email" id="forgotEmail" placeholder="votre@email.com" required></div><button type="submit" class="btn btn-primary">Envoyer le code</button></form></div><div id="forgotResetStep" style="display:none"><h2>Nouveau mot de passe</h2><p>Entrez le code reçu par email puis votre nouveau mot de passe.</p><form onsubmit="handleResetPassword(event)"><div class="form-group"><label>Code</label><input type="text" id="resetCode" inputmode="numeric" maxlength="6" placeholder="000000" required></div><div class="form-group"><label>Nouveau mot de passe</label><input type="password" id="resetPassword" minlength="6" placeholder="Au moins 6 caractères" required></div><button type="submit" class="btn btn-primary">Changer mon mot de passe</button></form></div><div class="switch" style="margin-top:16px"><a href="#" onclick="openAuthModal('login');return false">Retour à la connexion</a></div>';
-    const closeBtn = modal?.querySelector('.close-btn');
-    if (modal) closeBtn ? closeBtn.insertAdjacentElement('afterend', form) : modal.appendChild(form);
-  }
-
-  if (!document.getElementById('verificationForm') && document.getElementById('authModal')) {
-    const modal = document.querySelector('#authModal .modal');
-    const form = document.createElement('div');
-    form.id = 'verificationForm';
-    form.style.display = 'none';
-    form.innerHTML = '<h2>Vérifiez votre email</h2><p>Nous avons envoyé un code à <strong id="verificationEmail"></strong></p><form onsubmit="handleVerifyEmail(event)"><div class="form-group"><label>Code de vérification</label><input type="text" id="verificationCode" inputmode="numeric" maxlength="6" placeholder="000000" required></div><button type="submit" class="btn btn-primary">Vérifier mon email</button></form><button type="button" class="btn btn-secondary" style="margin-top:10px;width:100%" onclick="resendVerificationCode()">Renvoyer le code</button>';
-    const closeBtn = modal?.querySelector('.close-btn');
-    if (modal) closeBtn ? closeBtn.insertAdjacentElement('afterend', form) : modal.appendChild(form);
-  }
-}
-
-// ===== CATALOGUE-ONLY CUSTOMER ACTIONS =====
-async function addToCart() {
-  showToast('Ce site est un catalogue de présentation : les commandes ne sont pas disponibles.', 'info');
-  return false;
-}
-
+// Defensive no-op compatibility for any stale template or browser cache.
+async function addToCart() { return false; }
 async function loadCart() {
-  document.querySelectorAll('.cart-count').forEach(el => el.remove());
+  document.querySelectorAll('.cart-count, .cart-button, .cart-link, [data-cart]').forEach(el => el.remove());
   return { items: [] };
 }
+async function toggleWishlist() { return false; }
 
-async function toggleWishlist() {
-  return false;
+// Mobile navigation
+function toggleMobileMenu() {
+  document.body.classList.toggle('mobile-menu-open');
+  document.querySelector('.mobile-menu')?.classList.toggle('open');
+  document.querySelector('.mobile-menu-overlay')?.classList.toggle('open');
 }
 
 // ===== PRODUCTS =====
