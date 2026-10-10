@@ -1982,3 +1982,34 @@ section:not(.hero):not(.premium-hero):not(.promo-section):not(.app-download-hero
   .header .logo::after, .premium-header .logo::after { font-size:15px !important; letter-spacing:0 !important; }
   .header .logo img, .premium-header .logo img { max-width:54px !important; }
 }
+
+
+/* Logo restored: the original artwork already contains its own wordmark. */
+.header .logo, .premium-header .logo {
+  min-width:0 !important;
+  gap:0 !important;
+  overflow:visible !important;
+}
+.header .logo::after, .premium-header .logo::after, .logo::after {
+  content:none !important;
+  display:none !important;
+}
+.header .logo img, .premium-header .logo img {
+  height:52px !important;
+  width:auto !important;
+  max-width:150px !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  padding:0 !important;
+  background:#ffffff !important;
+  border:1px solid #c9a44c !important;
+  border-radius:7px !important;
+  box-shadow:0 0 16px rgba(201,164,76,.13) !important;
+}
+@media(max-width:640px) {
+  .header .logo img, .premium-header .logo img {
+    height:43px !important;
+    width:auto !important;
+    max-width:120px !important;
+  }
+}
