@@ -1812,3 +1812,44 @@ input[name="maxPrice"],
 [onclick*="addToCart"], [onclick*="toggleWishlist"], [href*="checkout.html"] {
   display:none !important;
 }
+
+
+/* Final visual lock: luxury noir & gold across every public catalogue page. */
+html, body { background:#0a0a0a !important; color:#eee7d6 !important; }
+main, section.section, .section:not(.promo-section), .page-header, .section-inner { color:#eee7d6; }
+.premium-hero, .hero, .hero-section, .promo-section {
+  background:#0b0b0b !important;
+  background-image:radial-gradient(ellipse at 75% 15%,rgba(201,164,76,.10),transparent 38%),linear-gradient(135deg,#080808 0%,#121212 55%,#090909 100%) !important;
+  color:#eee7d6 !important;
+}
+.premium-hero .hero-content h1 span,
+.hero .hero-content h1 span,
+.premium-kicker,
+.hero-kicker { color:#e5c66b !important; background:none !important; -webkit-text-fill-color:#e5c66b !important; }
+.hero-paint { display:none !important; }
+.hero-glow, .app-glow { background:radial-gradient(circle,rgba(201,164,76,.16),transparent 70%) !important; }
+.premium-hero-image::before { background:conic-gradient(from 20deg,#8e6d24,#f0d783,#b18a2e,#f0d783,#8e6d24) !important; opacity:.5 !important; }
+.promo-card, .feature-card, .feature-item, .review-card, .contact-info-card, .app-download-copy {
+  background:linear-gradient(145deg,#191919,#101010) !important;
+  color:#eee7d6 !important; border-color:#3a321f !important;
+}
+.promo-card h3, .promo-card .btn, .feature-item h3, .review-card h3 { color:#e5c66b !important; }
+.promo-card .btn, .promo-card .btn:hover {
+  background:linear-gradient(135deg,#f0d783,#b18a2e) !important; color:#15120a !important;
+}
+.promo-section .section-header h2, .promo-section .section-header h2 span { color:#e5c66b !important; }
+.promo-section .subtitle { background:rgba(201,164,76,.12) !important; color:#e5c66b !important; border:1px solid #6b5524; }
+.product-card, .category-card, .premium-category-card, .pd-grid, .pd-gallery, .pd-info,
+.search-wrapper, #searchSuggestions, .search-suggestion, .contact-form, .about-card {
+  background-color:#141414;
+  color:#eee7d6;
+  border-color:#3a321f;
+}
+#searchSuggestions { background:#151515 !important; border-color:#6b5524 !important; }
+#searchSuggestions button { background:#151515 !important; color:#e5c66b !important; box-shadow:none !important; }
+#searchSuggestions strong { color:#f0d783 !important; }
+#searchSuggestions small { color:#b8ad91 !important; }
+.footer, footer { background:#060606 !important; color:#d5c9a8 !important; }
+@media (max-width: 760px) {
+  .about-grid, .stats-grid { grid-template-columns:1fr !important; }
+}
