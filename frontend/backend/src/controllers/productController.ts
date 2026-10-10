@@ -46,7 +46,22 @@ export const getProducts = async (req: Request, res: Response) => {
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where,
-        include: { category: true },
+        // Public catalogue payload intentionally excludes prices, discounts and stock quantities.
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          image: true,
+          images: true,
+          features: true,
+          badge: true,
+          categoryId: true,
+          createdAt: true,
+          category: {
+            select: { id: true, name: true, slug: true, description: true, icon: true, color: true }
+          }
+        },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' }
@@ -71,9 +86,24 @@ export const getProducts = async (req: Request, res: Response) => {
 };
 export const getProduct = async (req: Request, res: Response) => {
   try {
-    const product = await prisma.product.findUnique({
-      where: { slug: req.params.slug },
-      include: { category: true, reviews: { include: { user: { select: { firstName: true, lastName: true } } } } }
+    const product = await prisma.product.findFirst({
+      where: { slug: req.params.slug, isActive: true },
+      // Public detail endpoint also returns catalogue fields only.
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        image: true,
+        images: true,
+        features: true,
+        badge: true,
+        categoryId: true,
+        createdAt: true,
+        category: {
+          select: { id: true, name: true, slug: true, description: true, icon: true, color: true }
+        }
+      }
     });
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
