@@ -348,40 +348,25 @@ async function fetchCategories() {
   return api('/products/categories');
 }
 
-function renderProductCard(product, inWishlist = false) {
-  const oldPrice = product.oldPrice ? `<span class="old-price">${product.oldPrice.toFixed(2)} TND</span>` : '';
-  const stockClass = product.stockStatus === 'IN_STOCK' ? 'stock-in' : product.stockStatus === 'LOW_STOCK' ? 'stock-low' : 'stock-out';
-  const stockText = product.stockStatus === 'IN_STOCK' ? 'En stock' : product.stockStatus === 'LOW_STOCK' ? 'Stock limité' : 'Rupture';
-  const badgeClass = product.badge === 'new' ? 'badge-new' : product.badge === 'sale' ? 'badge-sale' : product.badge === 'eco' ? 'badge-eco' : 'badge-premium';
-  const badgeText = product.badge === 'new' ? 'Nouveau' : product.badge === 'sale' ? 'Promo' : product.badge === 'eco' ? 'Éco' : 'Premium';
-  const fill = inWishlist ? 'currentColor' : 'none';
-  const color = inWishlist ? '#dc2626' : '';
+function renderProductCard(product) {
+  const badgeClass = product.badge === 'new' ? 'badge-new' : product.badge === 'eco' ? 'badge-eco' : 'badge-premium';
+  const badgeText = product.badge === 'new' ? 'Nouveau' : product.badge === 'eco' ? 'Éco' : 'Rainbow Colors';
 
   return `
-    <div class="product-card animate-fadeInUp">
-      <div class="product-image">
-        <img src="${product.image}" alt="${product.name}" loading="lazy" onerror="this.src='images/logo ranbow colors.jpeg'">
-        ${product.badge ? `<span class="product-badge ${badgeClass}">${badgeText}</span>` : ''}
-        <div class="product-actions-overlay">
-          <button class="action-btn" data-wishlist="${product.id}" onclick="event.stopPropagation(); toggleWishlist(${product.id})" title="Favoris" style="color:${color}">
-            <svg viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-          </button>
+    <article class="product-card animate-fadeInUp catalogue-product-card">
+      <a class="catalogue-product-link" href="product.html?slug=${encodeURIComponent(product.slug)}" aria-label="Voir ${product.name}">
+        <div class="product-image">
+          <img src="${product.image}" alt="${product.name}" loading="lazy" onerror="this.src='images/logo ranbow colors.jpeg'">
+          ${product.badge && product.badge !== 'sale' ? `<span class="product-badge ${badgeClass}">${badgeText}</span>` : ''}
         </div>
-      </div>
+      </a>
       <div class="product-info">
-        <span class="product-category">${product.category?.name || product.category}</span>
-        <h3 class="product-name">${product.name}</h3>
-        <p class="product-desc">${product.description}</p>
-        <div class="product-meta">
-          <span class="product-price">${product.price.toFixed(2)} TND ${oldPrice}</span>
-          <span class="stock-status ${stockClass}">${stockText}</span>
-        </div>
-        <div class="product-btns">
-          <button class="btn btn-cart" onclick="addToCart(${product.id})">🛒 Panier</button>
-          <a href="product.html?slug=${product.slug}" class="btn btn-buy">Acheter</a>
-        </div>
+        <span class="product-category">${product.category?.name || product.category || ''}</span>
+        <h3 class="product-name"><a href="product.html?slug=${encodeURIComponent(product.slug)}">${product.name}</a></h3>
+        <p class="product-desc">${product.description || ''}</p>
+        <a href="product.html?slug=${encodeURIComponent(product.slug)}" class="catalogue-details">Voir la fiche produit <span aria-hidden="true">→</span></a>
       </div>
-    </div>
+    </article>
   `;
 }
 
