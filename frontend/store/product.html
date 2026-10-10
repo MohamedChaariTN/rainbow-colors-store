@@ -70,7 +70,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('pdImage').src = p.image;
     document.getElementById('pdCategory').textContent = p.category?.name || p.category;
     document.getElementById('pdName').textContent = p.name;
-    font-size:13px;margin-left:8px">'+p.stock+' unités disponibles</span>';
     document.getElementById('pdDesc').textContent = p.description;
     const feats = JSON.parse(p.features||'[]');
     document.getElementById('pdFeatures').innerHTML = feats.map(f => '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>'+f+'</li>').join('');
