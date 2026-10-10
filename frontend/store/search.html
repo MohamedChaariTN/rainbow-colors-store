@@ -56,56 +56,6 @@
   </div>
 </section>
 <script>
-function quickSearch(t){ document.getElementById('searchInput').value=t; doSearch(); }
-async function doSearch(){
-  const q=document.getElementById('searchInput').value;
-  if(!q){ document.getElementById('searchResults').innerHTML=''; return; }
-  try {
-    const data=await fetchProducts({search:q});
-    document.getElementById('searchResults').innerHTML=data.products.length
-      ? data.products.map(p=>renderProductCard(p)).join('')
-      : '<div style="text-align:center;padding:60px"><h3>Aucun résultat pour "'+q+'"</h3><p>Essayez avec d'autres termes</p></div>';
-  } catch(e){}
-}
-document.getElementById('searchInput')?.addEventListener('input', debounce(doSearch, 300));
-function debounce(fn,ms){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args),ms); }; }
-const q=new URLSearchParams(location.search).get('q');
-if(q){ document.getElementById('searchInput').value=q; doSearch(); }
-</script>
-
-<footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <img src="images/logo ranbow colors.jpeg" alt="Rainbow Colors">
-        <p>Rainbow Colors - Votre fournisseur de confiance pour peintures et matériaux de construction en Tunisie.</p>
-        <div class="footer-social">
-          <a href="#">📘</a><a href="#">📸</a>
-        </div>
-      </div>
-      <div class="footer-col">
-        <h4>Navigation</h4>
-        <a href="index.html">Accueil</a><a href="products.html">Produits</a><a href="categories.html">Catégories</a><a href="about.html">À Propos</a><a href="contact.html">Contact</a>
-      </div>
-      
-      <div class="footer-col">
-        <h4>Contact</h4>
-        <div class="footer-contact-item"><span>📍</span><span>Route de Gabès Km 4,5<br>Sfax, Tunisie</span></div>
-        <div class="footer-contact-item"><span>📞</span><span>+216 29 253 908</span></div>
-        <div class="footer-contact-item"><span>✉️</span><span>contact@rainbow-colors.tn</span></div>
-      </div>
-    </div>
-    <div class="footer-bottom"><p>© 2026 Rainbow Colors. Tous droits réservés.</p><p>🇹🇳 Fait en Tunisie</p></div>
-  </div>
-</footer>
-<a href="https://wa.me/21629253908" class="whatsapp-float" target="_blank">📱</a>
-
-
-
-<script src="js/main.js?v=20261010-readonly-gold"></script>
-
-</body>
-</html<script>
 const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
 const searchSuggestions = document.getElementById('searchSuggestions');
@@ -225,7 +175,8 @@ if(q){
     <div class="footer-bottom"><p>© 2026 Rainbow Colors. Tous droits réservés.</p><p>🇹🇳 Fait en Tunisie</p></div>
   </div>
 </footer>
-<a href="https://wa.me/21629253908" class="whatsapp-float" target="_blank">📱</a>
+<a href="https://wa.me/21629253908" class="whatsapp-float" aria-label="Contacter Rainbow Colors sur WhatsApp">📱</a>
+
 
 
 
