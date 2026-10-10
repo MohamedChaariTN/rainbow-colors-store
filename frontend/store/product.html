@@ -49,46 +49,28 @@
       <div class="pd-info">
         <span class="pd-category" id="pdCategory">Catégorie</span>
         <h1 id="pdName">Nom du produit</h1>
-        <div class="pd-price" id="pdPrice">0.00 TND</div>
-        <div class="pd-stock" id="pdStock"></div>
+        
+        
         <p class="pd-desc" id="pdDesc">...</p>
         <ul class="pd-features" id="pdFeatures"></ul>
-        <div class="pd-qty">
-          <span style="font-weight:600;color:var(--rc-gray-700)">Quantité :</span>
-          <button class="qty-btn" onclick="const el=document.getElementById('pdQty');el.value=Math.max(1,parseInt(el.value)-1)">−</button>
-          <input type="text" class="qty-input" id="pdQty" value="1" readonly>
-          <button class="qty-btn" onclick="const el=document.getElementById('pdQty');el.value=parseInt(el.value)+1">+</button>
-        </div>
-        <div class="pd-actions">
-          <button class="btn btn-primary" onclick="addToCartFromDetail()">🛒 Ajouter au panier</button>
-          <a href="cart.html" class="btn btn-buy">Acheter maintenant</a>
-        </div>
+        
+        
       </div>
     </div>
   </div>
 </section>
 <script>
-let currentProduct = null;
-async function addToCartFromDetail() {
-  if(!currentProduct) return;
-  const qty = parseInt(document.getElementById('pdQty').value) || 1;
-  await addToCart(currentProduct.id, qty);
-}
 document.addEventListener('DOMContentLoaded', async () => {
   const slug = new URLSearchParams(location.search).get('slug');
   if(!slug) return location.href='products.html';
   try {
     const p = await fetchProduct(slug);
-    currentProduct = p;
     document.getElementById('pdTitle').textContent = p.name;
     document.getElementById('pdBreadcrumb').textContent = p.name;
     document.getElementById('pdImage').src = p.image;
     document.getElementById('pdCategory').textContent = p.category?.name || p.category;
     document.getElementById('pdName').textContent = p.name;
-    document.getElementById('pdPrice').innerHTML = p.price.toFixed(2)+' TND'+(p.oldPrice?' <span class="old">'+p.oldPrice.toFixed(2)+' TND</span>':'');
-    const st = p.stockStatus==='IN_STOCK'?'stock-in':p.stockStatus==='LOW_STOCK'?'stock-low':'stock-out';
-    const stt = p.stockStatus==='IN_STOCK'?'En stock':p.stockStatus==='LOW_STOCK'?'Stock limité':'Rupture';
-    document.getElementById('pdStock').innerHTML = '<span class="stock-status '+st+'">'+stt+'</span> <span style="color:var(--rc-gray-400);font-size:13px;margin-left:8px">'+p.stock+' unités disponibles</span>';
+    font-size:13px;margin-left:8px">'+p.stock+' unités disponibles</span>';
     document.getElementById('pdDesc').textContent = p.description;
     const feats = JSON.parse(p.features||'[]');
     document.getElementById('pdFeatures').innerHTML = feats.map(f => '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>'+f+'</li>').join('');
