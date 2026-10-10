@@ -1728,3 +1728,87 @@ tr:nth-child(even) { background:rgba(255,255,255,.025); }
 @media (prefers-reduced-motion:no-preference) {
   .product-card, .category-card, button, .btn { transition:all .22s ease; }
 }
+
+
+/* =========================================================
+   CATALOGUE-ONLY MODE — customer storefront
+   No accounts, prices, basket, checkout, orders or favourites.
+========================================================= */
+.header-actions a[href="cart.html"],
+.header-actions a[href="account.html"],
+.header-actions a[href="orders.html"],
+.header-actions a[href="wishlist.html"],
+.header-actions .auth-btn,
+.mobile-menu a[href="cart.html"],
+.mobile-menu a[href="account.html"],
+.mobile-menu a[href="orders.html"],
+.mobile-menu a[href="wishlist.html"],
+a[href="register.html"],
+a[href="checkout.html"],
+a[href="delete-account.html"],
+a[href="account.html"],
+a[href="cart.html"],
+a[href="orders.html"],
+a[href="wishlist.html"],
+.auth-btn,
+.cart-count,
+#authModal,
+.modal-overlay#authModal,
+.user-dropdown,
+.product-price,
+.old-price,
+.pd-price,
+#pdPrice,
+#pdStock,
+.pd-qty,
+.pd-actions,
+.product-actions-overlay,
+.product-btns,
+.btn-cart,
+.btn-buy,
+.cart-summary,
+.cart-table-wrap,
+.checkout-summary,
+.checkout-form,
+.price-filter,
+.price-range,
+input[name="minPrice"],
+input[name="maxPrice"],
+#minPrice,
+#maxPrice {
+  display:none !important;
+}
+.footer-col:has(a[href="account.html"]),
+.footer-col:has(a[href="cart.html"]),
+.footer-col:has(a[href="orders.html"]),
+.footer-col:has(a[href="wishlist.html"]) {
+  display:none !important;
+}
+.catalogue-product-card { overflow:hidden; }
+.catalogue-product-link { display:block; color:inherit; text-decoration:none; }
+.catalogue-product-card .product-image { cursor:pointer; }
+.catalogue-product-card .product-image img { transition:transform .35s ease; }
+.catalogue-product-card:hover .product-image img { transform:scale(1.035); }
+.catalogue-product-card .product-info { display:flex; flex-direction:column; align-items:flex-start; gap:10px; }
+.catalogue-product-card .product-name a { color:#e5c66b; text-decoration:none; }
+.catalogue-product-card .product-name a:hover { color:#ffe7a0; }
+.catalogue-details {
+  display:inline-flex; align-items:center; gap:10px; margin-top:6px;
+  padding:10px 15px; border-radius:9px; border:1px solid #b99742;
+  background:linear-gradient(135deg,#f0d783,#b18a2e); color:#15120a !important;
+  font-size:13px; font-weight:800; text-decoration:none; transition:transform .2s ease, box-shadow .2s ease;
+}
+.catalogue-details:hover { transform:translateY(-2px); box-shadow:0 7px 18px rgba(201,164,76,.22); color:#080808 !important; }
+.product-card .product-desc { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.pd-info { color:#eee7d6; }
+.pd-info .pd-category { color:#d7bd69; }
+#homeProducts .product-card, #productList .product-card, #searchResults .product-card { min-width:0; }
+@media (max-width:640px) {
+ .catalogue-details { width:100%; justify-content:center; }
+ .catalogue-product-card .product-info { padding:16px; }
+}
+/* Hide purchase/account language wherever an old component may still exist. */
+#authModal, .auth-modal, .login-modal, .register-modal, [data-action="add-to-cart"],
+[onclick*="addToCart"], [onclick*="toggleWishlist"], [href*="checkout.html"] {
+  display:none !important;
+}
