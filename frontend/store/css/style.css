@@ -1860,3 +1860,34 @@ main, section.section, .section:not(.promo-section), .page-header, .section-inne
 .phone-product-card { background:#211c10 !important; border:1px solid #6b5524 !important; color:#eee7d6 !important; }
 .phone-product-card small { color:#c9b47a !important; }
 .phone-nav { color:#e5c66b !important; border-top:1px solid #3a321f !important; }
+
+/* Remove legacy bright/blue surfaces left by older storefront styles. */
+section:not(.hero):not(.premium-hero):not(.promo-section):not(.app-download-hero) {
+  background-color:#0b0b0b !important;
+}
+.page-header, .features-bar, .premium-features, .features-strip, .trust-strip {
+  background:#0d0d0d !important;
+  color:#eee7d6 !important;
+  border-color:#3a321f !important;
+}
+.page-header h1, .page-header h2, .page-header .breadcrumb,
+.features-bar h3, .features-bar p, .premium-features h3, .premium-features p {
+  color:#e5c66b !important;
+}
+.features-bar .feature-item, .premium-features .feature-item {
+  background:#111111 !important;
+  color:#eee7d6 !important;
+  border-color:#3a321f !important;
+}
+.app-download-hero {
+  background:radial-gradient(ellipse at 72% 20%,rgba(201,164,76,.12),transparent 38%),linear-gradient(135deg,#080808,#141414) !important;
+  color:#eee7d6 !important;
+}
+.premium-header {
+  background:rgba(10,10,10,.97) !important;
+  border-bottom:1px solid rgba(201,164,76,.28) !important;
+}
+.btn-premium, .hero-btns .btn-premium {
+  background:linear-gradient(135deg,#f0d783,#b18a2e) !important;
+  color:#15120a !important;
+}
