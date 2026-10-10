@@ -42,7 +42,7 @@
         <input type="text" id="searchInput" placeholder="Rechercher peinture, enduit, vernis..." autocomplete="off" autofocus>
         <button onclick="doSearch()">🔍 Rechercher</button>
       </div>
-      <div id="searchSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 14px 14px;box-shadow:0 10px 25px rgba(0,0,0,.10);z-index:50;overflow:hidden"></div>
+      <div id="searchSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#151515;border:1px solid #6b5524;border-top:0;border-radius:0 0 14px 14px;box-shadow:0 10px 25px rgba(0,0,0,.4);z-index:50;overflow:hidden"></div>
     </div>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;justify-content:center">
       <span style="font-size:14px;color:var(--rc-gray-500);padding-top:8px">Filtres rapides :</span>
@@ -80,11 +80,11 @@ function showSuggestions(products, q){
 
   const items = products.slice(0,5).map(p => `
     <button type="button" onclick="selectSuggestion(${JSON.stringify(p.name).replace(/</g,'\\u003c')})"
-      style="width:100%;display:flex;align-items:center;gap:12px;padding:12px 16px;border:0;background:#fff;text-align:left;cursor:pointer">
+      style="width:100%;display:flex;align-items:center;gap:12px;padding:12px 16px;border:0;background:#151515 !important;color:#e5c66b !important;text-align:left;cursor:pointer;box-shadow:none !important">
       <span style="font-size:20px">🔎</span>
       <span style="flex:1">
-        <strong style="display:block;color:#111827">${escapeHtml(p.name)}</strong>
-        <small style="color:#6b7280">${escapeHtml(p.category?.name || 'Produit')}</small>
+        <strong style="display:block;color:#e5c66b">${escapeHtml(p.name)}</strong>
+        <small style="color:#b8ad91">${escapeHtml(p.category?.name || 'Produit')}</small>
       </span>
       <span style="color:#9ca3af">›</span>
     </button>
