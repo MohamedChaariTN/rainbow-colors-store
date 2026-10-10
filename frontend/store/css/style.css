@@ -1853,3 +1853,10 @@ main, section.section, .section:not(.promo-section), .page-header, .section-inne
 @media (max-width: 760px) {
   .about-grid, .stats-grid { grid-template-columns:1fr !important; }
 }
+
+.phone-mockup { background:#050505 !important; border-color:#8e6d24 !important; box-shadow:0 35px 80px rgba(0,0,0,.6),0 0 0 1px rgba(201,164,76,.25) !important; }
+.phone-screen { background:#111111 !important; color:#eee7d6 !important; }
+.phone-screen .phone-app-title, .phone-screen .phone-app-subtitle { color:#e5c66b !important; }
+.phone-product-card { background:#211c10 !important; border:1px solid #6b5524 !important; color:#eee7d6 !important; }
+.phone-product-card small { color:#c9b47a !important; }
+.phone-nav { color:#e5c66b !important; border-top:1px solid #3a321f !important; }
