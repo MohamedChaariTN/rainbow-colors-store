@@ -1891,3 +1891,94 @@ section:not(.hero):not(.premium-hero):not(.promo-section):not(.app-download-hero
   background:linear-gradient(135deg,#f0d783,#b18a2e) !important;
   color:#15120a !important;
 }
+
+
+/* NAVBAR & RAINBOW COLORS WORDMARK — premium black and gold */
+.header, header.header, .premium-header, header.site-header {
+  background:#080808 !important;
+  background-image:linear-gradient(180deg,#101010 0%,#060606 100%) !important;
+  border-bottom:1px solid rgba(201,164,76,.52) !important;
+  box-shadow:0 10px 32px rgba(0,0,0,.48) !important;
+  backdrop-filter:blur(18px) !important;
+}
+.header.scrolled, .premium-header.scrolled {
+  background:#050505 !important;
+  border-bottom-color:#c9a44c !important;
+}
+.header .header-inner, .premium-header .header-inner { background:transparent !important; }
+.header .nav-desktop .nav-link,
+.header .nav-link,
+.header nav a,
+.premium-header .nav-desktop .nav-link,
+.premium-header .nav-link,
+.premium-header nav a {
+  color:#e5c66b !important;
+  font-weight:650 !important;
+  text-shadow:0 1px 8px rgba(201,164,76,.08);
+}
+.header .nav-desktop .nav-link::after,
+.header .nav-link::after,
+.premium-header .nav-desktop .nav-link::after,
+.premium-header .nav-link::after {
+  background:linear-gradient(90deg,#9f792b,#f6df8a,#c9a44c) !important;
+  height:2px !important;
+  box-shadow:0 0 9px rgba(201,164,76,.32);
+}
+.header .nav-link:hover,
+.header .nav-link.active,
+.header nav a:hover,
+.premium-header .nav-link:hover,
+.premium-header .nav-link.active,
+.premium-header nav a:hover {
+  color:#fff0b5 !important;
+}
+.header .icon-btn, .premium-header .icon-btn {
+  color:#e5c66b !important;
+  background:transparent !important;
+}
+.header .icon-btn:hover, .premium-header .icon-btn:hover {
+  color:#080808 !important;
+  background:linear-gradient(135deg,#f0d783,#b18a2e) !important;
+}
+.header .logo, .premium-header .logo {
+  display:flex !important;
+  align-items:center !important;
+  gap:11px !important;
+  text-decoration:none !important;
+}
+.header .logo img, .premium-header .logo img {
+  object-fit:contain !important;
+  background:#101010 !important;
+  border:1px solid rgba(201,164,76,.7) !important;
+  border-radius:9px !important;
+  padding:2px !important;
+  box-shadow:0 0 18px rgba(201,164,76,.12) !important;
+  filter:drop-shadow(0 3px 7px rgba(0,0,0,.5)) !important;
+}
+.logo::after {
+  content:'Rainbow Colors';
+  font-family:Georgia,'Times New Roman',serif !important;
+  font-size:clamp(17px,1.5vw,22px) !important;
+  line-height:1 !important;
+  font-weight:800 !important;
+  letter-spacing:.15px !important;
+  background:linear-gradient(105deg,#fff1b8 0%,#dfbd61 42%,#a77d27 72%,#f6df8a 100%) !important;
+  -webkit-background-clip:text !important;
+  background-clip:text !important;
+  color:transparent !important;
+  white-space:nowrap !important;
+  text-shadow:none !important;
+}
+.logo:has(.logo-text)::after { content:none !important; }
+.logo .logo-text {
+  color:#e5c66b !important;
+  font-family:Georgia,'Times New Roman',serif !important;
+  font-weight:800 !important;
+  letter-spacing:.1px !important;
+}
+.logo .logo-text span { color:#f6df8a !important; }
+@media(max-width:640px) {
+  .header .logo, .premium-header .logo { gap:7px !important; min-width:0 !important; }
+  .header .logo::after, .premium-header .logo::after { font-size:15px !important; letter-spacing:0 !important; }
+  .header .logo img, .premium-header .logo img { max-width:54px !important; }
+}
