@@ -2148,3 +2148,14 @@ section:not(.hero):not(.premium-hero):not(.promo-section):not(.app-download-hero
   }
   .footer-brand .rc-logo-crop { width:150px !important; height:54px !important; }
 }
+
+
+/* Gold title requested for the app showcase heading. */
+.app-download-copy h2 {
+  color:#e5c66b !important;
+  background:none !important;
+  -webkit-background-clip:initial !important;
+  background-clip:initial !important;
+  -webkit-text-fill-color:#e5c66b !important;
+  text-shadow:0 2px 18px rgba(201,164,76,.18) !important;
+}
