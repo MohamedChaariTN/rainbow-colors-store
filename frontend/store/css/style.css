@@ -2159,3 +2159,81 @@ section:not(.hero):not(.premium-hero):not(.promo-section):not(.app-download-hero
   -webkit-text-fill-color:#e5c66b !important;
   text-shadow:0 2px 18px rgba(201,164,76,.18) !important;
 }
+
+
+/* TRUE TRANSPARENT LOGO: no white box, use the original artwork with white removed in SVG. */
+.header .logo.rc-logo-crop, .premium-header .logo.rc-logo-crop {
+  position:relative !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  overflow:visible !important;
+  width:180px !important;
+  height:66px !important;
+  min-width:180px !important;
+  flex:0 0 180px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.header .logo.rc-logo-crop img, .premium-header .logo.rc-logo-crop img {
+  position:static !important;
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  max-height:none !important;
+  left:auto !important;
+  top:auto !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  filter:none !important;
+  box-shadow:none !important;
+}
+.footer-brand .rc-logo-crop {
+  position:relative !important;
+  display:block !important;
+  overflow:visible !important;
+  width:180px !important;
+  height:66px !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.footer-brand .rc-logo-crop img {
+  position:static !important;
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  max-height:none !important;
+  left:auto !important;
+  top:auto !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  filter:none !important;
+  box-shadow:none !important;
+}
+@media(max-width:640px) {
+  .header .logo.rc-logo-crop, .premium-header .logo.rc-logo-crop {
+    width:142px !important;
+    height:54px !important;
+    min-width:142px !important;
+    flex:0 0 142px !important;
+  }
+  .footer-brand .rc-logo-crop { width:160px !important; height:60px !important; }
+}
