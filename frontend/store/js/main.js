@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ===== RAINBOW COLORS MOTION ENGINE ===== */
 (function initRainbowMotion() {
   try {
-    const logoSrc = '/images/rainbow-colors-app-icon.jpg';
+    const logoSrc = '/images/logo%20ranbow%20colors.jpeg';
 
     const loader = document.createElement('div');
     loader.id = 'rcPageLoader';
@@ -206,5 +206,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   } catch (error) {
     console.warn('Rainbow motion init skipped:', error);
+  }
+})();
+
+
+/* Premium interaction motion: links, buttons, logo, and scroll reveals. */
+(function initRainbowInteractions() {
+  if (window.__rcInteractionsReady) return;
+  window.__rcInteractionsReady = true;
+
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.addEventListener('click', function (event) {
+    const target = event.target.closest('a, button, [role="button"], .category-card, .product-card');
+    if (!target || reducedMotion) return;
+    if (target.matches('a[href^="#"]')) {
+      const href = target.getAttribute('href');
+      if (href && href.length > 1) {
+        const destination = document.querySelector(href);
+        if (destination) destination.classList.add('rc-anchor-arrive');
+      }
+    }
+    target.classList.remove('rc-click-pulse');
+    void target.offsetWidth;
+    target.classList.add('rc-click-pulse');
+    window.setTimeout(() => target.classList.remove('rc-click-pulse'), 520);
+  }, { passive: true });
+
+  document.querySelectorAll('.header .logo, .premium-header .logo').forEach((logo) => {
+    logo.classList.add('rc-logo-animated');
+  });
+
+  const dynamicTargets = '.category-card, .product-card, .section-header, .feature-item, .review-card, .promo-card, .page-header, .contact-info-card, .app-download-copy, .app-device-showcase';
+  if ('IntersectionObserver' in window && !reducedMotion) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('rc-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -24px 0px' });
+    document.querySelectorAll(dynamicTargets).forEach((el, index) => {
+      if (el.classList.contains('rc-reveal')) return;
+      el.classList.add('rc-reveal');
+      el.style.setProperty('--rc-delay', Math.min(index % 5, 4) * 65 + 'ms');
+      observer.observe(el);
+    });
+  } else {
+    document.querySelectorAll(dynamicTargets).forEach((el) => el.classList.add('rc-visible'));
   }
 })();
