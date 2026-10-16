@@ -2393,3 +2393,6 @@ a:not(.logo), button, [role="button"] { transition:color .22s ease,background-co
     top:-80px !important;
   }
 }
+
+/* Definitive original-logo crop: preserve the exact uploaded Rainbow Colors artwork. */
+a.logo.rc-logo-crop{position:relative!important;display:block!important;flex:0 0 154px!important;width:154px!important;min-width:154px!important;height:54px!important;overflow:hidden!important;padding:0!important;margin:0!important;border:1px solid #c9a44c!important;border-radius:6px!important;background:#fff!important;line-height:0!important}a.logo.rc-logo-crop img.rainbow-brand-logo{position:absolute!important;display:block!important;width:300px!important;max-width:none!important;height:auto!important;left:-73.6px!important;top:-96.4px!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;object-fit:unset!important;object-position:unset!important;background:transparent!important;box-shadow:none!important;filter:none!important}a.logo.rc-logo-crop:after{content:none!important;display:none!important}@media(max-width:640px){a.logo.rc-logo-crop{flex-basis:132px!important;width:132px!important;min-width:132px!important;height:47px!important}a.logo.rc-logo-crop img.rainbow-brand-logo{width:257px!important;left:-63px!important;top:-82.5px!important}}
