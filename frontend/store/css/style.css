@@ -2336,3 +2336,60 @@ a:not(.logo), button, [role="button"] { transition:color .22s ease,background-co
     height:57px !important;
   }
 }
+
+
+/* ACTUAL LOGO FIX: crop the whitespace from the original JPEG by clipping its image
+   inside the fixed-size brand frame. Keep the original blue/red logo artwork unchanged. */
+.header .logo.rc-logo-crop,
+.premium-header .logo.rc-logo-crop {
+  position:relative !important;
+  display:block !important;
+  flex:0 0 158px !important;
+  width:158px !important;
+  min-width:158px !important;
+  height:60px !important;
+  overflow:hidden !important;
+  padding:0 !important;
+  margin:0 !important;
+  background:#fff !important;
+  border:1px solid #c9a44c !important;
+  border-radius:7px !important;
+  box-sizing:border-box !important;
+}
+.header .logo.rc-logo-crop .rainbow-brand-logo,
+.premium-header .logo.rc-logo-crop .rainbow-brand-logo {
+  position:absolute !important;
+  display:block !important;
+  width:310px !important;
+  max-width:none !important;
+  height:auto !important;
+  left:-67px !important;
+  top:-95px !important;
+  min-width:0 !important;
+  flex:none !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  object-fit:fill !important;
+  object-position:initial !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  filter:none !important;
+  transform:none !important;
+}
+@media(max-width:640px) {
+  .header .logo.rc-logo-crop,
+  .premium-header .logo.rc-logo-crop {
+    flex:0 0 132px !important;
+    width:132px !important;
+    min-width:132px !important;
+    height:50px !important;
+  }
+  .header .logo.rc-logo-crop .rainbow-brand-logo,
+  .premium-header .logo.rc-logo-crop .rainbow-brand-logo {
+    width:262px !important;
+    left:-57px !important;
+    top:-80px !important;
+  }
+}
