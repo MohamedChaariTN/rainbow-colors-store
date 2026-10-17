@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ===== RAINBOW COLORS MOTION ENGINE ===== */
 (function initRainbowMotion() {
   try {
-    const logoSrc = '/images/logo%20ranbow%20colors.jpeg';
+    const logoSrc = '/images/rainbow-colors-logo-header.svg';
 
     const loader = document.createElement('div');
     loader.id = 'rcPageLoader';
