@@ -2,7 +2,9 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-const uploadDir = path.join(__dirname, '../../uploads/products');
+const uploadDir = process.env.VERCEL
+  ? path.join('/tmp', 'rainbow-colors-products')
+  : path.join(__dirname, '../../uploads/products');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({

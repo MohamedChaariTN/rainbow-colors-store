@@ -46,11 +46,14 @@ export const getProducts = async (req: Request, res: Response) => {
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where,
-        // Public catalogue payload intentionally excludes prices, discounts and stock quantities.
+        // Public catalogue needs prices so customers can compare products.
         select: {
           id: true,
           name: true,
           slug: true,
+          price: true,
+          oldPrice: true,
+          stockStatus: true,
           description: true,
           image: true,
           images: true,
@@ -88,11 +91,14 @@ export const getProduct = async (req: Request, res: Response) => {
   try {
     const product = await prisma.product.findFirst({
       where: { slug: req.params.slug, isActive: true },
-      // Public detail endpoint also returns catalogue fields only.
+      // Public product detail includes catalogue pricing.
       select: {
         id: true,
         name: true,
         slug: true,
+        price: true,
+        oldPrice: true,
+        stockStatus: true,
         description: true,
         image: true,
         images: true,

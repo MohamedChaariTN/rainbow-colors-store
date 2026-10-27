@@ -140,16 +140,12 @@ app.use(errorHandler);
 // START SERVER
 // ======================================================
 
-app.listen(PORT, () => {
-  console.log(
-    `🎨 Rainbow Colors Server running on http://localhost:${PORT}`
-  );
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🎨 Rainbow Colors Server running on http://localhost:${PORT}`);
+    console.log(`🛒 Store: http://localhost:${PORT}`);
+    console.log(`⚙️ Admin: http://localhost:${PORT}/admin`);
+  });
+}
 
-  console.log(
-    `🛒 Store: http://localhost:${PORT}`
-  );
-
-  console.log(
-    `⚙️ Admin: http://localhost:${PORT}/admin`
-  );
-});
+export default app;
