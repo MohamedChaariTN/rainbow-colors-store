@@ -1,0 +1,9 @@
+{
+  "name": "rainbow-colors-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static Vercel frontend build for the Rainbow Colors Store and Admin dashboard",
+  "scripts": {
+    "build": "node scripts/build-static.js"
+  }
+}
