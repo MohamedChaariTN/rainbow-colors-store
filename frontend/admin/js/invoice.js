@@ -111,7 +111,7 @@
         <div class="invoice-print-area">
           <div class="invoice-head">
             <div class="invoice-company">
-              <img class="invoice-logo" src="/images/logo%20ranbow%20colors.jpeg" alt="Rainbow Colors">
+              <img class="invoice-logo" src="/images/rainbow-colors-logo-header.svg" alt="Rainbow Colors">
               <div class="invoice-muted">Peintures et matériaux de construction</div>
               <div class="invoice-muted">Sfax, Tunisie · +216 29 253 908</div>
             </div>
