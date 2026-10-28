@@ -1,14 +1,48 @@
 // ===== RAINBOW COLORS PUBLIC CATALOGUE =====
-const API_URL = (window.RAINBOW_COLORS_API_URL || (window.location.origin + '/api')).replace(/\/$/, '');
+// Use same-origin /api by default, while allowing the storefront to target
+// another API through window.RAINBOW_COLORS_API_URL.
+const API_URL = (
+  window.RAINBOW_COLORS_API_URL ||
+  (window.location.origin + '/api')
+).replace(/\/$/, '');
+const API_TIMEOUT_MS = 40000;
+const API_MAX_ATTEMPTS = 3;
+const API_RETRYABLE_STATUS = new Set([502, 503, 504]);
+const API_RETRYABLE_METHODS = new Set(['GET', 'HEAD']);
 
 // Public read-only catalogue: no customer account, cart, wishlist, checkout or order workflow.
-// Clear any legacy customer session left in this browser.
+// Clear only the legacy customer session. The independent admin session
+// (rc_admin_token) must remain available to the admin interface.
 try {
   localStorage.removeItem('rc_token');
   sessionStorage.removeItem('rc_token');
 } catch (_) {}
 
+function apiDelay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableApiError(error) {
+  if (!error) return false;
+  if (error.retryable) return true;
+  if (error.name === 'AbortError') return true;
+  return error instanceof TypeError || /ECONNRESET|network|fetch|socket|connection/i.test(String(error.message || ''));
+}
+
+function friendlyApiError(error) {
+  if (error && error.name === 'AbortError') {
+    error.message = 'Le serveur met trop de temps à répondre. Veuillez réessayer.';
+  } else if (error instanceof TypeError) {
+    error.message = 'Connexion interrompue. Vérifiez votre connexion et réessayez.';
+  }
+  return error;
+}
+
 async function api(endpoint, options = {}) {
+  const method = String(options.method || 'GET').toUpperCase();
+  // Never retry POST/PATCH/DELETE: a retried order or payment could be duplicated.
+  const canRetry = API_RETRYABLE_METHODS.has(method);
+  const maxAttempts = canRetry ? API_MAX_ATTEMPTS : 1;
   const url = API_URL + endpoint;
   const opts = {
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
@@ -17,10 +51,32 @@ async function api(endpoint, options = {}) {
   if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
     opts.body = JSON.stringify(opts.body);
   }
-  const res = await fetch(url, opts);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Request failed');
-  return data;
+
+  let lastError;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+    try {
+      const res = await fetch(url, { ...opts, signal: opts.signal || controller.signal });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const error = new Error(data.error || 'Request failed');
+        error.status = res.status;
+        error.retryable = API_RETRYABLE_STATUS.has(res.status);
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      lastError = friendlyApiError(error);
+      const shouldRetry = canRetry && attempt < maxAttempts && isRetryableApiError(error);
+      if (!shouldRetry) throw lastError;
+      // Bounded exponential backoff: 400 ms, then 800 ms.
+      await apiDelay(400 * (2 ** (attempt - 1)));
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+  throw lastError;
 }
 
 // Defensive no-op compatibility for any stale template or browser cache.
@@ -157,7 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
       '.category-card',
       '.product-card',
       '.promo-card',
-      '.feature-item',
       '.review-card',
       '.contact-info-card',
       '.app-download-copy',

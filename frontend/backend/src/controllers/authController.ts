@@ -240,7 +240,12 @@ export const login = async (req: Request, res: Response) => {
   try {
     const data = loginSchema.parse(req.body);
     const user = await prisma.user.findUnique({ where: { email: data.email } });
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+
+    // Catalogue-only deployment: this endpoint exists solely for administrators.
+    // Return the same response for unknown and non-admin accounts.
+    if (!user || user.role !== 'ADMIN') {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
 
     const valid = await bcrypt.compare(data.password, user.password);
     if (!valid) return res.status(401).json({ error: 'Invalid credentials' });

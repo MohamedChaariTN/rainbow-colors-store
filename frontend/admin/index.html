@@ -979,12 +979,264 @@
   a:hover { color:#ffe7a0; }
   .admin-logo img { filter:drop-shadow(0 0 8px rgba(214,180,81,.18)); }
   @media(max-width:768px) { .admin-main { padding:20px 14px !important; } }
+
+  [hidden] { display: none !important; }
+
+  .admin-login-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+    background:
+      radial-gradient(circle at 16% 12%, rgba(214,180,81,.18), transparent 34%),
+      radial-gradient(circle at 84% 88%, rgba(214,180,81,.12), transparent 42%),
+      linear-gradient(145deg,#050505 0%,#12100a 55%,#070707 100%);
+  }
+
+  .admin-login-card {
+    width: min(100%, 430px);
+    padding: 36px 34px 28px;
+    border: 1px solid #4a3c1d;
+    border-radius: 22px;
+    background: linear-gradient(160deg,#1b1912 0%,#101010 70%);
+    box-shadow:
+      0 30px 90px rgba(0,0,0,.7),
+      inset 0 1px 0 rgba(255,255,255,.05);
+  }
+
+  .admin-login-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .admin-login-brand img {
+    width: 54px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 14px;
+    border: 1px solid #4a3c1d;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  .admin-login-brand span {
+    display: block;
+    color: #c9c0aa;
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  .admin-login-brand strong {
+    display: block;
+    color: #e5c66b;
+    font-size: 20px;
+    line-height: 1.2;
+  }
+
+  .admin-login-card h1 {
+    margin: 0 0 8px;
+    color: #f0d783 !important;
+    font-size: clamp(24px,5vw,30px);
+    line-height: 1.15;
+  }
+
+  .admin-login-intro {
+    margin: 0 0 26px;
+    color: #b8ad91;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .admin-login-field {
+    margin-bottom: 18px;
+  }
+
+  .admin-login-field label {
+    display: block;
+    margin-bottom: 8px;
+    color: #e5c66b;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .02em;
+  }
+
+  .admin-login-field input {
+    width: 100% !important;
+    height: 50px !important;
+    padding: 0 15px !important;
+    border-radius: 11px !important;
+    background: #0c0c0c !important;
+    color: #f7f0df !important;
+    border: 1px solid #514326 !important;
+    font-size: 15px !important;
+    outline: none !important;
+  }
+
+  .admin-login-field input:focus {
+    border-color: #d6b451 !important;
+    box-shadow: 0 0 0 3px rgba(214,180,81,.16) !important;
+  }
+
+  .admin-login-field input:disabled {
+    opacity: .55;
+    cursor: wait;
+  }
+
+  .admin-login-error {
+    display: none;
+    margin: 0 0 16px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    border: 1px solid #7a2e2e;
+    background: #2a1111;
+    color: #ffb4b4;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .admin-login-error.is-visible {
+    display: block;
+  }
+
+  .admin-login-submit {
+    width: 100% !important;
+    height: 50px !important;
+    margin-top: 4px;
+    border-radius: 11px !important;
+    font-size: 15px !important;
+    letter-spacing: .02em;
+  }
+
+  .admin-login-submit:disabled {
+    opacity: .65;
+    cursor: wait;
+  }
+
+  .admin-login-retry {
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: transparent;
+    color: #e5c66b;
+    border: 1px solid #a98938;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .admin-login-retry:hover {
+    background: #2b2413;
+  }
+
+  .admin-login-footnote {
+    margin: 24px 0 0;
+    color: #8f866f;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  @media(max-width:480px) {
+    .admin-login-screen { padding: 16px; }
+    .admin-login-card { padding: 30px 22px 24px; border-radius: 18px; }
+  }
 </style>
 </head>
 
 <body>
 
-<div class="admin-layout">
+<div
+  id="adminLoginScreen"
+  class="admin-login-screen"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="adminLoginTitle"
+>
+  <div class="admin-login-card">
+
+    <div class="admin-login-brand">
+      <img
+        src="/images/logo%20ranbow%20colors.jpeg"
+        alt="Rainbow Colors"
+      >
+      <div>
+        <span>Rainbow Colors</span>
+        <strong>Administration</strong>
+      </div>
+    </div>
+
+    <h1 id="adminLoginTitle">Connexion administrateur</h1>
+
+    <p class="admin-login-intro">
+      Accès réservé à l’équipe Rainbow Colors. Les comptes clients ne peuvent pas accéder à cette interface.
+    </p>
+
+    <form id="adminLoginForm" autocomplete="on">
+
+      <div class="admin-login-field">
+        <label for="adminLoginEmail">Email administrateur</label>
+        <input
+          id="adminLoginEmail"
+          name="email"
+          type="email"
+          autocomplete="username"
+          inputmode="email"
+          required
+        >
+      </div>
+
+      <div class="admin-login-field">
+        <label for="adminLoginPassword">Mot de passe</label>
+        <input
+          id="adminLoginPassword"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+      </div>
+
+      <div
+        id="adminLoginError"
+        class="admin-login-error"
+        role="alert"
+        aria-live="polite"
+      ></div>
+
+      <button
+        type="submit"
+        id="adminLoginSubmit"
+        class="btn-primary admin-login-submit"
+      >
+        Se connecter
+      </button>
+
+      <button
+        type="button"
+        id="adminRetrySession"
+        class="admin-login-retry"
+        hidden
+      >
+        Réessayer la session
+      </button>
+
+    </form>
+
+    <p class="admin-login-footnote">
+      Catalogue uniquement · Aucun compte client
+    </p>
+
+  </div>
+</div>
+
+<div id="adminApp" class="admin-layout" hidden>
 
   <!-- SIDEBAR -->
   <aside class="admin-sidebar">
@@ -1022,20 +1274,6 @@
 
       <a
         href="javascript:void(0)"
-        onclick="showSection('orders'); return false;"
-      >
-        📦 Commandes
-      </a>
-
-      <a
-        href="javascript:void(0)"
-        onclick="showSection('customers'); return false;"
-      >
-        👥 Clients
-      </a>
-
-      <a
-        href="javascript:void(0)"
         onclick="showSection('contactMessages'); loadContactMessages(); return false;"
       >
         ✉️ Messages <span id="contactMessagesBadge" class="admin-message-badge"></span>
@@ -1053,7 +1291,7 @@
 
     <div class="admin-sidebar-bottom">
 
-      <a href="../store/index.html">
+      <a href="../index.html">
         🌐 Voir le site
       </a>
 
@@ -1135,49 +1373,22 @@
 
           <div
             class="stat-icon"
-            style="background:#e7f9ed;color:#16a34a;"
-          >
-            📦
-          </div>
-
-          <div>
-
-            <div
-              class="stat-value"
-              id="statOrders"
-            >
-              -
-            </div>
-
-            <div class="stat-label">
-              Commandes
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="stat-card">
-
-          <div
-            class="stat-icon"
             style="background:#fff5db;color:#d97706;"
           >
-            👥
+            📁
           </div>
 
           <div>
 
             <div
               class="stat-value"
-              id="statUsers"
+              id="statCategories"
             >
               -
             </div>
 
             <div class="stat-label">
-              Clients
+              Catégories
             </div>
 
           </div>
@@ -1189,22 +1400,49 @@
 
           <div
             class="stat-icon"
-            style="background:#f5eaff;color:#7c3aed;"
+            style="background:#e7f9ed;color:#16a34a;"
           >
-            💰
+            ✉️
           </div>
 
           <div>
 
             <div
               class="stat-value"
-              id="statRevenue"
+              id="statMessages"
             >
               -
             </div>
 
             <div class="stat-label">
-              Revenus (TND)
+              Messages non lus
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <div
+            class="stat-icon"
+            style="background:#ffebeb;color:#dc2626;"
+          >
+            ⚠️
+          </div>
+
+          <div>
+
+            <div
+              class="stat-value"
+              id="statLowStock"
+            >
+              -
+            </div>
+
+            <div class="stat-label">
+              Alertes stock
             </div>
 
           </div>
@@ -1216,14 +1454,14 @@
 
       <div>
 
-        <!-- RECENT ORDERS -->
+        <!-- RECENT PRODUCTS -->
         <div class="admin-card">
 
           <h3>
-            📦 Commandes récentes
+            🆕 Derniers produits
           </h3>
 
-          <div id="recentOrders">
+          <div id="recentProducts">
 
             <div
               class="loading-skeleton"
@@ -1652,124 +1890,6 @@
 
 
     <!-- =======================
-         ORDERS
-    ======================== -->
-    <section
-      id="orders"
-      class="admin-section"
-    >
-
-      <h2>
-        Gestion des commandes
-      </h2>
-
-
-      <div
-        class="admin-card"
-        style="overflow-x:auto;"
-      >
-
-        <table
-          class="admin-table"
-          id="ordersTable"
-        >
-
-          <thead>
-
-            <tr>
-              <th>N°</th>
-              <th>Client</th>
-              <th>Date</th>
-              <th>Total</th>
-              <th>Paiement</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-
-          </thead>
-
-          <tbody></tbody>
-
-        </table>
-
-      </div>
-
-    </section>
-
-
-    <!-- =======================
-         CUSTOMERS
-    ======================== -->
-    <section
-      id="customers"
-      class="admin-section"
-    >
-
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:15px;
-          margin-bottom:20px;
-        "
-      >
-
-        <div>
-
-          <h2>
-            Gestion des clients
-          </h2>
-
-          <p
-            style="
-              margin:5px 0 0;
-              color:var(--admin-muted);
-              font-size:13px;
-            "
-          >
-            Gérez vos clients et leurs informations.
-          </p>
-
-        </div>
-
-      </div>
-
-
-      <div
-        class="admin-card"
-        style="overflow-x:auto;"
-      >
-
-        <table
-          class="admin-table"
-          id="customersTable"
-        >
-
-          <thead>
-
-            <tr>
-              <th>ID</th>
-              <th>Nom</th>
-              <th>Email</th>
-              <th>Téléphone</th>
-              <th>Rôle</th>
-              <th>Inscription</th>
-              <th>Actions</th>
-            </tr>
-
-          </thead>
-
-          <tbody></tbody>
-
-        </table>
-
-      </div>
-
-    </section>
-
-
-    <!-- =======================
          CONTACT MESSAGES
     ======================== -->
     <section id="contactMessages" class="admin-section">
@@ -1824,7 +1944,7 @@
 
 
 <!-- VERSIONED JS -->
-<script src="js/admin.js?v=10"></script>\n<script src="js/invoice.js?v=2"></script>
+<script src="js/admin.js?v=12"></script>
 
 </body>
 </html>
