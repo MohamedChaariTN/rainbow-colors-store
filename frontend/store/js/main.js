@@ -117,7 +117,7 @@ function renderProductCard(product) {
     <article class="product-card animate-fadeInUp catalogue-product-card">
       <a class="catalogue-product-link" href="product.html?slug=${encodeURIComponent(product.slug)}" aria-label="Voir ${product.name}">
         <div class="product-image">
-          <img src="${product.image}" alt="${product.name}" loading="lazy" onerror="this.src='images/logo ranbow colors.jpeg'">
+          <img src="${product.image}" alt="${product.name}" loading="lazy" onerror="this.onerror=null;this.src='images/rainbow-colors-logo-header.svg'">
           ${product.badge && product.badge !== 'sale' ? `<span class="product-badge ${badgeClass}">${badgeText}</span>` : ''}
         </div>
       </a>

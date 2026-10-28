@@ -771,7 +771,7 @@ function renderAdminProductsPage() {
             alt="${escapeHtml(p.name)}"
             loading="lazy"
             decoding="async"
-            onerror="this.src='../images/logo ranbow colors.jpeg'"
+            onerror="this.onerror=null;this.src='../images/rainbow-colors-logo-header.svg'"
           >
         </td>
 

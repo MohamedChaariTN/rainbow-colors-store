@@ -155,12 +155,15 @@
     }
 
     .admin-brand img {
-      width: 48px !important;
-      height: 48px !important;
+      width: 112px !important;
+      height: 38px !important;
 
-      object-fit: cover;
+      object-fit: contain;
 
-      border-radius: 13px !important;
+      border-radius: 8px !important;
+      background: #fff;
+      padding: 2px;
+      box-sizing: border-box;
 
       box-shadow:
         0 8px 20px rgba(0,0,0,0.25);
@@ -175,6 +178,17 @@
 
     .admin-brand strong {
       color: #fbbf24 !important;
+    }
+
+    @media (max-width: 768px) {
+      .admin-brand img {
+        width: 88px !important;
+        height: 30px !important;
+      }
+
+      .admin-brand span {
+        font-size: 15px !important;
+      }
     }
 
     .admin-nav {
@@ -1016,11 +1030,14 @@
   }
 
   .admin-login-brand img {
-    width: 54px;
-    height: 54px;
-    object-fit: cover;
-    border-radius: 14px;
+    width: 132px;
+    height: 44px;
+    object-fit: contain;
+    border-radius: 8px;
     border: 1px solid #4a3c1d;
+    background: #fff;
+    padding: 2px;
+    box-sizing: border-box;
     box-shadow: 0 8px 24px rgba(0,0,0,.35);
   }
 
@@ -1163,13 +1180,9 @@
 
     <div class="admin-login-brand">
       <img
-        src="/images/logo%20ranbow%20colors.jpeg"
-        alt="Rainbow Colors"
+        src="/images/rainbow-colors-logo-header.svg"
+        alt="Rainbow Colors Administration"
       >
-      <div>
-        <span>Rainbow Colors</span>
-        <strong>Administration</strong>
-      </div>
     </div>
 
     <h1 id="adminLoginTitle">Connexion administrateur</h1>
@@ -1244,12 +1257,12 @@
     <div class="admin-brand">
 
       <img
-        src="/images/logo%20ranbow%20colors.jpeg"
+        src="/images/rainbow-colors-logo-header.svg"
         alt="Rainbow Colors"
       >
 
       <span>
-        Rainbow <strong>Admin</strong>
+        <strong>Admin</strong>
       </span>
 
     </div>
@@ -1944,7 +1957,7 @@
 
 
 <!-- VERSIONED JS -->
-<script src="js/admin.js?v=12"></script>
+<script src="js/admin.js?v=13"></script>
 
 </body>
 </html>
