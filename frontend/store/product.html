@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Détail Produit | Rainbow Colors</title>
-<link rel="stylesheet" href="css/style.css?v=20261022-final">
+<link rel="icon" type="image/jpeg" href="images/rainbow-colors-app-icon.jpg">
+<link rel="stylesheet" href="css/style.css?v=20261101-catalogue">
 </head>
 <body>
 
@@ -39,7 +40,7 @@
 <section class="section">
   <div class="section-inner">
     <div class="pd-grid">
-      <div class="pd-gallery"><div class="pd-gallery-main"><img id="pdImage" src="" alt=""></div></div>
+      <div class="pd-gallery"><div class="pd-gallery-main"><img id="pdImage" src="" alt="" loading="eager"></div></div>
       <div class="pd-info">
         <span class="pd-category" id="pdCategory">Catégorie</span>
         <h1 id="pdName">Nom du produit</h1>
@@ -55,17 +56,27 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const slug = new URLSearchParams(location.search).get('slug');
   if(!slug) return location.href='products.html';
+  const image = document.getElementById('pdImage');
   try {
     const p = await fetchProduct(slug);
+    document.title = p.name + ' | Rainbow Colors';
     document.getElementById('pdTitle').textContent = p.name;
     document.getElementById('pdBreadcrumb').textContent = p.name;
-    document.getElementById('pdImage').src = p.image;
-    document.getElementById('pdCategory').textContent = p.category?.name || p.category;
+    image.src = p.image;
+    image.alt = p.name;
+    document.getElementById('pdCategory').textContent = p.category?.name || '';
     document.getElementById('pdName').textContent = p.name;
     document.getElementById('pdDesc').textContent = p.description;
-    const feats = JSON.parse(p.features||'[]');
-    document.getElementById('pdFeatures').innerHTML = feats.map(f => '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>'+f+'</li>').join('');
-  } catch(e) { console.error(e); }
+    const feats = Array.isArray(p.features) ? p.features : JSON.parse(p.features || '[]');
+    document.getElementById('pdFeatures').innerHTML = feats.map(f => '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>'+rcEscapeHtml(f)+'</li>').join('');
+  } catch(e) {
+    console.error(e);
+    document.title = 'Produit introuvable | Rainbow Colors';
+    document.getElementById('pdTitle').textContent = 'Produit introuvable';
+    document.getElementById('pdName').textContent = 'Produit introuvable';
+    document.getElementById('pdDesc').textContent = 'Ce produit ne figure pas dans le catalogue public. Consultez tous les produits disponibles.';
+    image.remove();
+  }
 });
 </script>
 
@@ -98,7 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 
-<script src="js/main.js?v=20261028-logo-refs"></script>
+<script src="js/main.js?v=20261101-catalogue"></script>
 
 </body>
 </html>

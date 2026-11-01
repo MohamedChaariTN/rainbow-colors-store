@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Catégories | Rainbow Colors</title>
-<link rel="stylesheet" href="css/style.css?v=20261022-final">
+<link rel="icon" type="image/jpeg" href="images/rainbow-colors-app-icon.jpg">
+<link rel="stylesheet" href="css/style.css?v=20261101-catalogue">
 </head>
 <body>
 
@@ -51,12 +52,19 @@ async function loadCategories() {
   } catch(e){}
 }
 async function loadCatProducts() {
-  const cat = new URLSearchParams(location.search).get('cat');
-  if(cat) document.getElementById('catTitle').textContent = decodeURIComponent(cat);
+  const urlParams = new URLSearchParams(location.search);
+  const cat = urlParams.get('category') || urlParams.get('cat');
   try {
+    if (cat) {
+      const categories = await fetchCategories();
+      const selected = categories.find(c => c.slug === cat);
+      if (selected) document.getElementById('catTitle').textContent = selected.name;
+    }
     const data = await fetchProducts(cat ? { category: cat } : {});
-    document.getElementById('catProducts').innerHTML = data.products.map(p => renderProductCard(p)).join('');
-  } catch(e){}
+    document.getElementById('catProducts').innerHTML = data.products.length
+      ? data.products.map(p => renderProductCard(p)).join('')
+      : '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--rc-gray-500)"><h3>Aucun produit dans cette collection</h3></div>';
+  } catch(e){ console.error(e); }
 }
 document.addEventListener('DOMContentLoaded', () => { loadCategories(); loadCatProducts(); });
 </script>
@@ -90,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => { loadCategories(); loadCatP
 
 
 
-<script src="js/main.js?v=20261028-logo-refs"></script>
+<script src="js/main.js?v=20261101-catalogue"></script>
 
 </body>
 </html>

@@ -95,54 +95,167 @@ function toggleMobileMenu() {
 }
 
 // ===== PRODUCTS =====
+// The public catalogue is a static JSON file deployed with the storefront.
+// It intentionally contains no prices, stock quantities, account or admin data.
+const CATALOGUE_URL = 'data/catalogue.json';
+let cataloguePromise = null;
+
+function rcEscapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  }[character]));
+}
+
+function rcNormalizeText(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function prepareCatalogue(data) {
+  if (!data || !Array.isArray(data.categories) || !Array.isArray(data.products)) {
+    throw new Error('Catalogue public invalide.');
+  }
+
+  const categories = data.categories.map((category) => ({ ...category }));
+  const categoriesBySlug = new Map(categories.map((category) => [category.slug, category]));
+
+  const products = data.products.map((product) => {
+    const category = categoriesBySlug.get(product.category) || null;
+    if (!product.slug || !product.name || !category) {
+      throw new Error('Produit ou catégorie invalide dans le catalogue public.');
+    }
+    return {
+      ...product,
+      category,
+      features: Array.isArray(product.features) ? product.features.slice() : []
+    };
+  });
+
+  return { ...data, categories, products };
+}
+
+async function loadCatalogue() {
+  if (!cataloguePromise) {
+    cataloguePromise = fetch(CATALOGUE_URL, { cache: 'no-cache', credentials: 'same-origin' })
+      .then((response) => {
+        if (!response.ok) throw new Error('Impossible de charger le catalogue.');
+        return response.json();
+      })
+      .then(prepareCatalogue)
+      .catch((error) => {
+        cataloguePromise = null;
+        throw error;
+      });
+  }
+  return cataloguePromise;
+}
+
 async function fetchProducts(params = {}) {
-  const qs = new URLSearchParams(params).toString();
-  const data = await api('/products?' + qs);
-  return data;
+  const catalogue = await loadCatalogue();
+  const categorySlug = String(params.category || '').trim();
+  const searchTerm = rcNormalizeText(params.search);
+
+  let products = catalogue.products;
+  if (categorySlug) {
+    products = products.filter((product) => product.category.slug === categorySlug);
+  }
+  if (searchTerm) {
+    products = products.filter((product) => {
+      const searchableText = [
+        product.name,
+        product.slug,
+        product.description,
+        product.category.name,
+        product.category.slug,
+        ...(product.features || [])
+      ].join(' ');
+      return rcNormalizeText(searchableText).includes(searchTerm);
+    });
+  }
+
+  const total = products.length;
+  const page = Math.max(1, Number.parseInt(params.page, 10) || 1);
+  const requestedLimit = Number.parseInt(params.limit, 10);
+  const limit = Number.isFinite(requestedLimit) && requestedLimit > 0 ? requestedLimit : Math.max(total, 1);
+  const start = (page - 1) * limit;
+
+  return {
+    products: products.slice(start, start + limit),
+    total,
+    page,
+    pages: Math.ceil(total / limit),
+    limit
+  };
 }
 
 async function fetchProduct(slug) {
-  return api('/products/' + slug);
+  const catalogue = await loadCatalogue();
+  const product = catalogue.products.find((item) => item.slug === slug);
+  if (!product) {
+    const error = new Error('Produit introuvable.');
+    error.status = 404;
+    throw error;
+  }
+  return product;
 }
 
 async function fetchCategories() {
-  return api('/products/categories');
+  const catalogue = await loadCatalogue();
+  return catalogue.categories.map((category) => ({
+    ...category,
+    _count: {
+      products: catalogue.products.filter((product) => product.category.slug === category.slug).length
+    }
+  }));
 }
 
 function renderProductCard(product) {
-  const badgeClass = product.badge === 'new' ? 'badge-new' : product.badge === 'eco' ? 'badge-eco' : 'badge-premium';
-  const badgeText = product.badge === 'new' ? 'Nouveau' : product.badge === 'eco' ? 'Éco' : 'Rainbow Colors';
+  const name = rcEscapeHtml(product.name);
+  const image = rcEscapeHtml(product.image || '');
+  const categoryName = rcEscapeHtml(product.category?.name || '');
+  const description = rcEscapeHtml(product.description || '');
+  const slug = encodeURIComponent(product.slug);
+  const imageMarkup = image
+    ? `<img src="${image}" alt="${name}" loading="lazy" onerror="var container=this.parentElement;this.remove();if(container)container.classList.add('product-image-missing')">`
+    : '';
 
   return `
     <article class="product-card animate-fadeInUp catalogue-product-card">
-      <a class="catalogue-product-link" href="product.html?slug=${encodeURIComponent(product.slug)}" aria-label="Voir ${product.name}">
-        <div class="product-image">
-          <img src="${product.image}" alt="${product.name}" loading="lazy" onerror="this.onerror=null;this.src='images/rainbow-colors-logo-header.svg'">
-          ${product.badge && product.badge !== 'sale' ? `<span class="product-badge ${badgeClass}">${badgeText}</span>` : ''}
+      <a class="catalogue-product-link" href="product.html?slug=${slug}" aria-label="Voir ${name}">
+        <div class="product-image${image ? '' : ' product-image-missing'}">
+          ${imageMarkup}
+          <span class="product-image-fallback" aria-hidden="true">${name}</span>
         </div>
       </a>
       <div class="product-info">
-        <span class="product-category">${product.category?.name || product.category || ''}</span>
-        <h3 class="product-name"><a href="product.html?slug=${encodeURIComponent(product.slug)}">${product.name}</a></h3>
-        <p class="product-desc">${product.description || ''}</p>
-        <a href="product.html?slug=${encodeURIComponent(product.slug)}" class="catalogue-details">Voir la fiche produit <span aria-hidden="true">→</span></a>
+        <span class="product-category">${categoryName}</span>
+        <h3 class="product-name"><a href="product.html?slug=${slug}">${name}</a></h3>
+        <p class="product-desc">${description}</p>
+        <a href="product.html?slug=${slug}" class="catalogue-details">Voir la fiche produit <span aria-hidden="true">→</span></a>
       </div>
     </article>
   `;
 }
 
 const CATEGORY_VISUALS = {
-    "peintures-sols": { title: "Solutions pour Sols", desc: "Revêtements résistants pour sols, ateliers et espaces professionnels.", image: "images/produit 3.jpg" },
-    "peintures-bois": { title: "Finitions Bois", desc: "Laques et peintures pour sublimer et protéger vos surfaces en bois.", image: "images/batou.jpg" },
-    "enduits": { title: "Préparation & Enduits", desc: "Enduits et solutions de préparation pour une surface prête à la finition.", image: "images/megma 1.jpg" },
-    "enduits-traditionnels": { title: "Enduits Traditionnels", desc: "Des finitions authentiques inspirées des techniques traditionnelles.", image: "images/megma 2.jpg" },
-    "vernis": { title: "Vernis & Protection", desc: "Protection et finition durable pour des surfaces soignées.", image: "images/produit 4.jpg" },
-    "traitements-metal": { title: "Protection Métal", desc: "Solutions anticorrosion et traitements pour métaux et structures.", image: "images/produit 5.jpg" },
-    "etancheite": { title: "Étanchéité & Protection", desc: "Solutions professionnelles contre l'humidité et les infiltrations.", image: "images/megma 3.jpg" },
-    "enduits-finition": { title: "Finition & Lissage", desc: "Préparez vos murs pour obtenir une finition régulière et élégante.", image: "images/megma 4.jpg" },
-    "colles": { title: "Colles & Pose", desc: "Colles et solutions fiables pour vos travaux de pose et de rénovation.", image: "images/produit 6.jpg" },
-    "enduits-facade": { title: "Façades & Extérieur", desc: "Solutions de finition et de protection pour façades durables.", image: "images/megma 5.jpg" },
-    "peintures-murales": { title: "Peintures Murales", desc: "Des peintures pour transformer vos murs avec une finition professionnelle.", image: "images/djur 1.jpg" }
+    "peintures-sols": { title: "Solutions pour Sols", desc: "Revêtements résistants pour sols, ateliers et espaces professionnels.", image: "images/products/peinture-epoxy.jpg" },
+    "peintures-bois": { title: "Finitions Bois", desc: "Laques et peintures pour sublimer et protéger vos surfaces en bois.", image: "images/products/laque-rainbow-mat.jpg" },
+    "enduits": { title: "Préparation & Enduits", desc: "Enduits et solutions de préparation pour une surface prête à la finition.", image: "images/products/durajir.jpg" },
+    "enduits-traditionnels": { title: "Enduits Traditionnels", desc: "Des finitions authentiques inspirées des techniques traditionnelles.", image: "images/products/durajir-arabi.jpg" },
+    "vernis": { title: "Vernis & Protection", desc: "Protection et finition durable pour des surfaces soignées.", image: "images/products/vernis-marin.jpg" },
+    "traitements-metal": { title: "Protection Métal", desc: "Solutions anticorrosion et traitements pour métaux et structures.", image: "images/products/anti-rouille.jpg" },
+    "etancheite": { title: "Étanchéité & Protection", desc: "Solutions professionnelles contre l'humidité et les infiltrations.", image: "images/products/etanche-impermeabilisation.jpg" },
+    "enduits-finition": { title: "Finition & Lissage", desc: "Préparez vos murs pour obtenir une finition régulière et élégante.", image: "images/products/spatulina-2.jpg" },
+    "colles": { title: "Colles & Pose", desc: "Colles et solutions fiables pour vos travaux de pose et de rénovation.", image: "images/products/mag-eco700.jpg" },
+    "enduits-facade": { title: "Façades & Extérieur", desc: "Solutions de finition et de protection pour façades durables.", image: "images/products/tyrolien.jpg" },
+    "peintures-murales": { title: "Peintures Murales", desc: "Des peintures pour transformer vos murs avec une finition professionnelle.", image: "images/products/magma-ultra-shield.jpg" }
 };
 
 function renderCategoryCard(cat) {
@@ -154,16 +267,16 @@ function renderCategoryCard(cat) {
   };
 
   return `
-    <a href="products.html?category=${cat.slug}" class="category-card premium-category-card animate-fadeInUp" style="--category-color:${cat.color}">
+    <a href="products.html?category=${encodeURIComponent(cat.slug)}" class="category-card premium-category-card animate-fadeInUp" style="--category-color:${rcEscapeHtml(cat.color)}">
       <div class="category-media">
-        <img src="${visual.image}" alt="${visual.title}" loading="lazy" onerror="this.src='images/rainbow-colors-social-preview.jpg'">
+        <img src="${rcEscapeHtml(visual.image)}" alt="${rcEscapeHtml(visual.title)}" loading="lazy" onerror="this.onerror=null;this.src='images/rainbow-colors-social-preview.jpg'">
         <div class="category-media-overlay"></div>
         <span class="category-number">${String(count).padStart(2, '0')}</span>
       </div>
       <div class="category-card-body">
         <div class="category-eyebrow">RAINBOW COLORS</div>
-        <h3>${visual.title}</h3>
-        <p>${visual.desc}</p>
+        <h3>${rcEscapeHtml(visual.title)}</h3>
+        <p>${rcEscapeHtml(visual.desc)}</p>
         <span class="category-cta">Découvrir la collection <span aria-hidden="true">→</span></span>
       </div>
     </a>
