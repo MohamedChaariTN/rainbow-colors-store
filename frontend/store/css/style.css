@@ -2394,3 +2394,331 @@ a.logo.rc-logo-crop{position:relative!important;display:block!important;flex:0 0
     height:49px !important;
   }
 }
+
+/* =========================================================
+   PREMIUM SMOOTH MOTION — consolidated motion layer
+   Additive only: no layout, branding, catalogue or data changes.
+   ========================================================= */
+:root {
+  --rc-ease-out: cubic-bezier(.22, 1, .36, 1);
+  --rc-ease-soft: cubic-bezier(.2, .7, .2, 1);
+}
+
+/* Cross-document page transitions where supported; graceful otherwise. */
+@view-transition { navigation: auto; }
+@keyframes rcViewOut { to { opacity: 0; } }
+@keyframes rcViewIn {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+::view-transition-old(root) { animation: rcViewOut .16s ease both; }
+::view-transition-new(root) { animation: rcViewIn .3s var(--rc-ease-out) both; }
+
+/* Progressive page entrance, revealed after the brand loader clears. */
+@keyframes rcPageFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rcPageRise {
+  from { opacity: 0; transform: translate3d(0, 16px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+html.rc-page-ready .premium-topbar { animation: rcPageFade .4s ease both; }
+html.rc-page-ready .header { animation: rcPageFade .45s ease .04s both; }
+html.rc-page-ready .page-header .section-inner > * { animation: rcPageRise .52s var(--rc-ease-out) both; }
+html.rc-page-ready .page-header .section-inner > *:nth-child(1) { animation-delay: .06s; }
+html.rc-page-ready .page-header .section-inner > *:nth-child(2) { animation-delay: .12s; }
+html.rc-page-ready .page-header .section-inner > *:nth-child(3) { animation-delay: .18s; }
+html.rc-page-ready .premium-hero .hero-content { animation: none; }
+html.rc-page-ready .premium-hero .hero-content > * { animation: rcPageRise .58s var(--rc-ease-out) both; }
+html.rc-page-ready .premium-hero .hero-content > *:nth-child(1) { animation-delay: .07s; }
+html.rc-page-ready .premium-hero .hero-content > *:nth-child(2) { animation-delay: .14s; }
+html.rc-page-ready .premium-hero .hero-content > *:nth-child(3) { animation-delay: .21s; }
+html.rc-page-ready .premium-hero .hero-content > *:nth-child(4) { animation-delay: .28s; }
+html.rc-page-ready .premium-hero .hero-content > *:nth-child(5) { animation-delay: .35s; }
+html.rc-page-ready .premium-hero .hero-trust > div { animation: none; }
+html.rc-page-ready .premium-hero .hero-image { animation: rcPageRise .72s .2s var(--rc-ease-out) both; }
+html.rc-page-ready .app-download-copy { animation: none; }
+html.rc-page-ready .app-download-copy > * { animation: rcPageRise .55s var(--rc-ease-out) both; }
+html.rc-page-ready .app-download-copy > *:nth-child(1) { animation-delay: .05s; }
+html.rc-page-ready .app-download-copy > *:nth-child(2) { animation-delay: .11s; }
+html.rc-page-ready .app-download-copy > *:nth-child(3) { animation-delay: .17s; }
+html.rc-page-ready .app-download-copy > *:nth-child(4) { animation-delay: .23s; }
+html.rc-page-ready .app-download-copy > *:nth-child(5) { animation-delay: .29s; }
+html.rc-page-ready .app-device-showcase { animation: rcPageRise .7s .16s var(--rc-ease-out) both; }
+
+/* Viewport reveals. Content is visible by default; JS only adds these
+   classes after the observer is ready, and falls back to visible on error. */
+@keyframes rcRevealUp {
+  from { opacity: 0; transform: translate3d(0, 22px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+.rc-reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition: box-shadow .3s ease, border-color .3s ease;
+}
+.rc-reveal.rc-visible {
+  opacity: 1;
+  transform: none;
+  animation: rcRevealUp .62s var(--rc-ease-out) backwards;
+  animation-delay: var(--rc-delay, 0ms);
+}
+.products-grid .product-card.rc-reveal,
+.categories-grid .category-card.rc-reveal {
+  transition: transform .32s var(--rc-ease-soft), box-shadow .32s ease, border-color .32s ease;
+}
+
+/* Product cards: contained image zoom, gentle lift, short press response. */
+@media (hover: hover) and (pointer: fine) {
+  .products-grid .product-card:hover {
+    transform: translate3d(0, -6px, 0);
+    box-shadow: 0 18px 38px rgba(0, 0, 0, .42), 0 0 0 1px rgba(226, 192, 92, .14);
+  }
+  .products-grid .catalogue-product-card:hover .product-image img {
+    transform: scale(1.04);
+  }
+  .categories-grid .premium-category-card:hover {
+    transform: translate3d(0, -5px, 0);
+    box-shadow: 0 18px 38px rgba(0, 0, 0, .38), 0 0 0 1px rgba(226, 192, 92, .12);
+  }
+  .categories-grid .premium-category-card:hover .category-media img {
+    transform: scale(1.045);
+    filter: saturate(1.04);
+  }
+  .btn:hover, .btn:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .22);
+  }
+  .icon-btn:hover, .icon-btn:focus-visible { transform: translateY(-1px); }
+  .store-badge:hover, .store-badge:focus-visible { transform: translateY(-2px); }
+  .catalogue-details:hover, .catalogue-details:focus-visible { transform: translateY(-1px); }
+  .nav-link:hover, .nav-link.active { transform: translateY(-1px); }
+}
+@media (hover: none) {
+  .products-grid .product-card:hover,
+  .categories-grid .premium-category-card:hover { transform: none; }
+  .products-grid .catalogue-product-card:hover .product-image img,
+  .categories-grid .premium-category-card:hover .category-media img { transform: none; }
+}
+.products-grid .product-card:active,
+.categories-grid .premium-category-card:active {
+  transform: translate3d(0, -1px, 0) scale(.993);
+  transition-duration: .09s;
+}
+.products-grid .product-card:has(.catalogue-product-link:active) {
+  transform: translate3d(0, -1px, 0) scale(.993);
+  transition-duration: .09s;
+}
+.btn:active,
+button:active,
+.icon-btn:active,
+.store-badge:active,
+.catalogue-details:active {
+  transform: translateY(0) scale(.985);
+  transition-duration: .08s;
+}
+.nav-link:active,
+.mobile-nav-link:active { transform: translateY(1px); }
+
+/* Product detail entrance after the static catalogue has populated. */
+@keyframes rcDetailImageIn {
+  from { opacity: 0; transform: translate3d(0, 12px, 0) scale(.992); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes rcDetailTextIn {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes rcFeatureIn {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to { opacity: 1; transform: none; }
+}
+.pd-grid.rc-detail-enter .pd-gallery { animation: rcDetailImageIn .7s var(--rc-ease-out) both; }
+.pd-grid.rc-detail-enter .pd-info .pd-category { animation: rcDetailTextIn .5s .1s var(--rc-ease-out) both; }
+.pd-grid.rc-detail-enter .pd-info h1 { animation: rcDetailTextIn .56s .16s var(--rc-ease-out) both; }
+.pd-grid.rc-detail-enter .pd-info .pd-desc { animation: rcDetailTextIn .56s .22s var(--rc-ease-out) both; }
+.pd-grid.rc-detail-enter .pd-info .pd-features { animation: rcDetailTextIn .5s .28s var(--rc-ease-out) both; }
+.pd-grid.rc-detail-enter .pd-features li { animation: rcFeatureIn .42s var(--rc-ease-out) both; }
+.pd-grid.rc-detail-enter .pd-features li:nth-child(1) { animation-delay: .32s; }
+.pd-grid.rc-detail-enter .pd-features li:nth-child(2) { animation-delay: .37s; }
+.pd-grid.rc-detail-enter .pd-features li:nth-child(3) { animation-delay: .42s; }
+.pd-grid.rc-detail-enter .pd-features li:nth-child(4) { animation-delay: .47s; }
+.pd-grid.rc-detail-enter .pd-features li:nth-child(5) { animation-delay: .52s; }
+.pd-grid.rc-detail-enter .pd-features li:nth-child(6) { animation-delay: .57s; }
+
+/* Mobile navigation: fast slide, fade, and staggered links. */
+.mobile-menu {
+  right: 0;
+  transform: translate3d(100%, 0, 0);
+  visibility: hidden;
+  transition: transform .38s var(--rc-ease-out), visibility 0s linear .38s;
+  will-change: transform;
+}
+.mobile-menu.open {
+  right: 0;
+  transform: translate3d(0, 0, 0);
+  visibility: visible;
+  transition: transform .38s var(--rc-ease-out), visibility 0s;
+}
+.mobile-menu-overlay {
+  transition: opacity .28s ease;
+  backdrop-filter: blur(0);
+}
+.mobile-menu-overlay.open { backdrop-filter: blur(2px); }
+.mobile-nav-link {
+  transition: color .2s ease, transform .2s ease, border-color .2s ease;
+  opacity: 0;
+  transform: translate3d(14px, 0, 0);
+}
+.mobile-menu.open .mobile-nav-link {
+  opacity: 1;
+  transform: none;
+  animation: rcMobileLinkIn .34s var(--rc-ease-out) backwards;
+  animation-delay: var(--rc-link-delay, 0ms);
+}
+@keyframes rcMobileLinkIn {
+  from { opacity: 0; transform: translate3d(14px, 0, 0); }
+  to { opacity: 1; transform: none; }
+}
+.mobile-menu.open .mobile-nav-link:nth-of-type(1) { --rc-link-delay: .05s; }
+.mobile-menu.open .mobile-nav-link:nth-of-type(2) { --rc-link-delay: .1s; }
+.mobile-menu.open .mobile-nav-link:nth-of-type(3) { --rc-link-delay: .15s; }
+.mobile-menu.open .mobile-nav-link:nth-of-type(4) { --rc-link-delay: .2s; }
+.mobile-menu.open .mobile-nav-link:nth-of-type(5) { --rc-link-delay: .25s; }
+.mobile-nav-link:hover, .mobile-nav-link.active {
+  padding-left: 0;
+  transform: translateX(6px);
+}
+
+/* Short, visible interaction and focus states. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #f0d783;
+  outline-offset: 3px;
+}
+.search-bar-large input:focus-visible { outline: none; }
+.search-bar-large {
+  transition: border-color .25s ease, box-shadow .25s ease;
+}
+.search-bar-large:focus-within {
+  border-color: #c9a44c;
+  box-shadow: 0 0 0 3px rgba(201, 164, 76, .2), 0 18px 40px rgba(0, 0, 0, .22);
+}
+.search-bar-large button {
+  transition: background-color .2s ease, transform .2s ease;
+}
+.search-bar-large button:hover { transform: translateX(1px); }
+#searchSuggestions {
+  animation: rcSuggestIn .18s var(--rc-ease-out) both;
+}
+@keyframes rcSuggestIn {
+  from { opacity: 0; transform: translate3d(0, -4px, 0); }
+  to { opacity: 1; transform: none; }
+}
+#searchSuggestions button {
+  transition: background-color .18s ease, color .18s ease;
+}
+#searchSuggestions button:hover {
+  background: #211c10 !important;
+}
+a, button, .product-card, .category-card { touch-action: manipulation; }
+
+/* Mobile/tablet layout guard for the About page's inline grids. */
+@media (max-width: 720px) {
+  .about-story-grid {
+    grid-template-columns: 1fr !important;
+    gap: 36px !important;
+  }
+}
+@media (max-width: 640px) {
+  .about-story-grid { gap: 28px !important; margin-bottom: 56px !important; }
+  .about-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    margin-bottom: 56px !important;
+  }
+}
+@media (max-width: 430px) {
+  .about-stats-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Keep the experience calm: no permanently moving decorative layers. */
+body::before,
+body::after,
+.hero::before,
+.hero-badge,
+.whatsapp-float,
+.premium-hero::after,
+.premium-hero-image::before,
+.premium-hero .paint-one,
+.premium-hero .paint-two,
+.premium-hero .paint-three,
+.products-grid .product-card:hover::before {
+  animation: none !important;
+}
+
+/* Reduced motion: show everything, remove non-essential motion and delays. */
+@media (prefers-reduced-motion: reduce) {
+  html.rc-page-ready .premium-topbar,
+  html.rc-page-ready .header,
+  html.rc-page-ready .page-header .section-inner > *,
+  html.rc-page-ready .premium-hero .hero-content > *,
+  html.rc-page-ready .premium-hero .hero-image,
+  html.rc-page-ready .app-download-copy > *,
+  html.rc-page-ready .app-device-showcase,
+  .pd-grid.rc-detail-enter .pd-gallery,
+  .pd-grid.rc-detail-enter .pd-info > *,
+  .pd-grid.rc-detail-enter .pd-features li {
+    animation: none !important;
+    animation-delay: 0ms !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .rc-reveal,
+  .rc-reveal.rc-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .mobile-menu .mobile-nav-link,
+  .mobile-menu.open .mobile-nav-link {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .mobile-menu,
+  .mobile-menu.open,
+  .mobile-menu-overlay,
+  .search-bar-large,
+  #searchSuggestions {
+    transition-duration: 0s !important;
+    animation: none !important;
+  }
+  .products-grid .product-card:hover,
+  .products-grid .product-card:active,
+  .categories-grid .premium-category-card:hover,
+  .categories-grid .premium-category-card:active,
+  .products-grid .catalogue-product-card:hover .product-image img,
+  .categories-grid .premium-category-card:hover .category-media img,
+  .btn:hover,
+  .btn:active,
+  button:active,
+  .icon-btn:hover,
+  .icon-btn:active,
+  .store-badge:hover,
+  .store-badge:active,
+  .catalogue-details:hover,
+  .catalogue-details:active,
+  .nav-link:hover,
+  .nav-link:active,
+  .mobile-nav-link:hover,
+  .mobile-nav-link:active {
+    transform: none !important;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}

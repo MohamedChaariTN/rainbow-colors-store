@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Détail Produit | Rainbow Colors</title>
 <link rel="icon" type="image/jpeg" href="images/rainbow-colors-app-icon.jpg">
-<link rel="stylesheet" href="css/style.css?v=20261101-catalogue">
+<link rel="stylesheet" href="css/style.css?v=20261102-motion">
 </head>
 <body>
 
@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('pdDesc').textContent = p.description;
     const feats = Array.isArray(p.features) ? p.features : JSON.parse(p.features || '[]');
     document.getElementById('pdFeatures').innerHTML = feats.map(f => '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>'+rcEscapeHtml(f)+'</li>').join('');
+    if (window.rcAnimateProductDetails) window.rcAnimateProductDetails();
   } catch(e) {
     console.error(e);
     document.title = 'Produit introuvable | Rainbow Colors';
@@ -76,6 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('pdName').textContent = 'Produit introuvable';
     document.getElementById('pdDesc').textContent = 'Ce produit ne figure pas dans le catalogue public. Consultez tous les produits disponibles.';
     image.remove();
+    if (window.rcAnimateProductDetails) window.rcAnimateProductDetails();
   }
 });
 </script>
@@ -109,7 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 
-<script src="js/main.js?v=20261101-catalogue"></script>
+<script src="js/main.js?v=20261102-motion"></script>
 
 </body>
 </html>
