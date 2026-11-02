@@ -1,0 +1,382 @@
+{
+  "version": 1,
+  "updated": "2026-11-01",
+  "source": "Catalogue public Rainbow Colors construit à partir des visuels produits locaux et des données catalogue locales. Données publiques uniquement.",
+  "categories": [
+    {
+      "name": "Peintures Sols",
+      "slug": "peintures-sols",
+      "description": "Peintures pour sols et parkings",
+      "icon": "🏭",
+      "color": "#7c3aed"
+    },
+    {
+      "name": "Peintures Bois",
+      "slug": "peintures-bois",
+      "description": "Laqués et peintures pour bois",
+      "icon": "🚪",
+      "color": "#f97316"
+    },
+    {
+      "name": "Enduits",
+      "slug": "enduits",
+      "description": "Enduits et mortiers",
+      "icon": "🧱",
+      "color": "#16a34a"
+    },
+    {
+      "name": "Enduits Traditionnels",
+      "slug": "enduits-traditionnels",
+      "description": "Enduits traditionnels à la chaux",
+      "icon": "🏛️",
+      "color": "#d97706"
+    },
+    {
+      "name": "Vernis",
+      "slug": "vernis",
+      "description": "Vernis et protections",
+      "icon": "✨",
+      "color": "#0d9488"
+    },
+    {
+      "name": "Traitements Métal",
+      "slug": "traitements-metal",
+      "description": "Anti-rouille et traitements",
+      "icon": "🔩",
+      "color": "#dc2626"
+    },
+    {
+      "name": "Étanchéité",
+      "slug": "etancheite",
+      "description": "Produits d'étanchéité",
+      "icon": "☔",
+      "color": "#06b6d4"
+    },
+    {
+      "name": "Enduits de Finition",
+      "slug": "enduits-finition",
+      "description": "Enduits de lissage et garnissage",
+      "icon": "🪒",
+      "color": "#8b5cf6"
+    },
+    {
+      "name": "Colles",
+      "slug": "colles",
+      "description": "Ciments colle et colles à carrelage",
+      "icon": "🔧",
+      "color": "#eab308"
+    },
+    {
+      "name": "Enduits de Façade",
+      "slug": "enduits-facade",
+      "description": "Enduits de façade tyrolienne",
+      "icon": "🏠",
+      "color": "#f59e0b"
+    },
+    {
+      "name": "Peintures Murales",
+      "slug": "peintures-murales",
+      "description": "Peintures acryliques intérieur/extérieur",
+      "icon": "🎨",
+      "color": "#2563eb"
+    }
+  ],
+  "products": [
+    {
+      "slug": "peinture-epoxy",
+      "name": "Peinture Époxy",
+      "category": "peintures-sols",
+      "description": "Peinture pour sols, grandes surfaces, usines et parkings. Résine époxy haute résistance avec durcisseur.",
+      "image": "images/products/peinture-epoxy.jpg",
+      "features": [
+        "Peinture pour sols",
+        "Résine époxy",
+        "Haute résistance",
+        "Grandes surfaces, usines et parkings"
+      ]
+    },
+    {
+      "slug": "laque-rainbow-mat",
+      "name": "Laque Rainbow Colors Mat",
+      "category": "peintures-bois",
+      "description": "Laque Rainbow Colors intérieure et extérieure, fini mat, en boîte de 1 kg. Elle convient aux boiseries, murs, plafonds et métal.",
+      "image": "images/products/laque-rainbow-mat.jpg",
+      "features": [
+        "Fini mat",
+        "Intérieur & extérieur",
+        "Boiseries, murs, plafonds et métal",
+        "Lavable",
+        "Séchage rapide",
+        "1 kg"
+      ]
+    },
+    {
+      "slug": "durajir-monocomposant",
+      "name": "DURAJIR",
+      "category": "enduits",
+      "description": "DURAJIR est un mortier monocomposant en poudre à base de chaux naturelles, en sac de 20 kg. Une solution écologique pour les finitions.",
+      "image": "images/products/durajir.jpg",
+      "features": [
+        "Mortier monocomposant",
+        "Base de chaux naturelles",
+        "Éco-produit",
+        "20 kg"
+      ]
+    },
+    {
+      "slug": "durajir-arabi",
+      "name": "DURAJIR ARABI",
+      "category": "enduits-traditionnels",
+      "description": "DURAJIR ARABI est un enduit traditionnel à la chaux en sac de 20 kg. Il convient aux mortiers de chaux, bâtards de ciment chaux et plâtre chaux.",
+      "image": "images/products/durajir-arabi.jpg",
+      "features": [
+        "Enduit traditionnel",
+        "Base de chaux",
+        "Mortiers de chaux",
+        "Bâtards ciment-chaux",
+        "Plâtre chaux",
+        "20 kg"
+      ]
+    },
+    {
+      "slug": "vernis-marin",
+      "name": "Vernis Marin",
+      "category": "vernis",
+      "description": "Vernis marin polyvalent pour la protection et la décoration du bois. Transparent et brillant, il offre une excellente résistance aux agressions physiques, chimiques et aux UV. Pour usage extérieur.",
+      "image": "images/products/vernis-marin.jpg",
+      "features": [
+        "Transparent brillant",
+        "Résistance aux UV",
+        "Protection & décoration du bois",
+        "Extérieur",
+        "1 kg"
+      ]
+    },
+    {
+      "slug": "anti-rouille",
+      "name": "Anti-Rouille",
+      "category": "traitements-metal",
+      "description": "Peinture antirouille intérieure et extérieure, disponible en conditionnements de 0,1 à 5 kg. Séchage rapide.",
+      "image": "images/products/anti-rouille.jpg",
+      "features": [
+        "Anti-corrosion",
+        "Intérieur & extérieur",
+        "Séchage rapide",
+        "Conditionnements de 0,1 à 5 kg"
+      ]
+    },
+    {
+      "slug": "etanche-impermeabilisation",
+      "name": "ÉTANCHE",
+      "category": "etancheite",
+      "description": "Revêtement d'imperméabilisation ÉTANCHE en seau de 15 L. Protection durable contre l'eau et l'humidité, avec une haute adhérence et une bonne élasticité. Pour toitures, terrasses, balcons, murs enterrés et fondations.",
+      "image": "images/products/etanche-impermeabilisation.jpg",
+      "features": [
+        "Protection renforcée",
+        "Résistance aux intempéries",
+        "Haute adhérence",
+        "Imperméable",
+        "Résiste aux UV",
+        "15 L"
+      ]
+    },
+    {
+      "slug": "durajir-etanche",
+      "name": "DURAJIR ÉTANCHE",
+      "category": "etancheite",
+      "description": "DURAJIR ÉTANCHE est un enduit à base de chaux naturelle, conditionné en sac de 20 kg. Il offre une imperméabilité parfaite, une bonne perméabilité à la vapeur d'eau et une protection des armatures.",
+      "image": "images/products/durajir-etanche.jpg",
+      "features": [
+        "Base de chaux naturelle",
+        "Imperméabilité parfaite",
+        "Durabilité",
+        "Perméabilité à la vapeur d'eau",
+        "Protection des armatures",
+        "20 kg"
+      ]
+    },
+    {
+      "slug": "etanche-eco",
+      "name": "ETANCHEECO",
+      "category": "etancheite",
+      "description": "Système d'étanchéité écologique pour toitures et terrasses. Protection contre l'eau et les infiltrations.",
+      "image": "images/products/etancheeco.jpg",
+      "features": [
+        "Étanchéité écologique",
+        "Toitures & terrasses",
+        "Protection contre l'eau"
+      ]
+    },
+    {
+      "slug": "spatulium",
+      "name": "SPATULIUM",
+      "category": "enduits-finition",
+      "description": "SPATULIUM est un enduit garnissant blanc en sac de 25 kg. Il prépare et régularise les supports avant la finition, avec une haute adhérence et un résultat parfait.",
+      "image": "images/products/spatulium.jpg",
+      "features": [
+        "Enduit garnissant",
+        "Blanc",
+        "Haute adhérence",
+        "Qualité supérieure",
+        "25 kg"
+      ]
+    },
+    {
+      "slug": "spatulina-2",
+      "name": "SPATULINA 2",
+      "category": "enduits-finition",
+      "description": "SPATULINA 2 est un enduit de lissage intérieur et extérieur en sac de 20 kg. Blanc éclatant, facile à appliquer, séchage rapide, anti-humidité et adhérence optimale.",
+      "image": "images/products/spatulina-2.jpg",
+      "features": [
+        "Enduit de lissage",
+        "Intérieur & extérieur",
+        "Blanc éclatant",
+        "Séchage rapide",
+        "Anti-humidité",
+        "Adhérence optimale",
+        "20 kg"
+      ]
+    },
+    {
+      "slug": "spatulina-1",
+      "name": "SPATULINA 1",
+      "category": "enduits-finition",
+      "description": "SPATULINA 1 est un enduit de garnissage et de rebouchage à base de chaux naturelle, en sac de 20 kg. Intérieur et extérieur, anti-humidité et adhérence optimale.",
+      "image": "images/products/spatulina-1.jpg",
+      "features": [
+        "Garnissage & rebouchage",
+        "Base de chaux naturelle",
+        "Intérieur & extérieur",
+        "Anti-humidité",
+        "20 kg"
+      ]
+    },
+    {
+      "slug": "carojoint",
+      "name": "CaroJoint",
+      "category": "colles",
+      "description": "CaroJoint est un joint de carrelage prêt à l'emploi pour des joints de 1 à 5 mm. Adapté à l'intérieur et à l'extérieur, il convient à tous types de carreaux.",
+      "image": "images/products/carojoint.jpg",
+      "features": [
+        "Joint 1 à 5 mm",
+        "Intérieur & extérieur",
+        "Prêt à l'emploi",
+        "Tous types de carreaux",
+        "Haute adhérence",
+        "Finition parfaite"
+      ]
+    },
+    {
+      "slug": "mag-eco700",
+      "name": "MAG-ECO700",
+      "category": "colles",
+      "description": "MAG-ECO700 est un ciment colle C1 conditionné en sac de 25 kg. Prêt à gâcher, facile à appliquer et à adhérence optimale, il est destiné à la pose de carreaux en céramique et parterre.",
+      "image": "images/products/mag-eco700.jpg",
+      "features": [
+        "Ciment colle C1",
+        "Prêt à gâcher",
+        "Facile à appliquer",
+        "Adhérence optimale",
+        "25 kg"
+      ]
+    },
+    {
+      "slug": "mag-1000",
+      "name": "MAG-1000",
+      "category": "colles",
+      "description": "MAG-1000 est un ciment colle C1TE conditionné en sac de 25 kg. Prêt à gâcher, facile à appliquer et à adhérence optimale, il est destiné à la pose de carreaux en céramique et parterre.",
+      "image": "images/products/mag-1000.jpg",
+      "features": [
+        "Ciment colle C1TE",
+        "Prêt à gâcher",
+        "Facile à appliquer",
+        "Adhérence optimale",
+        "25 kg"
+      ]
+    },
+    {
+      "slug": "tyrolien",
+      "name": "TYROLIEN",
+      "category": "enduits-facade",
+      "description": "Enduit de façade TYROLIEN appliqué à la tyrolienne, en sac de 25 kg. Disponible en blanc, gris et beige. Prêt à gâcher, facile à appliquer et à haute adhérence.",
+      "image": "images/products/tyrolien.jpg",
+      "features": [
+        "Enduit de façade",
+        "Blanc, gris, beige",
+        "Prêt à gâcher",
+        "Facile à appliquer",
+        "Perméable à la vapeur d'eau",
+        "25 kg"
+      ]
+    },
+    {
+      "slug": "magma-intenso",
+      "name": "Magma Intenso",
+      "category": "peintures-murales",
+      "description": "Peinture acrylique Magma Intenso pour murs et plafonds, en seau de 40 kg. Couleurs hautes densité et lessivables, fini super mat qui masque les imperfections. S'applique sur plâtre, béton, enduit, bois, ciment et pierre.",
+      "image": "images/products/magma-intenso.jpg",
+      "features": [
+        "Peinture acrylique",
+        "Murs & plafonds",
+        "Fini super mat",
+        "Lessivable",
+        "Haute durabilité",
+        "40 kg"
+      ]
+    },
+    {
+      "slug": "magma-ultra-shield",
+      "name": "Magma Ultra-shield",
+      "category": "peintures-murales",
+      "description": "Peinture acrylique Magma Ultra-shield pour façades et extérieurs, en seau de 5 L. Couleurs hautes densité et lessivables, fini super mat qui masque les imperfections. Haute résistance aux intempéries, aux UV et aux variations de température.",
+      "image": "images/products/magma-ultra-shield.jpg",
+      "features": [
+        "Peinture acrylique",
+        "Façades & extérieurs",
+        "Fini super mat",
+        "Lessivable",
+        "Résistance aux intempéries",
+        "5 L"
+      ]
+    },
+    {
+      "slug": "peinture-acrylique-super",
+      "name": "Peinture Acrylique Super",
+      "category": "peintures-murales",
+      "description": "Peinture acrylique qualité super pour murs intérieurs et extérieurs. Une finition soignée et durable.",
+      "image": "images/products/peinture-acrylique-super.jpg",
+      "features": [
+        "Qualité super",
+        "Intérieur & extérieur",
+        "Finition soignée",
+        "Haute durabilité"
+      ]
+    },
+    {
+      "slug": "peinture-acrylique-extra",
+      "name": "Peinture Acrylique Extra",
+      "category": "peintures-murales",
+      "description": "Peinture acrylique qualité extra, aux couleurs vives et durables, pour un intérieur moderne.",
+      "image": "images/products/peinture-acrylique-extra.jpg",
+      "features": [
+        "Qualité extra",
+        "Couleurs vives",
+        "Lavable",
+        "Intérieur & extérieur"
+      ]
+    },
+    {
+      "slug": "peinture-acrylique-basique",
+      "name": "Peinture Acrylique Basique",
+      "category": "peintures-murales",
+      "description": "Peinture acrylique de qualité basique, une solution de peinture pour chaque coin de la maison.",
+      "image": "images/products/peinture-acrylique-basique.jpg",
+      "features": [
+        "Qualité basique",
+        "Intérieur & extérieur",
+        "Couvrante",
+        "Facile d'entretien"
+      ]
+    }
+  ]
+}

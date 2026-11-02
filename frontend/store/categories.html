@@ -4,13 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Catégories | Rainbow Colors</title>
-<link rel="stylesheet" href="css/style.css?v=20261016-logo-actual">
+<link rel="icon" type="image/jpeg" href="images/rainbow-colors-app-icon.jpg">
+<link rel="stylesheet" href="css/style.css?v=20261102-motion">
 </head>
 <body>
 
 <header class="header">
   <div class="header-inner">
-    <a href="index.html" class="logo"><img class="rainbow-brand-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors"></a>
+    <a href="index.html" class="logo">
+      <img class="rainbow-brand-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
+    </a>
     <nav class="nav-desktop"><a href="index.html" class="nav-link ">Accueil</a><a href="products.html" class="nav-link ">Produits</a><a href="categories.html" class="nav-link active">Catégories</a><a href="about.html" class="nav-link ">À Propos</a><a href="contact.html" class="nav-link ">Contact</a></nav>
     <div class="header-actions">
       <a href="search.html" class="icon-btn" title="Rechercher" aria-label="Rechercher"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg></a>
@@ -49,12 +52,19 @@ async function loadCategories() {
   } catch(e){}
 }
 async function loadCatProducts() {
-  const cat = new URLSearchParams(location.search).get('cat');
-  if(cat) document.getElementById('catTitle').textContent = decodeURIComponent(cat);
+  const urlParams = new URLSearchParams(location.search);
+  const cat = urlParams.get('category') || urlParams.get('cat');
   try {
+    if (cat) {
+      const categories = await fetchCategories();
+      const selected = categories.find(c => c.slug === cat);
+      if (selected) document.getElementById('catTitle').textContent = selected.name;
+    }
     const data = await fetchProducts(cat ? { category: cat } : {});
-    document.getElementById('catProducts').innerHTML = data.products.map(p => renderProductCard(p)).join('');
-  } catch(e){}
+    document.getElementById('catProducts').innerHTML = data.products.length
+      ? data.products.map(p => renderProductCard(p)).join('')
+      : '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--rc-gray-500)"><h3>Aucun produit dans cette collection</h3></div>';
+  } catch(e){ console.error(e); }
 }
 document.addEventListener('DOMContentLoaded', () => { loadCategories(); loadCatProducts(); });
 </script>
@@ -63,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => { loadCategories(); loadCatP
   <div class="footer-inner">
     <div class="footer-grid">
       <div class="footer-brand">
-        <img class="rainbow-brand-logo rainbow-footer-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors">
+        <img class="rainbow-brand-logo rainbow-footer-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
         <p>Rainbow Colors - Votre fournisseur de confiance pour peintures et matériaux de construction en Tunisie.</p>
         <div class="footer-social">
           
@@ -88,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => { loadCategories(); loadCatP
 
 
 
-<script src="js/main.js?v=20261011-premium-motion"></script>
+<script src="js/main.js?v=20261102-motion"></script>
 
 </body>
 </html>

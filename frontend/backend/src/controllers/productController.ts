@@ -175,7 +175,17 @@ export const deleteProduct = async (req: any, res: Response) => {
   }
 };
 
-export const getCategories = async (req: Request, res: Response) => {
-  const categories = await prisma.category.findMany({ include: { _count: { select: { products: true } } } });
-  res.json(categories);
+export const getCategories = async (_req: Request, res: Response) => {
+  try {
+    const categories = await prisma.category.findMany({
+      include: { _count: { select: { products: true } } }
+    });
+    res.json(categories);
+  } catch (err: any) {
+    console.error('GET /api/products/categories failed:', err);
+    res.status(500).json({
+      error: 'Impossible de charger les catégories.',
+      details: process.env.NODE_ENV === 'production' ? undefined : err?.message
+    });
+  }
 };

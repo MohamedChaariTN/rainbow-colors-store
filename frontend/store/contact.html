@@ -4,13 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Contact | Rainbow Colors</title>
-<link rel="stylesheet" href="css/style.css?v=20261016-logo-actual">
+<link rel="icon" type="image/jpeg" href="images/rainbow-colors-app-icon.jpg">
+<link rel="stylesheet" href="css/style.css?v=20261102-motion">
 </head>
 <body>
 
 <header class="header">
   <div class="header-inner">
-    <a href="index.html" class="logo"><img class="rainbow-brand-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors"></a>
+    <a href="index.html" class="logo">
+      <img class="rainbow-brand-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
+    </a>
     <nav class="nav-desktop"><a href="index.html" class="nav-link ">Accueil</a><a href="products.html" class="nav-link ">Produits</a><a href="categories.html" class="nav-link ">Catégories</a><a href="about.html" class="nav-link ">À Propos</a><a href="contact.html" class="nav-link active">Contact</a></nav>
     <div class="header-actions">
       <a href="search.html" class="icon-btn" title="Rechercher">🔍</a>
@@ -40,7 +43,7 @@
         <div class="contact-info-card"><div class="icon">📞</div><div><h4>Téléphone</h4><p>+216 29 253 908<br>+216 29 961 293</p></div></div>
         <div class="contact-info-card"><div class="icon">✉️</div><div><h4>Email</h4><p>contact@rainbow-colors.tn<br>commercial@rainbow-colors.tn</p></div></div>
         <div class="contact-info-card"><div class="icon">🕐</div><div><h4>Horaires</h4><p>Lun - Sam: 8h00 - 18h00<br>Dimanche: Fermé</p></div></div>
-        <div style="background:linear-gradient(145deg,#191919,#101010);color:#eee7d6;padding:32px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.28);border:1px solid #3a321f">
+        <div data-rc-reveal style="background:linear-gradient(145deg,#191919,#101010);color:#eee7d6;padding:32px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.28);border:1px solid #3a321f">
           <h3 style="font-size:20px;font-weight:700;margin-bottom:20px">Envoyez-nous un message</h3>
           <form id="contactForm" onsubmit="handleContactSubmit(event)">
             <div class="form-row">
@@ -56,7 +59,7 @@
         </div>
       </div>
       <div>
-        <div class="contact-map">
+        <div class="contact-map" data-rc-reveal>
           <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2624.99!2d10.75!3d34.75!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDQ1JzAwLjAiTiAxMMKwNDUnMDAuMCJF!5e0!3m2!1sfr!2stn" width="100%" height="100%" style="border:0;border-radius:16px" allowfullscreen loading="lazy"></iframe>
         </div>
       </div>
@@ -68,7 +71,7 @@
   <div class="footer-inner">
     <div class="footer-grid">
       <div class="footer-brand">
-        <img class="rainbow-brand-logo rainbow-footer-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors">
+        <img class="rainbow-brand-logo rainbow-footer-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
         <p>Rainbow Colors - Votre fournisseur de confiance pour peintures et matériaux de construction en Tunisie.</p>
         <div class="footer-social">
           
@@ -94,6 +97,13 @@
 
 
 <script>
+// Shared API configuration used by the catalogue, contact form and admin:
+// same-origin /api by default, with an optional external API base.
+const CONTACT_API_URL = (
+  window.RAINBOW_COLORS_API_URL ||
+  (window.location.origin + '/api')
+).replace(/\/$/, '');
+
 async function handleContactSubmit(event) {
   event.preventDefault();
 
@@ -106,7 +116,7 @@ async function handleContactSubmit(event) {
   success.style.display = 'none';
 
   try {
-    const response = await fetch(window.location.origin + '/api/contact', {
+    const response = await fetch(CONTACT_API_URL + '/contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -144,7 +154,7 @@ async function handleContactSubmit(event) {
   }
 }
 </script>
-<script src="js/main.js?v=20261011-premium-motion"></script>
+<script src="js/main.js?v=20261102-motion"></script>
 
 </body>
 </html>

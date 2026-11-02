@@ -1,7 +1,7 @@
 {
   "name": "rainbow-colors-store",
   "version": "1.0.0",
-  "description": "Rainbow Colors - Full-stack e-commerce",
+  "description": "Rainbow Colors - Catalogue API",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
@@ -37,5 +37,8 @@
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

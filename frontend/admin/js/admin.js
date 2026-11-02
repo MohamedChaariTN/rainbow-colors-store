@@ -1,11 +1,16 @@
-const API_URL = window.location.origin + '/api';
+// Shared API configuration: same-origin /api by default, with an optional
+// external API base supplied through window.RAINBOW_COLORS_API_URL.
+const API_URL = (
+  window.RAINBOW_COLORS_API_URL ||
+  (window.location.origin + '/api')
+).replace(/\/$/, '');
 
-let authToken = localStorage.getItem('rc_token');
+const ADMIN_TOKEN_KEY = 'rc_admin_token';
+const LEGACY_TOKEN_KEY = 'rc_token';
+
+let authToken = localStorage.getItem(ADMIN_TOKEN_KEY);
 let currentUser = null;
-
-let knownOrderIds = new Set();
-let firstOrdersLoad = true;
-let autoRefreshTimer = null;
+let loginRequestInFlight = false;
 
 // =========================
 // API
@@ -51,11 +56,30 @@ async function api(endpoint, options = {}) {
   }
 
   if (!res.ok) {
-    throw new Error(
+    const error = new Error(
       data.error ||
       data.message ||
       `HTTP ${res.status}`
     );
+
+    error.status = res.status;
+    error.data = data;
+
+    // A protected request can expire while the dashboard is open. Do not
+    // leave the admin interface visible once the server rejects the session.
+    if (
+      (res.status === 401 || res.status === 403) &&
+      endpoint !== '/auth/login' &&
+      endpoint !== '/auth/me'
+    ) {
+      clearAdminSession();
+      showAdminLogin(
+        'Votre session a expiré ou n’est plus autorisée. Veuillez vous reconnecter.',
+        { clearPassword: true }
+      );
+    }
+
+    throw error;
   }
 
   return data;
@@ -76,13 +100,139 @@ function escapeHtml(value) {
 // =========================
 // ADMIN AUTH
 // =========================
+function clearAdminSession() {
+  try {
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
+  } catch (_) {}
+
+  authToken = null;
+  currentUser = null;
+}
+
+function setAdminIdentity() {
+  const adminName =
+    document.getElementById('adminName');
+
+  const avatar =
+    document.querySelector('.admin-avatar');
+
+  if (adminName) {
+    adminName.textContent =
+      (
+        (currentUser?.firstName || '') +
+        ' ' +
+        (currentUser?.lastName || '')
+      ).trim() || 'Admin';
+  }
+
+  if (avatar) {
+    avatar.textContent = (
+      (currentUser?.firstName?.[0] || 'A') +
+      (currentUser?.lastName?.[0] || '')
+    ).toUpperCase();
+  }
+}
+
+function setLoginBusy(isBusy, label) {
+  const form =
+    document.getElementById('adminLoginForm');
+
+  const button =
+    document.getElementById('adminLoginSubmit');
+
+  if (form) {
+    form.querySelectorAll('input').forEach(input => {
+      input.disabled = Boolean(isBusy);
+    });
+  }
+
+  if (button) {
+    button.disabled = Boolean(isBusy);
+    button.textContent =
+      isBusy
+        ? (label || 'Connexion…')
+        : 'Se connecter';
+    button.setAttribute(
+      'aria-busy',
+      isBusy ? 'true' : 'false'
+    );
+  }
+}
+
+function showAdminLogin(message = '', options = {}) {
+  const app =
+    document.getElementById('adminApp');
+
+  const login =
+    document.getElementById('adminLoginScreen');
+
+  const errorBox =
+    document.getElementById('adminLoginError');
+
+  const retry =
+    document.getElementById('adminRetrySession');
+
+  const emailInput =
+    document.getElementById('adminLoginEmail');
+
+  const passwordInput =
+    document.getElementById('adminLoginPassword');
+
+  if (app) app.hidden = true;
+  if (login) login.hidden = false;
+
+  if (errorBox) {
+    errorBox.textContent = message;
+    errorBox.classList.toggle(
+      'is-visible',
+      Boolean(message)
+    );
+  }
+
+  if (retry) {
+    retry.hidden = !options.allowRetry;
+  }
+
+  setLoginBusy(false);
+
+  if (passwordInput && options.clearPassword) {
+    passwordInput.value = '';
+  }
+
+  if (
+    options.focusPassword &&
+    passwordInput &&
+    emailInput?.value.trim()
+  ) {
+    passwordInput.focus();
+  } else if (emailInput && !options.focusPassword) {
+    emailInput.focus();
+  }
+}
+
+function showAdminApp() {
+  const app =
+    document.getElementById('adminApp');
+
+  const login =
+    document.getElementById('adminLoginScreen');
+
+  if (login) login.hidden = true;
+  if (app) app.hidden = false;
+
+  setAdminIdentity();
+}
+
 async function checkAdmin() {
-  authToken = localStorage.getItem('rc_token');
+  authToken = localStorage.getItem(ADMIN_TOKEN_KEY);
 
   if (!authToken) {
-    location.href = '../store/index.html';
+    showAdminLogin();
     return false;
   }
+
+  setLoginBusy(true, 'Vérification…');
 
   try {
     const data = await api('/auth/me');
@@ -90,47 +240,152 @@ async function checkAdmin() {
     currentUser = data.user;
 
     if (!currentUser || currentUser.role !== 'ADMIN') {
-      alert('Accès réservé aux administrateurs');
-      location.href = '../store/index.html';
+      clearAdminSession();
+      showAdminLogin(
+        'Accès réservé aux administrateurs.',
+        { clearPassword: true }
+      );
       return false;
     }
 
-    const adminName =
-      document.getElementById('adminName');
-
-    const avatar =
-      document.querySelector('.admin-avatar');
-
-    if (adminName) {
-      adminName.textContent =
-        (currentUser.firstName || '') +
-        ' ' +
-        (currentUser.lastName || '');
-    }
-
-    if (avatar) {
-      avatar.textContent = (
-        (currentUser.firstName?.[0] || 'A') +
-        (currentUser.lastName?.[0] || '')
-      ).toUpperCase();
-    }
-
+    showAdminApp();
     return true;
 
   } catch (error) {
-    console.error('Admin auth error:', error);
-
-    localStorage.removeItem('rc_token');
-
-    location.href = '../store/index.html';
+    if (error.status === 401 || error.status === 403) {
+      clearAdminSession();
+      showAdminLogin(
+        'Votre session a expiré ou n’est plus valide. Veuillez vous reconnecter.',
+        { clearPassword: true }
+      );
+    } else {
+      showAdminLogin(
+        'Impossible de vérifier la session. Vérifiez votre connexion puis réessayez.',
+        { allowRetry: true }
+      );
+    }
 
     return false;
   }
 }
 
+async function loginAdmin(event) {
+  event.preventDefault();
+
+  if (loginRequestInFlight) {
+    return;
+  }
+
+  const emailInput =
+    document.getElementById('adminLoginEmail');
+
+  const passwordInput =
+    document.getElementById('adminLoginPassword');
+
+  if (!emailInput || !passwordInput) {
+    return;
+  }
+
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!email || !password) {
+    showAdminLogin(
+      'Veuillez saisir votre email et votre mot de passe.'
+    );
+    return;
+  }
+
+  loginRequestInFlight = true;
+  setLoginBusy(true, 'Connexion…');
+
+  try {
+    const data = await api('/auth/login', {
+      method: 'POST',
+      body: { email, password }
+    });
+
+    if (
+      !data?.token ||
+      !data?.user ||
+      data.user.role !== 'ADMIN'
+    ) {
+      const error = new Error(
+        'Accès réservé aux administrateurs.'
+      );
+      error.status = 403;
+      throw error;
+    }
+
+    authToken = data.token;
+    currentUser = data.user;
+
+    localStorage.setItem(ADMIN_TOKEN_KEY, authToken);
+
+    // The admin session is independent from the legacy customer token.
+    try {
+      localStorage.removeItem(LEGACY_TOKEN_KEY);
+    } catch (_) {}
+
+    passwordInput.value = '';
+    showAdminApp();
+
+    await loadDashboard();
+    await loadContactMessages();
+
+  } catch (error) {
+    passwordInput.value = '';
+
+    const isAuthError =
+      error.status === 401 || error.status === 403;
+
+    const isNetworkError =
+      error instanceof TypeError ||
+      !navigator.onLine ||
+      error.status >= 500;
+
+    const message =
+      isAuthError
+        ? 'Email ou mot de passe incorrect, ou accès administrateur non autorisé.'
+        : isNetworkError
+          ? 'Impossible de contacter le serveur. Vérifiez votre connexion puis réessayez.'
+          : (error.message || 'Connexion impossible.');
+
+    showAdminLogin(message, { focusPassword: true });
+
+  } finally {
+    loginRequestInFlight = false;
+    setLoginBusy(false);
+  }
+}
+
+async function retryAdminSession() {
+  if (loginRequestInFlight) {
+    return;
+  }
+
+  const adminOk = await checkAdmin();
+
+  if (!adminOk) {
+    return;
+  }
+
+  await loadDashboard();
+  await loadContactMessages();
+}
+
 function logoutAdmin() {
-  localStorage.removeItem('rc_token');
-  location.href = '../store/index.html';
+  clearAdminSession();
+
+  const form =
+    document.getElementById('adminLoginForm');
+
+  if (form) {
+    form.reset();
+  }
+
+  showAdminLogin('Vous êtes déconnecté.');
+  setLoginBusy(false);
 }
 
 // =========================
@@ -171,9 +426,8 @@ function showSection(id) {
   const titles = {
     dashboard: 'Tableau de bord',
     products: 'Gestion des produits',
-    orders: 'Gestion des commandes',
-    customers: 'Gestion des clients',
-    categories: 'Catégories'
+    categories: 'Catégories',
+    contactMessages: 'Messages reçus'
   };
 
   const pageTitle =
@@ -192,196 +446,8 @@ function showSection(id) {
     loadAdminProducts();
   }
 
-  if (id === 'orders') {
-    loadAdminOrders();
-  }
-
-  if (id === 'customers') {
-    loadAdminCustomers();
-  }
-
   if (id === 'categories') {
     loadAdminCategories();
-  }
-}
-
-// =========================
-// NEW ORDER NOTIFICATION
-// =========================
-function showNewOrderNotification(order) {
-  const old =
-    document.getElementById(
-      'newOrderNotification'
-    );
-
-  if (old) {
-    old.remove();
-  }
-
-  const notification =
-    document.createElement('div');
-
-  notification.id =
-    'newOrderNotification';
-
-  notification.style.cssText = `
-    position:fixed;
-    top:20px;
-    right:20px;
-    z-index:99999;
-    width:350px;
-    background:#fff;
-    border-radius:14px;
-    padding:18px;
-    box-shadow:0 10px 40px rgba(0,0,0,.18);
-    border:2px solid #2563eb;
-  `;
-
-  const firstName =
-    order.user?.firstName ||
-    order.firstName ||
-    '';
-
-  const lastName =
-    order.user?.lastName ||
-    order.lastName ||
-    '';
-
-  notification.innerHTML = `
-    <div style="
-      display:flex;
-      justify-content:space-between;
-      gap:12px
-    ">
-      <div>
-
-        <div style="
-          font-size:18px;
-          font-weight:800;
-          color:#2563eb
-        ">
-          🔔 Nouvelle commande
-        </div>
-
-        <div style="
-          margin-top:8px;
-          font-weight:700
-        ">
-          ${escapeHtml(order.orderNumber)}
-        </div>
-
-        <div style="
-          margin-top:5px;
-          color:#666
-        ">
-          ${escapeHtml(firstName)}
-          ${escapeHtml(lastName)}
-        </div>
-
-        <div style="
-          margin-top:5px;
-          font-weight:700
-        ">
-          ${Number(order.total || 0).toFixed(2)} TND
-        </div>
-
-      </div>
-
-      <button
-        id="closeNewOrderNotification"
-        style="
-          border:none;
-          background:transparent;
-          font-size:20px;
-          cursor:pointer
-        "
-      >
-        ✕
-      </button>
-
-    </div>
-
-    <button
-      id="viewNewOrderButton"
-      style="
-        margin-top:14px;
-        width:100%;
-        padding:10px;
-        border:none;
-        border-radius:9px;
-        background:#2563eb;
-        color:#fff;
-        font-weight:700;
-        cursor:pointer
-      "
-    >
-      Voir les commandes
-    </button>
-  `;
-
-  document.body.appendChild(
-    notification
-  );
-
-  document
-    .getElementById(
-      'closeNewOrderNotification'
-    )
-    ?.addEventListener(
-      'click',
-      () => {
-        notification.remove();
-      }
-    );
-
-  document
-    .getElementById(
-      'viewNewOrderButton'
-    )
-    ?.addEventListener(
-      'click',
-      () => {
-        notification.remove();
-        showSection('orders');
-      }
-    );
-
-  setTimeout(() => {
-    if (notification.parentNode) {
-      notification.remove();
-    }
-  }, 10000);
-
-  if (
-    'Notification' in window &&
-    Notification.permission === 'granted'
-  ) {
-    new Notification(
-      'Nouvelle commande Rainbow Colors',
-      {
-        body:
-          `${order.orderNumber} - ` +
-          `${Number(
-            order.total || 0
-          ).toFixed(2)} TND`
-      }
-    );
-  }
-}
-
-async function requestNotificationPermission() {
-  if (!('Notification' in window)) {
-    return;
-  }
-
-  if (
-    Notification.permission === 'default'
-  ) {
-    try {
-      await Notification.requestPermission();
-    } catch (error) {
-      console.error(error);
-    }
   }
 }
 
@@ -393,120 +459,89 @@ async function loadDashboard() {
     const data =
       await api('/admin/dashboard');
 
-    const statProducts =
+    const setStat = (id, value) => {
+      const element = document.getElementById(id);
+      if (element) element.textContent = value;
+    };
+
+    setStat(
+      'statProducts',
+      data.stats?.totalProducts ?? 0
+    );
+    setStat(
+      'statCategories',
+      data.stats?.totalCategories ?? 0
+    );
+    setStat(
+      'statMessages',
+      data.stats?.unreadMessages ?? 0
+    );
+    setStat(
+      'statLowStock',
+      data.stats?.lowStockCount ?? 0
+    );
+
+    const recentProducts =
       document.getElementById(
-        'statProducts'
+        'recentProducts'
       );
 
-    const statOrders =
-      document.getElementById(
-        'statOrders'
-      );
+    if (recentProducts) {
+      const products = Array.isArray(data.recentProducts)
+        ? data.recentProducts
+        : [];
 
-    const statUsers =
-      document.getElementById(
-        'statUsers'
-      );
-
-    const statRevenue =
-      document.getElementById(
-        'statRevenue'
-      );
-
-    if (statProducts) {
-      statProducts.textContent =
-        data.stats.totalProducts;
-    }
-
-    if (statOrders) {
-      statOrders.textContent =
-        data.stats.totalOrders;
-    }
-
-    if (statUsers) {
-      statUsers.textContent =
-        data.stats.totalUsers;
-    }
-
-    if (statRevenue) {
-      statRevenue.textContent =
-        Number(
-          data.stats.totalRevenue || 0
-        ).toFixed(2);
-    }
-
-    const recentOrders =
-      document.getElementById(
-        'recentOrders'
-      );
-
-    if (recentOrders) {
-      recentOrders.innerHTML =
-        data.recentOrders.length
-          ? data.recentOrders
+      recentProducts.innerHTML =
+        products.length
+          ? products
               .map(
-                o => `
+                p => `
                   <div style="
                     display:flex;
                     justify-content:space-between;
+                    gap:12px;
                     padding:10px 0;
                     border-bottom:
-                      1px solid var(--gray-100)
+                      1px solid var(--admin-border)
                   ">
 
                     <div>
                       <strong>
-                        ${escapeHtml(
-                          o.orderNumber
-                        )}
+                        ${escapeHtml(p.name)}
                       </strong>
 
                       <div style="
                         font-size:12px;
-                        color:var(--gray-400)
+                        color:var(--admin-muted)
                       ">
                         ${escapeHtml(
-                          o.user?.firstName || ''
-                        )}
-                        ${escapeHtml(
-                          o.user?.lastName || ''
+                          p.category?.name ||
+                          'Sans catégorie'
                         )}
                       </div>
                     </div>
 
-                    <div style="
-                      text-align:right
+                    <span style="
+                      font-size:12px;
+                      color:var(--admin-muted);
+                      white-space:nowrap
                     ">
-
-                      <div style="
-                        font-weight:700
-                      ">
-                        ${Number(
-                          o.total || 0
-                        ).toFixed(2)} TND
-                      </div>
-
-                      <span
-                        class="badge status-${String(
-                          o.status
-                        ).toLowerCase()}"
-                      >
-                        ${escapeHtml(
-                          o.status
-                        )}
-                      </span>
-
-                    </div>
+                      ${new Date(
+                        p.createdAt
+                      ).toLocaleDateString(
+                        'fr-FR'
+                      )}
+                    </span>
                   </div>
                 `
               )
               .join('')
           : `
             <p style="
-              color:var(--gray-400);
+              color:var(--admin-muted);
               font-size:14px
             ">
-              Aucune commande
+              Aucun produit
             </p>
           `;
     }
@@ -517,17 +552,22 @@ async function loadDashboard() {
       );
 
     if (lowStock) {
+      const products = Array.isArray(data.lowStock)
+        ? data.lowStock
+        : [];
+
       lowStock.innerHTML =
-        data.lowStock.length
-          ? data.lowStock
+        products.length
+          ? products
               .map(
                 p => `
                   <div style="
                     display:flex;
                     justify-content:space-between;
+                    gap:12px;
                     padding:10px 0;
                     border-bottom:
-                      1px solid var(--gray-100)
+                      1px solid var(--admin-border)
                   ">
 
                     <span>
@@ -535,7 +575,7 @@ async function loadDashboard() {
                     </span>
 
                     <span style="
-                      color:var(--danger);
+                      color:#d96c62;
                       font-weight:700;
                       font-size:13px
                     ">
@@ -549,7 +589,7 @@ async function loadDashboard() {
               .join('')
           : `
             <p style="
-              color:var(--gray-400);
+              color:var(--admin-muted);
               font-size:14px
             ">
               Tout est en ordre
@@ -731,7 +771,7 @@ function renderAdminProductsPage() {
             alt="${escapeHtml(p.name)}"
             loading="lazy"
             decoding="async"
-            onerror="this.src='../store/images/logo ranbow colors.jpeg'"
+            onerror="this.onerror=null;this.src='../images/rainbow-colors-logo-header.svg'"
           >
         </td>
 
@@ -1146,907 +1186,7 @@ async function deleteProduct(id) {
       }
     );
 
-    await loadAdminProducts();
-
-    await loadDashboard();
-
-  } catch (error) {
-    alert(error.message);
-  }
-}
-
-// =========================
-// ORDERS
-// =========================
-async function loadAdminOrders(
-  showNotification = true
-) {
-  try {
-    const orders =
-      await api('/admin/orders');
-
-    if (!Array.isArray(orders)) {
-      return;
-    }
-
-    if (
-      !firstOrdersLoad &&
-      showNotification
-    ) {
-      const newOrders =
-        orders.filter(
-          order =>
-            !knownOrderIds.has(
-              order.id
-            )
-        );
-
-      newOrders
-        .slice(0, 3)
-        .forEach(order => {
-          showNewOrderNotification(
-            order
-          );
-        });
-    }
-
-    knownOrderIds =
-      new Set(
-        orders.map(
-          order => order.id
-        )
-      );
-
-    firstOrdersLoad = false;
-
-    const tbody =
-      document.querySelector(
-        '#ordersTable tbody'
-      );
-
-    if (!tbody) {
-      return;
-    }
-
-    if (!orders.length) {
-      tbody.innerHTML = `
-        <tr>
-          <td
-            colspan="7"
-            style="
-              text-align:center;
-              padding:30px;
-              color:#999
-            "
-          >
-            Aucune commande
-          </td>
-        </tr>
-      `;
-
-      return;
-    }
-
-    tbody.innerHTML =
-      orders
-        .map(o => {
-          const paymentLabel =
-            o.paymentMethod === 'cod'
-              ? '💵 COD'
-              : o.paymentMethod === 'card'
-              ? '💳 Carte'
-              : '📮 E-Dinar';
-
-          const firstName =
-            o.user?.firstName ||
-            o.firstName ||
-            '';
-
-          const lastName =
-            o.user?.lastName ||
-            o.lastName ||
-            '';
-
-          const email =
-            o.user?.email ||
-            o.email ||
-            '';
-
-          const phone =
-            o.user?.phone ||
-            o.phone ||
-            '-';
-
-          return `
-            <tr>
-
-              <td>
-                <strong>
-                  ${escapeHtml(
-                    o.orderNumber
-                  )}
-                </strong>
-              </td>
-
-              <td>
-                <strong>
-                  ${escapeHtml(
-                    firstName
-                  )}
-                  ${escapeHtml(
-                    lastName
-                  )}
-                </strong>
-
-                <br>
-
-                <small
-                  style="
-                    color:var(--gray-400)
-                  "
-                >
-                  ${escapeHtml(
-                    email
-                  )}
-                </small>
-
-                <br>
-
-                <small
-                  style="
-                    color:var(--gray-400)
-                  "
-                >
-                  ${escapeHtml(
-                    phone
-                  )}
-                </small>
-              </td>
-
-              <td>
-                ${new Date(
-                  o.createdAt
-                ).toLocaleString(
-                  'fr-FR'
-                )}
-              </td>
-
-              <td>
-                <strong>
-                  ${Number(
-                    o.total || 0
-                  ).toFixed(2)}
-                  TND
-                </strong>
-              </td>
-
-              <td>
-                ${paymentLabel}
-
-                <br>
-
-                <small>
-                  ${escapeHtml(
-                    o.paymentStatus ||
-                    'PENDING'
-                  )}
-                </small>
-              </td>
-
-              <td>
-                <span
-                  class="
-                    badge
-                    status-${String(
-                      o.status
-                    ).toLowerCase()}
-                  "
-                >
-                  ${escapeHtml(
-                    o.status
-                  )}
-                </span>
-              </td>
-
-              <td>
-
-                <button class="btn-sm btn-edit" onclick="viewAdminOrder(${o.id})" title="Voir les détails de la commande">👁️</button>
-
-                <select
-                  onchange="
-                    updateOrderStatus(
-                      ${o.id},
-                      this.value,
-                      this
-                    )
-                  "
-                  style="
-                    padding:6px 10px;
-                    border-radius:8px;
-                    border:
-                      1px solid
-                      var(--gray-300);
-                    font-size:13px
-                  "
-                >
-
-                  <option
-                    value="PENDING"
-                    ${
-                      o.status ===
-                      'PENDING'
-                        ? 'selected'
-                        : ''
-                    }
-                  >
-                    En attente
-                  </option>
-
-                  <option
-                    value="CONFIRMED"
-                    ${
-                      o.status ===
-                      'CONFIRMED'
-                        ? 'selected'
-                        : ''
-                    }
-                  >
-                    Confirmée
-                  </option>
-
-                  <option
-                    value="PROCESSING"
-                    ${
-                      o.status ===
-                      'PROCESSING'
-                        ? 'selected'
-                        : ''
-                    }
-                  >
-                    En traitement
-                  </option>
-
-                  <option
-                    value="SHIPPED"
-                    ${
-                      o.status ===
-                      'SHIPPED'
-                        ? 'selected'
-                        : ''
-                    }
-                  >
-                    Expédiée
-                  </option>
-
-                  <option
-                    value="DELIVERED"
-                    ${
-                      o.status ===
-                      'DELIVERED'
-                        ? 'selected'
-                        : ''
-                    }
-                  >
-                    Livrée
-                  </option>
-
-                  <option
-                    value="CANCELLED"
-                    ${
-                      o.status ===
-                      'CANCELLED'
-                        ? 'selected'
-                        : ''
-                    }
-                  >
-                    Annulée
-                  </option>
-
-                </select>
-
-              </td>
-
-            </tr>
-          `;
-        })
-        .join('');
-
-  } catch (error) {
-    console.error(
-      'Orders error:',
-      error
-    );
-  }
-}
-
-// =========================
-// UPDATE ORDER STATUS
-// =========================
-function generateAdminInvoice(id) {
-  // Ouvrir la fenêtre immédiatement pendant le clic utilisateur
-  // pour éviter que le navigateur bloque le popup après l'appel API.
-  const invoiceWindow = window.open('', '_blank');
-
-  if (!invoiceWindow) {
-    alert('Autorisez les fenêtres pop-up pour générer la facture.');
-    return;
-  }
-
-  invoiceWindow.document.write(`
-    <!doctype html>
-    <html lang="fr">
-      <head>
-        <meta charset="utf-8">
-        <title>Facture Rainbow Colors</title>
-        <style>
-          body{font-family:Arial,sans-serif;padding:40px;color:#172033}
-          .loading{text-align:center;margin-top:120px;font-size:18px}
-        </style>
-      </head>
-      <body>
-        <div class="loading">Préparation de la facture…</div>
-      </body>
-    </html>
-  `);
-  invoiceWindow.document.close();
-
-  viewAdminOrderForInvoice(id, invoiceWindow);
-}
-
-async function viewAdminOrderForInvoice(id, invoiceWindow) {
-  try {
-    const o = await api('/admin/orders/' + id);
-
-    const customer = [
-      o.user?.firstName,
-      o.user?.lastName
-    ].filter(Boolean).join(' ') || 'Client';
-
-    const payment =
-      o.paymentMethod === 'cod'
-        ? 'Paiement à la livraison'
-        : o.paymentMethod === 'card'
-        ? 'Carte bancaire'
-        : 'E-Dinar';
-
-    const rows = (o.items || [])
-      .map(item => {
-        const quantity = Number(item.quantity || 0);
-        const price = Number(item.price || 0);
-        const total = price * quantity;
-
-        return '<tr>' +
-          '<td>' + escapeHtml(item.name) + '</td>' +
-          '<td>' + quantity + '</td>' +
-          '<td>' + price.toFixed(3) + ' TND</td>' +
-          '<td>' + total.toFixed(3) + ' TND</td>' +
-        '</tr>';
-      })
-      .join('');
-
-    const address = [
-      o.address,
-      o.city,
-      o.governorate,
-      o.postalCode
-    ].filter(Boolean).join(', ') || '—';
-
-    invoiceWindow.document.open();
-    invoiceWindow.document.write(`
-      <!doctype html>
-      <html lang="fr">
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Facture ${escapeHtml(o.orderNumber || '')}</title>
-        <style>
-          @page{size:A4;margin:16mm}
-          *{box-sizing:border-box}
-          body{font-family:Arial,Helvetica,sans-serif;color:#172033;margin:0;background:#fff}
-          .top{display:flex;justify-content:space-between;gap:30px;border-bottom:3px solid #2563eb;padding-bottom:18px}
-          .brand{font-size:25px;font-weight:900;color:#2563eb}
-          .brand span{color:#7c3aed}
-          .muted{color:#64748b;font-size:12px;margin-top:5px}
-          .invoice-title{text-align:right}
-          .invoice-title strong{font-size:20px}
-          .box{margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
-          .box>div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;line-height:1.7}
-          .title{margin-top:28px;font-size:20px;font-weight:800}
-          table{width:100%;border-collapse:collapse;margin-top:14px}
-          th{background:#f1f5f9;text-align:left;padding:11px;font-size:12px}
-          td{padding:11px;border-bottom:1px solid #e2e8f0;font-size:13px}
-          .totals{width:320px;max-width:100%;margin:22px 0 0 auto}
-          .line{display:flex;justify-content:space-between;padding:6px 0}
-          .grand{border-top:2px solid #172033;margin-top:6px;padding-top:10px;font-size:18px;font-weight:900}
-          .footer{text-align:center;margin-top:45px;color:#64748b;font-size:11px;border-top:1px solid #e2e8f0;padding-top:15px}
-          @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
-        </style>
-      </head>
-      <body>
-        <div class="top">
-          <div>
-            <div class="brand">Rainbow <span>Colors</span></div>
-            <div class="muted">Peintures et matériaux de construction</div>
-          </div>
-          <div class="invoice-title">
-            <strong>FACTURE</strong>
-            <div>${escapeHtml(o.orderNumber || '')}</div>
-            <div class="muted">${new Date(o.createdAt).toLocaleDateString('fr-FR')}</div>
-          </div>
-        </div>
-
-        <div class="box">
-          <div>
-            <strong>Client</strong><br>
-            ${escapeHtml(customer)}<br>
-            ${escapeHtml(o.user?.email || '')}<br>
-            ${escapeHtml(o.user?.phone || '')}
-          </div>
-          <div>
-            <strong>Adresse de livraison</strong><br>
-            ${escapeHtml(address)}<br><br>
-            <strong>Paiement</strong><br>
-            ${escapeHtml(payment)}
-          </div>
-        </div>
-
-        <div class="title">Détail de la commande</div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Produit</th>
-              <th>Qté</th>
-              <th>Prix unitaire</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-
-        <div class="totals">
-          <div class="line">
-            <span>Sous-total</span>
-            <strong>${Number(o.subtotal || 0).toFixed(3)} TND</strong>
-          </div>
-          <div class="line">
-            <span>Livraison</span>
-            <strong>${Number(o.shipping || 0).toFixed(3)} TND</strong>
-          </div>
-          <div class="line">
-            <span>TVA</span>
-            <strong>${Number(o.tax || 0).toFixed(3)} TND</strong>
-          </div>
-          <div class="line grand">
-            <span>Total</span>
-            <strong>${Number(o.total || 0).toFixed(3)} TND</strong>
-          </div>
-        </div>
-
-        <div class="footer">
-          Rainbow Colors — Sfax, Tunisie — +216 29 253 908<br>
-          Document généré depuis le Dashboard Admin
-        </div>
-      </body>
-      </html>
-    `);
-    invoiceWindow.document.close();
-
-    // Lancer l'impression seulement après que le contenu est chargé.
-    setTimeout(() => {
-      try {
-        invoiceWindow.focus();
-        invoiceWindow.print();
-      } catch (printError) {
-        console.error('Invoice print error:', printError);
-      }
-    }, 500);
-
-  } catch (error) {
-    console.error('Invoice generation error:', error);
-    try {
-      invoiceWindow.document.open();
-      invoiceWindow.document.write(
-        '<p style="font-family:Arial;padding:30px;color:#dc2626">' +
-        '<strong>Impossible de générer la facture.</strong><br><br>' +
-        escapeHtml(error.message || 'Erreur inconnue') +
-        '</p>'
-      );
-      invoiceWindow.document.close();
-    } catch (_) {}
-  }
-}
-async function viewAdminOrderForInvoice(id){
- try{
-  const o=await api('/admin/orders/'+id);
-  const customer=[o.user?.firstName,o.user?.lastName].filter(Boolean).join(' ')||'Client';
-  const payment=o.paymentMethod==='cod'?'Paiement à la livraison':o.paymentMethod==='card'?'Carte bancaire':'E-Dinar';
-  const rows=(o.items||[]).map(item=>'<tr><td>'+escapeHtml(item.name)+'</td><td>'+Number(item.quantity||0)+'</td><td>'+Number(item.price||0).toFixed(3)+' TND</td><td>'+((Number(item.price)||0)*(Number(item.quantity)||0)).toFixed(3)+' TND</td></tr>').join('');
-  const w=window.open('','_blank');
-  if(!w){alert('Autorisez les fenêtres pop-up pour générer la facture.');return;}
-  w.document.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Facture '+escapeHtml(o.orderNumber||'')+'</title><style>@page{size:A4;margin:18mm}body{font-family:Arial,sans-serif;color:#172033;margin:0}.top{display:flex;justify-content:space-between;border-bottom:3px solid #2563eb;padding-bottom:18px}.brand{font-size:25px;font-weight:900;color:#2563eb}.brand span{color:#7c3aed}.muted{color:#64748b;font-size:12px}.box{margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:20px}.box>div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px}.title{margin-top:28px;font-size:22px}table{width:100%;border-collapse:collapse;margin-top:14px}th{background:#f1f5f9;text-align:left;padding:11px;font-size:12px}td{padding:11px;border-bottom:1px solid #e2e8f0;font-size:13px}.totals{width:300px;margin:22px 0 0 auto}.line{display:flex;justify-content:space-between;padding:6px 0}.grand{border-top:2px solid #172033;margin-top:6px;padding-top:10px;font-size:18px;font-weight:900}.footer{text-align:center;margin-top:45px;color:#64748b;font-size:11px;border-top:1px solid #e2e8f0;padding-top:15px}</style></head><body><div class="top"><div><div class="brand">Rainbow <span>Colors</span></div><div class="muted">Peintures et matériaux de construction</div></div><div style="text-align:right"><strong>FACTURE</strong><div>'+escapeHtml(o.orderNumber||'')+'</div><div class="muted">'+new Date(o.createdAt).toLocaleDateString('fr-FR')+'</div></div></div><div class="box"><div><strong>Client</strong><br>'+escapeHtml(customer)+'<br>'+escapeHtml(o.user?.email||'')+'<br>'+escapeHtml(o.user?.phone||'')+'</div><div><strong>Adresse de livraison</strong><br>'+escapeHtml([o.address,o.city,o.governorate,o.postalCode].filter(Boolean).join(', ')||'—')+'<br><br><strong>Paiement</strong><br>'+escapeHtml(payment)+'</div></div><div class="title">Détail de la commande</div><table><thead><tr><th>Produit</th><th>Qté</th><th>Prix unitaire</th><th>Total</th></tr></thead><tbody>'+rows+'</tbody></table><div class="totals"><div class="line"><span>Sous-total</span><strong>'+Number(o.subtotal||0).toFixed(3)+' TND</strong></div><div class="line"><span>Livraison</span><strong>'+Number(o.shipping||0).toFixed(3)+' TND</strong></div><div class="line"><span>TVA</span><strong>'+Number(o.tax||0).toFixed(3)+' TND</strong></div><div class="line grand"><span>Total</span><strong>'+Number(o.total||0).toFixed(3)+' TND</strong></div></div><div class="footer">Rainbow Colors — Sfax, Tunisie — +216 29 253 908<br>Document généré depuis le Dashboard Admin</div><script>window.onload=function(){setTimeout(function(){window.print()},300)}</script></body></html>');
-  w.document.close();
- }catch(error){alert(error.message);}
-}
-
-async function viewAdminOrder(id) {
-  try {
-    const o = await api('/admin/orders/' + id);
-    const old = document.getElementById('adminOrderDetailsModal');
-    if (old) old.remove();
-    const paymentLabel = o.paymentMethod === 'cod' ? '💵 Paiement à la livraison' : o.paymentMethod === 'card' ? '💳 Carte bancaire' : '📮 E-Dinar';
-    const customer = [o.user?.firstName, o.user?.lastName].filter(Boolean).join(' ') || 'Client';
-    const items = (o.items || []).map(item => '<div class="admin-order-detail-item"><div><strong>' + escapeHtml(item.name) + '</strong><small>Quantité : ' + Number(item.quantity || 0) + '</small></div><strong>' + (Number(item.price || 0) * Number(item.quantity || 0)).toFixed(2) + ' TND</strong></div>').join('');
-    const modal = document.createElement('div');
-    modal.id = 'adminOrderDetailsModal';
-    modal.className = 'customer-details-modal';
-    modal.innerHTML = '<div class="customer-details-backdrop" onclick="this.parentElement.remove()"></div><div class="customer-details-panel"><button class="customer-details-close" onclick="document.getElementById(\'adminOrderDetailsModal\').remove()">×</button><div class="customer-details-header"><div><span class="customer-details-kicker">DÉTAILS DE LA COMMANDE</span><h2>' + escapeHtml(o.orderNumber || '') + '</h2><p>' + escapeHtml(customer) + ' · ' + escapeHtml(o.user?.email || '') + '</p></div><div class="customer-details-avatar">🧾</div></div><div class="customer-details-grid"><div><span>Date</span><strong>' + new Date(o.createdAt).toLocaleString('fr-FR') + '</strong></div><div><span>Total</span><strong>' + Number(o.total || 0).toFixed(2) + ' TND</strong></div><div><span>Paiement</span><strong>' + paymentLabel + '</strong></div><div><span>Statut</span><strong>' + escapeHtml(o.status || '') + '</strong></div><div><span>Adresse</span><strong>' + escapeHtml([o.address,o.city,o.governorate,o.postalCode].filter(Boolean).join(', ') || '—') + '</strong></div><div><span>Téléphone</span><strong>' + escapeHtml(o.user?.phone || '—') + '</strong></div></div><div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn-sm btn-edit" onclick="generateAdminInvoice(${o.id})">🧾 Générer la facture</button></div><div class="customer-history-title"><h3>Produits commandés</h3><span>' + (o.items || []).length + ' article(s)</span></div><div class="customer-history-list">' + (items || '<div class="customer-empty-history">Aucun produit.</div>') + '</div><div class="admin-order-totals"><div><span>Sous-total</span><strong>' + Number(o.subtotal || 0).toFixed(2) + ' TND</strong></div><div><span>Livraison</span><strong>' + Number(o.shipping || 0).toFixed(2) + ' TND</strong></div><div><span>TVA</span><strong>' + Number(o.tax || 0).toFixed(2) + ' TND</strong></div><div class="grand"><span>Total</span><strong>' + Number(o.total || 0).toFixed(2) + ' TND</strong></div></div></div>';
-    document.body.appendChild(modal);
-  } catch (error) { alert(error.message); }
-}
-
-async function updateOrderStatus(
-  id,
-  status,
-  selectElement = null
-) {
-  const oldValue =
-    selectElement
-      ? selectElement.value
-      : status;
-
-  if (selectElement) {
-    selectElement.disabled = true;
-  }
-
-  try {
-    await api(
-      '/admin/orders/' + id,
-      {
-        method: 'PATCH',
-        body: {
-          status: status
-        }
-      }
-    );
-
-    await loadAdminOrders(false);
-
-    await loadDashboard();
-
-  } catch (error) {
-    console.error(
-      'Update order status error:',
-      error
-    );
-
-    alert(
-      'Erreur lors de la modification du statut :\n\n' +
-      error.message
-    );
-
-    await loadAdminOrders(false);
-
-  } finally {
-    if (selectElement) {
-      selectElement.disabled = false;
-
-      if (
-        selectElement.parentNode
-      ) {
-        selectElement.value =
-          oldValue;
-      }
-    }
-  }
-}
-
-// =========================
-// CUSTOMERS
-// =========================
-async function loadAdminCustomers() {
-  try {
-    const users =
-      await api('/admin/users');
-
-    const table =
-      document.getElementById(
-        'customersTable'
-      );
-
-    const tbody =
-      table?.querySelector(
-        'tbody'
-      );
-
-    if (!tbody) {
-      return;
-    }
-
-    tbody.innerHTML =
-      users
-        .map(
-          u => `
-            <tr>
-
-              <td>
-                #${u.id}
-              </td>
-
-              <td>
-                <strong>
-                  ${escapeHtml(
-                    u.firstName || ''
-                  )}
-
-                  ${escapeHtml(
-                    u.lastName || ''
-                  )}
-                </strong>
-              </td>
-
-              <td>
-                ${escapeHtml(
-                  u.email || ''
-                )}
-              </td>
-
-              <td>
-                ${escapeHtml(
-                  u.phone || '-'
-                )}
-              </td>
-
-              <td>
-                <span
-                  class="
-                    badge ${
-                      u.role === 'ADMIN'
-                        ? 'badge-premium'
-                        : 'badge-new'
-                    }
-                  "
-                >
-                  ${escapeHtml(
-                    u.role
-                  )}
-                </span>
-              </td>
-
-              <td>
-                ${new Date(
-                  u.createdAt
-                ).toLocaleDateString(
-                  'fr-FR'
-                )}
-              </td>
-
-              <td
-                style="
-                  white-space:nowrap
-                "
-              >
-
-                <button class="btn-sm btn-edit" onclick="viewUserDetails(${u.id})" title="Historique des achats">👁️</button>
-
-                <button class="btn-sm btn-edit" onclick="editUser(${u.id})" title="Modifier">✏️</button>
-
-                <button
-                  class="btn-sm btn-delete"
-                  onclick="
-                    deleteUser(${u.id})
-                  "
-                  title="Supprimer"
-                >
-                  🗑️
-                </button>
-
-              </td>
-
-            </tr>
-          `
-        )
-        .join('');
-
-  } catch (error) {
-    console.error(
-      'Customers error:',
-      error
-    );
-  }
-}
-
-async function viewUserDetails(id) {
-  try {
-    const data = await api('/admin/users/' + id);
-    const u = data.user;
-    const orders = Array.isArray(u.orders) ? u.orders : [];
-    const old = document.getElementById('customerDetailsModal');
-    if (old) old.remove();
-    const ordersHtml = orders.length ? orders.map(o => {
-      const items = (o.items || []).map(item => '<div class="customer-order-item"><span>' + escapeHtml(item.name) + '</span><strong>' + Number(item.quantity || 0) + ' × ' + Number(item.price || 0).toFixed(3) + ' TND</strong></div>').join('');
-      return '<div class="customer-order-card"><div class="customer-order-head"><div><strong>' + escapeHtml(o.orderNumber) + '</strong><small>' + new Date(o.createdAt).toLocaleString('fr-FR') + '</small></div><strong>' + Number(o.total || 0).toFixed(2) + ' TND</strong></div><div class="customer-order-meta"><span>📦 ' + escapeHtml(o.status) + '</span><span>💳 ' + escapeHtml(o.paymentStatus) + '</span><span>💰 ' + escapeHtml(o.paymentMethod) + '</span></div><div class="customer-order-address">📍 ' + escapeHtml([o.address, o.city, o.governorate, o.postalCode].filter(Boolean).join(', ')) + '</div><div class="customer-order-items">' + items + '</div></div>';
-    }).join('') : '<div class="customer-empty-history">Aucune commande pour ce client.</div>';
-    const modal = document.createElement('div');
-    modal.id = 'customerDetailsModal';
-    modal.className = 'customer-details-modal';
-    modal.innerHTML = '<div class="customer-details-backdrop" onclick="this.parentElement.remove()"></div><div class="customer-details-panel"><button class="customer-details-close" onclick="document.getElementById(\'customerDetailsModal\').remove()">×</button><div class="customer-details-header"><div><span class="customer-details-kicker">FICHE CLIENT</span><h2>' + escapeHtml((u.firstName || '') + ' ' + (u.lastName || '')) + '</h2><p>' + escapeHtml(u.email || '') + '</p></div><div class="customer-details-avatar">👤</div></div><div class="customer-details-grid"><div><span>Pays</span><strong>🇹🇳 ' + escapeHtml(data.country || 'Tunisie') + '</strong></div><div><span>Téléphone</span><strong>' + escapeHtml(u.phone || '—') + '</strong></div><div><span>Ville</span><strong>' + escapeHtml(u.city || '—') + '</strong></div><div><span>Adresse</span><strong>' + escapeHtml(u.address || '—') + '</strong></div><div><span>Client depuis</span><strong>' + new Date(u.createdAt).toLocaleDateString('fr-FR') + '</strong></div><div><span>Commandes</span><strong>' + orders.length + '</strong></div></div><div class="customer-history-title"><h3>Historique des achats</h3><span>' + orders.length + ' commande(s)</span></div><div class="customer-history-list">' + ordersHtml + '</div></div>';
-    document.body.appendChild(modal);
-  } catch (error) { alert(error.message); }
-}
-
-async function editUser(id) {
-  try {
-    const users =
-      await api('/admin/users');
-
-    const user =
-      users.find(
-        item =>
-          Number(item.id) ===
-          Number(id)
-      );
-
-    if (!user) {
-      alert(
-        'Client introuvable'
-      );
-
-      return;
-    }
-
-    const firstName =
-      prompt(
-        'Prénom :',
-        user.firstName || ''
-      );
-
-    if (firstName === null) {
-      return;
-    }
-
-    const lastName =
-      prompt(
-        'Nom :',
-        user.lastName || ''
-      );
-
-    if (lastName === null) {
-      return;
-    }
-
-    const email =
-      prompt(
-        'Email :',
-        user.email || ''
-      );
-
-    if (email === null) {
-      return;
-    }
-
-    const phone =
-      prompt(
-        'Téléphone :',
-        user.phone || ''
-      );
-
-    if (phone === null) {
-      return;
-    }
-
-    const address =
-      prompt(
-        'Adresse :',
-        user.address || ''
-      );
-
-    if (address === null) {
-      return;
-    }
-
-    const city =
-      prompt(
-        'Ville :',
-        user.city || ''
-      );
-
-    if (city === null) {
-      return;
-    }
-
-    const role =
-      prompt(
-        'Rôle (CUSTOMER ou ADMIN) :',
-        user.role || 'CUSTOMER'
-      );
-
-    if (role === null) {
-      return;
-    }
-
-    const normalizedRole =
-      role
-        .trim()
-        .toUpperCase();
-
-    if (
-      normalizedRole !==
-        'CUSTOMER' &&
-      normalizedRole !==
-        'ADMIN'
-    ) {
-      alert(
-        'Le rôle doit être CUSTOMER ou ADMIN.'
-      );
-
-      return;
-    }
-
-    await api(
-      '/admin/users/' + id,
-      {
-        method: 'PATCH',
-        body: {
-          firstName:
-            firstName.trim(),
-
-          lastName:
-            lastName.trim(),
-
-          email:
-            email.trim(),
-
-          phone:
-            phone.trim() || null,
-
-          address:
-            address.trim() || null,
-
-          city:
-            city.trim() || null,
-
-          role:
-            normalizedRole
-        }
-      }
-    );
-
-    alert(
-      'Client modifié avec succès !'
-    );
-
-    await loadAdminCustomers();
-
-    await loadDashboard();
-
-  } catch (error) {
-    alert(error.message);
-  }
-}
-
-async function deleteUser(id) {
-  if (
-    !confirm(
-      'Voulez-vous vraiment supprimer ce client ?'
-    )
-  ) {
-    return;
-  }
-
-  try {
-    await api(
-      '/admin/users/' + id,
-      {
-        method: 'DELETE'
-      }
-    );
-
-    alert(
-      'Client supprimé avec succès !'
-    );
-
-    await loadAdminCustomers();
+    await loadAdminProducts(true);
 
     await loadDashboard();
 
@@ -2537,54 +1677,26 @@ async function deleteCategory(id) {
 }
 
 // =========================
-// AUTO REFRESH
-// =========================
-function startAutoRefresh() {
-  if (autoRefreshTimer) {
-    clearInterval(
-      autoRefreshTimer
-    );
-  }
-
-  autoRefreshTimer =
-    setInterval(
-      async () => {
-        try {
-          await loadAdminOrders(
-            true
-          );
-
-          const dashboard =
-            document.getElementById(
-              'dashboard'
-            );
-
-          if (
-            dashboard &&
-            dashboard.classList.contains(
-              'active'
-            )
-          ) {
-            await loadDashboard();
-          }
-
-        } catch (error) {
-          console.error(
-            'Auto refresh error:',
-            error
-          );
-        }
-      },
-      15000
-    );
-}
-
-// =========================
 // INIT
 // =========================
 document.addEventListener(
   'DOMContentLoaded',
   async () => {
+    const loginForm =
+      document.getElementById('adminLoginForm');
+
+    const retryButton =
+      document.getElementById('adminRetrySession');
+
+    loginForm?.addEventListener(
+      'submit',
+      loginAdmin
+    );
+
+    retryButton?.addEventListener(
+      'click',
+      retryAdminSession
+    );
 
     const adminOk =
       await checkAdmin();
@@ -2593,15 +1705,9 @@ document.addEventListener(
       return;
     }
 
-    await requestNotificationPermission();
-
     await loadDashboard();
 
-    await loadAdminOrders(
-      false
-    );
-
-    startAutoRefresh();
+    await loadContactMessages();
   }
 );
 

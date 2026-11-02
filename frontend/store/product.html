@@ -4,13 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Détail Produit | Rainbow Colors</title>
-<link rel="stylesheet" href="css/style.css?v=20261016-logo-actual">
+<link rel="icon" type="image/jpeg" href="images/rainbow-colors-app-icon.jpg">
+<link rel="stylesheet" href="css/style.css?v=20261102-motion">
 </head>
 <body>
 
 <header class="header">
   <div class="header-inner">
-    <a href="index.html" class="logo"><img class="rainbow-brand-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors"></a>
+    <a href="index.html" class="logo">
+      <img class="rainbow-brand-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
+    </a>
     <nav class="nav-desktop"><a href="index.html" class="nav-link ">Accueil</a><a href="products.html" class="nav-link active">Produits</a><a href="categories.html" class="nav-link ">Catégories</a><a href="about.html" class="nav-link ">À Propos</a><a href="contact.html" class="nav-link ">Contact</a></nav>
     <div class="header-actions">
       <a href="search.html" class="icon-btn" title="Rechercher">🔍</a>
@@ -37,7 +40,7 @@
 <section class="section">
   <div class="section-inner">
     <div class="pd-grid">
-      <div class="pd-gallery"><div class="pd-gallery-main"><img id="pdImage" src="" alt=""></div></div>
+      <div class="pd-gallery"><div class="pd-gallery-main"><img id="pdImage" src="" alt="" loading="eager"></div></div>
       <div class="pd-info">
         <span class="pd-category" id="pdCategory">Catégorie</span>
         <h1 id="pdName">Nom du produit</h1>
@@ -53,17 +56,29 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const slug = new URLSearchParams(location.search).get('slug');
   if(!slug) return location.href='products.html';
+  const image = document.getElementById('pdImage');
   try {
     const p = await fetchProduct(slug);
+    document.title = p.name + ' | Rainbow Colors';
     document.getElementById('pdTitle').textContent = p.name;
     document.getElementById('pdBreadcrumb').textContent = p.name;
-    document.getElementById('pdImage').src = p.image;
-    document.getElementById('pdCategory').textContent = p.category?.name || p.category;
+    image.src = p.image;
+    image.alt = p.name;
+    document.getElementById('pdCategory').textContent = p.category?.name || '';
     document.getElementById('pdName').textContent = p.name;
     document.getElementById('pdDesc').textContent = p.description;
-    const feats = JSON.parse(p.features||'[]');
-    document.getElementById('pdFeatures').innerHTML = feats.map(f => '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>'+f+'</li>').join('');
-  } catch(e) { console.error(e); }
+    const feats = Array.isArray(p.features) ? p.features : JSON.parse(p.features || '[]');
+    document.getElementById('pdFeatures').innerHTML = feats.map(f => '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>'+rcEscapeHtml(f)+'</li>').join('');
+    if (window.rcAnimateProductDetails) window.rcAnimateProductDetails();
+  } catch(e) {
+    console.error(e);
+    document.title = 'Produit introuvable | Rainbow Colors';
+    document.getElementById('pdTitle').textContent = 'Produit introuvable';
+    document.getElementById('pdName').textContent = 'Produit introuvable';
+    document.getElementById('pdDesc').textContent = 'Ce produit ne figure pas dans le catalogue public. Consultez tous les produits disponibles.';
+    image.remove();
+    if (window.rcAnimateProductDetails) window.rcAnimateProductDetails();
+  }
 });
 </script>
 
@@ -71,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   <div class="footer-inner">
     <div class="footer-grid">
       <div class="footer-brand">
-        <img class="rainbow-brand-logo rainbow-footer-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors">
+        <img class="rainbow-brand-logo rainbow-footer-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
         <p>Rainbow Colors - Votre fournisseur de confiance pour peintures et matériaux de construction en Tunisie.</p>
         <div class="footer-social">
           
@@ -96,7 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 
-<script src="js/main.js?v=20261011-premium-motion"></script>
+<script src="js/main.js?v=20261102-motion"></script>
 
 </body>
 </html>
