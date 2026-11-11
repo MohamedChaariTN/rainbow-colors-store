@@ -50,6 +50,27 @@ router.get('/health/db', async (_req, res) => {
   }
 });
 
+// Temporary, non-sensitive deployment diagnostics. Never returns credentials.
+router.get('/health/config', (_req, res) => {
+  const raw = process.env.DATABASE_URL || '';
+  let host: string | null = null;
+  try {
+    host = raw ? new URL(raw).host : null;
+  } catch {
+    host = 'unparsable';
+  }
+  res.json({
+    databaseUrlConfigured: Boolean(raw),
+    databaseHost: host,
+    databaseLooksNeon: /neon\.tech/i.test(raw),
+    databaseLooksRender: /render\.com/i.test(raw),
+    jwtConfigured: Boolean(process.env.JWT_SECRET),
+    frontendUrlConfigured: Boolean(process.env.FRONTEND_URL),
+    resendConfigured: Boolean(process.env.RESEND_API_KEY),
+    nodeEnv: process.env.NODE_ENV || null
+  });
+});
+
 // ======================================================
 // ADMIN AUTHENTICATION
 // Only administrators can log in. Customer registration,
