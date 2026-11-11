@@ -1,6 +1,23 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../config/prisma';
+import { describeDbError, isRetryableDbError, withDbRetry } from '../utils/dbRetry';
+
+function sendCatalogueError(res: Response, operation: string, err: unknown) {
+  console.error(`${operation} failed:`, describeDbError(err));
+  if (isRetryableDbError(err)) {
+    res.set('Retry-After', '5');
+    return res.status(503).json({
+      error: 'Le catalogue est temporairement indisponible. Veuillez réessayer dans quelques instants.'
+    });
+  }
+  return res.status(500).json({ error: 'Une erreur interne est survenue.' });
+}
+
+function uploadedImage(req: any): string | null {
+  if (!req.file?.buffer) return null;
+  return `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+}
 
 const productSchema = z.object({
   name: z.string().min(2),
@@ -43,7 +60,7 @@ export const getProducts = async (req: Request, res: Response) => {
       ];
     }
 
-    const [products, total] = await Promise.all([
+    const [products, total] = await withDbRetry(() => Promise.all([
       prisma.product.findMany({
         where,
         // Public catalogue payload intentionally excludes prices, discounts and stock quantities.
@@ -67,7 +84,7 @@ export const getProducts = async (req: Request, res: Response) => {
         orderBy: { createdAt: 'desc' }
       }),
       prisma.product.count({ where })
-    ]);
+    ]));
 
     res.json({
       products,
@@ -76,17 +93,13 @@ export const getProducts = async (req: Request, res: Response) => {
       page,
       limit
     });
-  } catch (err: any) {
-    console.error('GET /api/products failed:', err);
-    res.status(500).json({
-      error: 'Impossible de charger le catalogue.',
-      details: process.env.NODE_ENV === 'production' ? undefined : err?.message
-    });
+  } catch (err: unknown) {
+    return sendCatalogueError(res, 'GET /api/products', err);
   }
 };
 export const getProduct = async (req: Request, res: Response) => {
   try {
-    const product = await prisma.product.findFirst({
+    const product = await withDbRetry(() => prisma.product.findFirst({
       where: { slug: req.params.slug, isActive: true },
       // Public detail endpoint also returns catalogue fields only.
       select: {
@@ -104,18 +117,18 @@ export const getProduct = async (req: Request, res: Response) => {
           select: { id: true, name: true, slug: true, description: true, icon: true, color: true }
         }
       }
-    });
+    }));
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (err: unknown) {
+    return sendCatalogueError(res, 'GET /api/products/:slug', err);
   }
 };
 
 export const createProduct = async (req: any, res: Response) => {
   try {
     const data = productSchema.parse(req.body);
-    const image = req.file ? `/uploads/products/${req.file.filename}` : '/images/placeholder.jpg';
+    const image = uploadedImage(req) || '/images/placeholder.jpg';
     const features = data.features ? (data.features.startsWith('[') ? data.features : JSON.stringify(data.features.split('\n').filter(f => f.trim()))) : '[]';
     const product = await prisma.product.create({
       data: {
@@ -158,7 +171,11 @@ export const updateProduct = async (req: any, res: Response) => {
     if (data.features) {
       updateData.features = data.features.startsWith('[') ? data.features : JSON.stringify(data.features.split('\n').filter(f => f.trim()));
     }
-    if (req.file) updateData.image = `/uploads/products/${req.file.filename}`;
+    const image = uploadedImage(req);
+    if (image) {
+      updateData.image = image;
+      updateData.images = JSON.stringify([image]);
+    }
     const product = await prisma.product.update({ where: { id }, data: updateData });
     res.json(product);
   } catch (err: any) {
@@ -177,15 +194,11 @@ export const deleteProduct = async (req: any, res: Response) => {
 
 export const getCategories = async (_req: Request, res: Response) => {
   try {
-    const categories = await prisma.category.findMany({
+    const categories = await withDbRetry(() => prisma.category.findMany({
       include: { _count: { select: { products: true } } }
-    });
+    }));
     res.json(categories);
-  } catch (err: any) {
-    console.error('GET /api/products/categories failed:', err);
-    res.status(500).json({
-      error: 'Impossible de charger les catégories.',
-      details: process.env.NODE_ENV === 'production' ? undefined : err?.message
-    });
+  } catch (err: unknown) {
+    return sendCatalogueError(res, 'GET /api/products/categories', err);
   }
 };

@@ -23,6 +23,8 @@ import {
 import { authenticate, requireAdmin } from '../middleware/auth';
 import { sendContactMessage } from '../controllers/contactController';
 import { upload } from '../config/upload';
+import { prisma } from '../config/prisma';
+import { describeDbError, withDbRetry } from '../utils/dbRetry';
 
 const router = Router();
 
@@ -36,6 +38,16 @@ router.get('/health', (_req, res) => {
     service: 'rainbow-colors-api',
     mode: 'catalogue-only'
   });
+});
+
+router.get('/health/db', async (_req, res) => {
+  try {
+    await withDbRetry(() => prisma.$queryRaw`SELECT 1`, { attempts: 2, baseDelayMs: 250 });
+    return res.json({ ok: true, database: 'up' });
+  } catch (err) {
+    console.error('Database health check failed:', describeDbError(err));
+    return res.status(503).json({ ok: false, database: 'down' });
+  }
 });
 
 // ======================================================

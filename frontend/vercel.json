@@ -1,8 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "node scripts/build-static.js",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
   "outputDirectory": "public",
+  "functions": {
+    "api/[...path].ts": {
+      "maxDuration": 30
+    }
+  },
   "redirects": [
     {
       "source": "/admin",
@@ -14,6 +20,17 @@
     {
       "source": "/store/images/:path*",
       "destination": "/images/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
     }
   ]
 }

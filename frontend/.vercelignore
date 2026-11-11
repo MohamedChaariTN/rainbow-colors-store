@@ -1,6 +1,10 @@
-backend/
 public/
 node_modules/
 .env
 .env.*
 store/css/rainbow-colors-store.zip
+backend/node_modules/
+backend/dist/
+backend/uploads/
+backend/.env
+backend/.env.*
