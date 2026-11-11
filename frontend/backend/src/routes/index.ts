@@ -50,24 +50,21 @@ router.get('/health/db', async (_req, res) => {
   }
 });
 
-// Temporary, non-sensitive deployment diagnostics. Never returns credentials.
+// Temporary, non-sensitive deployment diagnostics. Returns only whether a
+// database is configured and which known provider it appears to use.
 router.get('/health/config', (_req, res) => {
   const raw = process.env.DATABASE_URL || '';
-  let host: string | null = null;
-  try {
-    host = raw ? new URL(raw).host : null;
-  } catch {
-    host = 'unparsable';
-  }
+  const provider = !raw
+    ? 'unknown'
+    : /neon\.tech/i.test(raw)
+      ? 'neon'
+      : /render\.com/i.test(raw)
+        ? 'render'
+        : 'unknown';
+
   res.json({
-    databaseUrlConfigured: Boolean(raw),
-    databaseHost: host,
-    databaseLooksNeon: /neon\.tech/i.test(raw),
-    databaseLooksRender: /render\.com/i.test(raw),
-    jwtConfigured: Boolean(process.env.JWT_SECRET),
-    frontendUrlConfigured: Boolean(process.env.FRONTEND_URL),
-    resendConfigured: Boolean(process.env.RESEND_API_KEY),
-    nodeEnv: process.env.NODE_ENV || null
+    databaseConfigured: Boolean(raw),
+    databaseProvider: provider
   });
 });
 
