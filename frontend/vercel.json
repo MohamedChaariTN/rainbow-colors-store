@@ -5,7 +5,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "public",
   "functions": {
-    "api/[...path].ts": {
+    "api/index.ts": {
       "maxDuration": 30
     }
   },
@@ -17,6 +17,10 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/((?!index$).*)",
+      "destination": "/api/index?__rc_path=$1"
+    },
     {
       "source": "/store/images/:path*",
       "destination": "/images/:path*"
