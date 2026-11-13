@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Accueil | Rainbow Colors</title>
-<link rel="stylesheet" href="css/style.css?v=20261102-motion">
+<meta name="theme-color" content="#080808">
+<script src="js/theme.js?v=20261112-theme"></script>
+<link rel="stylesheet" href="css/style.css?v=20261113-color">
 <link rel="icon" type="image/jpeg" href="images/rainbow-colors-app-icon.jpg">
 <link rel="apple-touch-icon" href="images/rainbow-colors-app-icon.jpg">
 <meta property="og:title" content="Rainbow Colors">
@@ -31,7 +33,7 @@
     <a href="index.html" class="logo">
       <img class="rainbow-brand-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
     </a>
-    <nav class="nav-desktop"><a href="index.html" class="nav-link active">Accueil</a><a href="products.html" class="nav-link">Produits</a><a href="categories.html" class="nav-link">Catégories</a><a href="about.html" class="nav-link">À Propos</a><a href="contact.html" class="nav-link">Contact</a></nav>
+    <nav class="nav-desktop"><a href="index.html" class="nav-link active">Accueil</a><a href="products.html" class="nav-link">Produits</a><a href="categories.html" class="nav-link">Catégories</a><a href="color.html" class="nav-link">Color</a></nav>
     <div class="header-actions">
       <a href="search.html" class="icon-btn" title="Rechercher">🔍</a>
 
@@ -42,49 +44,11 @@
 <div class="mobile-menu-overlay" onclick="toggleMobileMenu()"></div>
 <div class="mobile-menu">
   <button class="icon-btn" style="position:absolute;top:16px;right:16px" onclick="toggleMobileMenu()">✕</button>
-  <a href="index.html" class="mobile-nav-link">Accueil</a><a href="products.html" class="mobile-nav-link">Produits</a><a href="categories.html" class="mobile-nav-link">Catégories</a><a href="about.html" class="mobile-nav-link">À Propos</a><a href="contact.html" class="mobile-nav-link">Contact</a>
+  <a href="index.html" class="mobile-nav-link">Accueil</a><a href="products.html" class="mobile-nav-link">Produits</a><a href="categories.html" class="mobile-nav-link">Catégories</a><a href="color.html" class="mobile-nav-link">Color</a>
 
   
   
 </div>
-
-<section class="app-download-hero" aria-label="Application Rainbow Colors">
-  <div class="app-download-inner">
-    <div class="app-download-copy">
-      <span class="app-download-kicker">📱 LE CATALOGUE RAINBOW COLORS</span>
-      <h2>Rainbow Colors, maintenant dans votre poche.</h2>
-      <p>Retrouvez notre catalogue de peintures, finitions et matériaux Rainbow Colors.</p>
-      <div class="app-store-actions">
-        <a href="#mobile-app" class="store-badge google-badge" aria-label="Application Android bientôt disponible">
-          <span class="store-badge-icon">▶</span>
-          <span><small>BIENTÔT DISPONIBLE SUR</small><strong>Google Play</strong></span>
-        </a>
-        <a href="#mobile-app" class="store-badge apple-badge" aria-label="Application iPhone bientôt disponible">
-          <span class="store-badge-icon"></span>
-          <span><small>BIENTÔT DISPONIBLE SUR</small><strong>App Store</strong></span>
-        </a>
-      </div>
-      <div class="app-download-note">Android &amp; iPhone · Une seule expérience Rainbow Colors</div>
-    </div>
-    <div class="app-device-showcase" aria-hidden="true">
-      <div class="app-glow"></div>
-      <div class="phone-mockup">
-        <div class="phone-speaker"></div>
-        <div class="phone-screen">
-          <div class="phone-status">9:41 <span>● ● ▰</span></div>
-          <img src="images/rainbow-colors-app-icon.jpg" alt="">
-          <div class="phone-app-title">Rainbow Colors</div>
-          <div class="phone-app-subtitle">Peintures &amp; revêtements</div>
-          <div class="phone-product-card">
-            <img src="images/produit 5.jpg" alt="">
-            <div><strong>Découvrez nos produits</strong><small>Voir la gamme</small></div>
-          </div>
-          <div class="phone-nav"><span>⌂</span><span>▦</span><span>⌕</span><span>●</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
 <section class="hero premium-hero">
   <div class="hero-paint paint-one"></div><div class="hero-paint paint-two"></div><div class="hero-paint paint-three"></div>
@@ -118,7 +82,7 @@
   <div class="categories-grid" id="homeCategories"><div class="loading-skeleton" style="height:200px"></div></div>
 </div></section>
 
-<section class="section" style="background:#111111;border-top:1px solid #3a321f;border-bottom:1px solid #3a321f"><div class="section-inner">
+<section class="section rc-featured-section" style="background:#111111;border-top:1px solid #3a321f;border-bottom:1px solid #3a321f"><div class="section-inner">
   <div class="section-header"><span class="subtitle">À DÉCOUVRIR</span><h2>Nos produits <span>vedettes</span></h2><p>Découvrez une sélection de produits de la gamme Rainbow Colors.</p></div>
   <div class="products-grid" id="homeProducts"><div class="loading-skeleton" style="height:300px"></div><div class="loading-skeleton" style="height:300px"></div><div class="loading-skeleton" style="height:300px"></div><div class="loading-skeleton" style="height:300px"></div></div>
   <div style="text-align:center;margin-top:40px"><a href="products.html" class="btn btn-primary">Voir tous les produits</a></div>
@@ -150,7 +114,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   <div class="footer-inner">
     <div class="footer-grid">
       <div class="footer-brand">
-        <img class="rainbow-brand-logo rainbow-footer-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
+        <div class="footer-brand__logos">
+          <img class="rainbow-brand-logo rainbow-footer-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
+          <img class="magma-brand-logo" src="images/magma-logo-transparent.png" alt="MAGMA">
+        </div>
         <p>Rainbow Colors - Votre fournisseur de confiance pour peintures et matériaux de construction en Tunisie.</p>
         <div class="footer-social">
           
@@ -175,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 
-<script src="js/main.js?v=20261102-motion"></script>
+<script src="js/main.js?v=20261111-motion"></script>
 
 </body>
 </html>

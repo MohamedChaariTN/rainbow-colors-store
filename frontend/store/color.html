@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color | Rainbow Colors</title>
+<meta name="description" content="Simulateur de couleurs Rainbow Colors : prévisualisez nos peintures sur des intérieurs réels et choisissez la teinte idéale pour vos murs.">
+<meta name="theme-color" content="#080808">
+<script src="js/theme.js?v=20261112-theme"></script>
+<link rel="icon" type="image/jpeg" href="images/rainbow-colors-app-icon.jpg">
+<link rel="stylesheet" href="css/style.css?v=20261113-color">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <img class="rainbow-brand-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
+    </a>
+    <nav class="nav-desktop"><a href="index.html" class="nav-link ">Accueil</a><a href="products.html" class="nav-link ">Produits</a><a href="categories.html" class="nav-link ">Catégories</a><a href="color.html" class="nav-link active">Color</a></nav>
+    <div class="header-actions">
+      <a href="search.html" class="icon-btn" title="Rechercher">🔍</a>
+
+      <button class="icon-btn mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+    </div>
+  </div>
+</header>
+<div class="mobile-menu-overlay" onclick="toggleMobileMenu()"></div>
+<div class="mobile-menu">
+  <button class="icon-btn" style="position:absolute;top:16px;right:16px" onclick="toggleMobileMenu()">✕</button>
+  <a href="index.html" class="mobile-nav-link">Accueil</a><a href="products.html" class="mobile-nav-link">Produits</a><a href="categories.html" class="mobile-nav-link">Catégories</a><a href="color.html" class="mobile-nav-link">Color</a>
+
+</div>
+
+<section class="page-header">
+  <div class="section-inner">
+    <div class="page-kicker">SIMULATEUR DE TEINTES</div>
+    <h1>Visualiseur de couleurs</h1>
+    <p>Prévisualisez nos peintures sur des intérieurs réels et choisissez la teinte idéale pour vos murs.</p>
+    <div class="breadcrumb"><a href="index.html">Accueil</a><span>></span><span>Color</span></div>
+  </div>
+</section>
+
+<section class="section rc-color-section">
+  <div class="section-inner">
+    <div class="rc-color-layout">
+
+      <div class="rc-color-controls">
+
+        <div class="rc-color-step">
+          <div class="rc-color-step__head">
+            <span class="rc-color-step__num" aria-hidden="true">1</span>
+            <div>
+              <h2>Choisissez votre pièce</h2>
+              <p>Trois intérieurs réels pour visualiser votre teinte.</p>
+            </div>
+          </div>
+          <div class="rc-rooms" role="group" aria-label="Choix de la pièce">
+            <button type="button" class="rc-room is-active" data-room="salon" data-label="Salon" data-scene="images/rooms/salon.jpg" data-mask="images/rooms/salon-mask.png" data-light="images/rooms/salon-light.png" aria-pressed="true">
+              <span class="rc-room__thumb">
+                <span class="rc-photo" style="--rc-photo-mask:url(/images/rooms/salon-mask.png)">
+                  <img class="rc-photo__base" src="images/rooms/salon-900.jpg" alt="Salon moderne beige et bleu marine" width="1672" height="941" loading="lazy" decoding="async">
+                  <img class="rc-photo__light" src="images/rooms/salon-light.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
+                  <span class="rc-photo__paint" aria-hidden="true"></span>
+                </span>
+              </span>
+              <span class="rc-room__name">Salon</span>
+              <span class="rc-room__meta">Canapé, tapis et lumière naturelle.</span>
+            </button>
+            <button type="button" class="rc-room" data-room="chambre" data-label="Chambre" data-scene="images/rooms/chambre.jpg" data-mask="images/rooms/chambre-mask.png" data-light="images/rooms/chambre-light.png" aria-pressed="false">
+              <span class="rc-room__thumb">
+                <span class="rc-photo" style="--rc-photo-mask:url(/images/rooms/chambre-mask.png)">
+                  <img class="rc-photo__base" src="images/rooms/chambre-900.jpg" alt="Chambre moderne aux tons naturels" width="1672" height="941" loading="lazy" decoding="async">
+                  <img class="rc-photo__light" src="images/rooms/chambre-light.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
+                  <span class="rc-photo__paint" aria-hidden="true"></span>
+                </span>
+              </span>
+              <span class="rc-room__name">Chambre</span>
+              <span class="rc-room__meta">Literis, rideaux et tableaux.</span>
+            </button>
+            <button type="button" class="rc-room" data-room="cuisine" data-label="Cuisine" data-scene="images/rooms/cuisine.jpg" data-mask="images/rooms/cuisine-mask.png" data-light="images/rooms/cuisine-light.png" aria-pressed="false">
+              <span class="rc-room__thumb">
+                <span class="rc-photo" style="--rc-photo-mask:url(/images/rooms/cuisine-mask.png)">
+                  <img class="rc-photo__base" src="images/rooms/cuisine-900.jpg" alt="Cuisine moderne claire" width="1672" height="941" loading="lazy" decoding="async">
+                  <img class="rc-photo__light" src="images/rooms/cuisine-light.png" alt="" aria-hidden="true" loading="lazy" decoding="async">
+                  <span class="rc-photo__paint" aria-hidden="true"></span>
+                </span>
+              </span>
+              <span class="rc-room__name">Cuisine</span>
+              <span class="rc-room__meta">Crédence, îlot et suspensions.</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="rc-color-step">
+          <div class="rc-color-step__head">
+            <span class="rc-color-step__num" aria-hidden="true">2</span>
+            <div>
+              <h2>Choisissez une teinte</h2>
+              <p><span id="rc-palette-total">274</span> teintes appliquées uniquement sur les murs.</p>
+            </div>
+          </div>
+
+          <div class="rc-palette-bar">
+            <div class="rc-families" role="group" aria-label="Familles de teintes" id="rc-families"></div>
+            <div class="rc-palette-tools">
+              <label class="rc-search">
+                <span class="rc-sr-only">Rechercher une teinte</span>
+                <span class="rc-search__icon" aria-hidden="true">🔍</span>
+                <input type="search" id="rc-palette-search" placeholder="Rechercher une teinte…" autocomplete="off" spellcheck="false">
+              </label>
+              <p class="rc-palette-count" id="rc-palette-count" aria-live="polite">274 teintes</p>
+            </div>
+          </div>
+
+          <div class="rc-palette" id="rc-palette"></div>
+        </div>
+
+      </div>
+
+      <aside class="rc-color-preview" aria-labelledby="rc-preview-step">
+        <div class="rc-color-step__head">
+          <span class="rc-color-step__num" aria-hidden="true">3</span>
+          <div>
+            <h2 id="rc-preview-step">Visualisez votre teinte</h2>
+            <p>Seuls les murs changent de couleur : mobilier, sol et lumière restent identiques.</p>
+          </div>
+        </div>
+
+        <div class="rc-preview-frame">
+          <div class="rc-photo rc-preview-stage" id="rc-preview-stage" style="--rc-photo-mask:url(/images/rooms/salon-mask.png)">
+            <img class="rc-photo__base" id="rc-preview-base" src="images/rooms/salon.jpg" alt="Salon moderne beige et bleu marine" width="1672" height="941" decoding="async">
+            <img class="rc-photo__light" id="rc-preview-light" src="images/rooms/salon-light.png" alt="" aria-hidden="true" decoding="async">
+            <span class="rc-photo__paint" id="rc-preview-paint" aria-hidden="true"></span>
+          </div>
+
+          <div class="rc-preview-tools">
+            <button type="button" class="rc-btn-reset" id="rc-reset">↺ Réinitialiser</button>
+          </div>
+
+          <div class="rc-preview-badge">
+            <span class="rc-preview-badge__chip" id="rc-preview-chip" style="background:#8a7a63"></span>
+            <span class="rc-preview-badge__text">
+              <span class="rc-preview-badge__name" id="rc-preview-name">Photo originale</span>
+              <span class="rc-preview-badge__hex" id="rc-preview-hex">Aucune teinte appliquée</span>
+            </span>
+          </div>
+        </div>
+
+        <p class="rc-preview-caption">Pièce <strong id="rc-preview-room">Salon</strong> — <strong id="rc-preview-caption-name">Photo originale</strong> <span id="rc-preview-caption-hex"></span></p>
+        <p class="rc-preview-note">Rendu indicatif : la lumière de la pièce, la finition et la matière de la peinture peuvent modifier la teinte finale. Demandez nos échantillons chez un revendeur Rainbow Colors.</p>
+
+        <p class="rc-sr-only" id="rc-live" aria-live="polite"></p>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+<section class="section rc-color-cta">
+  <div class="section-inner" style="text-align:center">
+    <h2 style="font-size:clamp(24px,3vw,34px);font-weight:800;margin-bottom:12px">La teinte vous plaît&nbsp;?</h2>
+    <p style="max-width:620px;margin:0 auto 26px;color:var(--rc-theme-muted)">Parcourez notre catalogue de peintures et revêtements, ou contactez-nous pour recevoir des échantillons.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="products.html" class="btn btn-primary">Voir les produits</a>
+      <a href="contact.html" class="btn btn-outline">Nous contacter</a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand__logos">
+          <img class="rainbow-brand-logo rainbow-footer-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
+          <img class="magma-brand-logo" src="images/magma-logo-transparent.png" alt="MAGMA">
+        </div>
+        <p>Rainbow Colors - Votre fournisseur de confiance pour peintures et matériaux de construction en Tunisie.</p>
+        <div class="footer-social">
+          <a href="#">📘</a><a href="#">📸</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <a href="index.html">Accueil</a><a href="products.html">Produits</a><a href="categories.html">Catégories</a><a href="about.html">À Propos</a><a href="contact.html">Contact</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <div class="footer-contact-item"><span>📍</span><span>Route de Gabès Km 4,5<br>Sfax, Tunisie</span></div>
+        <div class="footer-contact-item"><span>📞</span><span>+216 29 253 908</span></div>
+        <div class="footer-contact-item"><span>✉️</span><span>contact@rainbow-colors.tn</span></div>
+      </div>
+    </div>
+    <div class="footer-bottom"><p>© 2026 Rainbow Colors. Tous droits réservés.</p><p>🇹🇳 Fait en Tunisie</p></div>
+  </div>
+</footer>
+<a href="https://wa.me/21629253908" class="whatsapp-float" target="_blank">📱</a>
+
+<script src="js/main.js?v=20261111-motion"></script>
+<script src="js/color-palette.js?v=20261113-color"></script>
+<script src="js/color-visualizer.js?v=20261113-color"></script>
+
+</body>
+</html>

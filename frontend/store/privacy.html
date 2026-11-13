@@ -4,15 +4,68 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Politique de confidentialité | Rainbow Colors</title>
+<meta name="theme-color" content="#080808">
+<script src="js/theme.js?v=20261112-theme"></script>
 <style>
-:root{color-scheme:dark}
+:root{
+  color-scheme:dark;
+  --privacy-bg:#090909;
+  --privacy-text:#eee7d6;
+  --privacy-muted:#d0c8b5;
+  --privacy-heading:#e5c66b;
+  --privacy-card-top:#191919;
+  --privacy-card-bottom:#101010;
+  --privacy-border:#4a3d20;
+  --privacy-link:#e5c66b;
+  --privacy-meta:#a89c7d;
+  --privacy-shadow:0 12px 30px rgba(0,0,0,.38);
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --privacy-bg:#f7f3ea;
+  --privacy-text:#2f281e;
+  --privacy-muted:#5a4d39;
+  --privacy-heading:#241d12;
+  --privacy-card-top:#fffdf8;
+  --privacy-card-bottom:#f7f0e2;
+  --privacy-border:#d8c49a;
+  --privacy-link:#7a5718;
+  --privacy-meta:#6b5d46;
+  --privacy-shadow:0 12px 30px rgba(59,44,16,.12);
+}
 *{box-sizing:border-box}
-body{font-family:Arial,sans-serif;background:#090909;color:#eee7d6;margin:0}
-main{max-width:900px;margin:0 auto;padding:40px 20px 70px}
-.card{background:linear-gradient(145deg,#191919,#101010);border:1px solid #4a3d20;border-radius:18px;padding:28px;box-shadow:0 12px 30px rgba(0,0,0,.38)}
-h1,h2{color:#e5c66b}h2{margin-top:28px}
-p,li{line-height:1.7;color:#d0c8b5}
-a{color:#e5c66b}.meta{font-size:13px;color:#a89c7d}
+body{font-family:Arial,sans-serif;background:var(--privacy-bg);color:var(--privacy-text);margin:0}
+main{max-width:900px;margin:0 auto;padding:104px 20px 70px}
+.card{background:linear-gradient(145deg,var(--privacy-card-top),var(--privacy-card-bottom));border:1px solid var(--privacy-border);border-radius:18px;padding:28px;box-shadow:var(--privacy-shadow)}
+h1,h2{color:var(--privacy-heading)}h2{margin-top:28px}
+p,li{line-height:1.7;color:var(--privacy-muted)}
+a{color:var(--privacy-link)}a:hover{color:#8a641c}
+.meta{font-size:13px;color:var(--privacy-meta)}
+::selection{background:#c9a44c;color:#171208}
+a:focus-visible,.rc-theme-option:focus-visible{outline:3px solid #f0d783;outline-offset:3px}
+:root[data-theme="light"] a:focus-visible,
+:root[data-theme="light"] .rc-theme-option:focus-visible{outline-color:#7a5718}
+
+/* Theme selector for this standalone page (style.css is not loaded here). */
+.rc-theme-switcher{display:block}
+.rc-theme-switcher__label{display:none}
+.rc-theme-switcher__options{display:inline-flex;align-items:center;gap:2px}
+.rc-theme-option{width:34px;height:34px;padding:0;border:0 !important;border-radius:999px !important;background:transparent !important;color:#e5c66b !important;box-shadow:none !important;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;line-height:1}
+.rc-theme-option svg{width:16px;height:16px;display:block;pointer-events:none}
+.rc-theme-option__text{display:none}
+.rc-theme-option:hover{background:rgba(201,164,76,.18) !important;color:#fff0b5 !important}
+.rc-theme-option.is-active{background:linear-gradient(135deg,#f0d783,#b18a2e) !important;color:#171208 !important;box-shadow:0 2px 8px rgba(95,67,16,.18) !important}
+.rc-theme-option.is-active:hover{background:linear-gradient(135deg,#f0d783,#b18a2e) !important;color:#171208 !important}
+.rc-theme-dock{position:fixed;top:16px;right:16px;z-index:3000;display:flex;padding:7px;border:1px solid rgba(201,164,76,.46);border-radius:999px;background:rgba(8,8,8,.92);box-shadow:0 10px 30px rgba(0,0,0,.28);backdrop-filter:blur(14px)}
+:root[data-theme="light"] .rc-theme-dock{background:rgba(255,253,248,.94);border-color:#d8c49a;box-shadow:0 10px 28px rgba(59,44,16,.16)}
+:root[data-theme="light"] .rc-theme-option{color:#6b4e13 !important}
+:root[data-theme="light"] .rc-theme-option:hover{background:#eadcc2 !important;color:#4f390d !important}
+:root[data-theme="light"] .rc-theme-option.is-active{color:#171208 !important}
+@media (max-width:768px){.rc-theme-dock{top:12px;right:12px}main{padding-top:96px}}
+@media (prefers-reduced-motion:no-preference){
+  .card{animation:privacyCardIn .55s cubic-bezier(.22,.65,.28,1) both}
+  @keyframes privacyCardIn{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:none}}
+}
 </style>
 </head>
 <body><main><div class="card">

@@ -238,12 +238,14 @@ async function fetchProduct(slug) {
 
 async function fetchCategories() {
   const catalogue = await loadCatalogue();
-  return catalogue.categories.map((category) => ({
-    ...category,
-    _count: {
-      products: catalogue.products.filter((product) => product.category.slug === category.slug).length
-    }
-  }));
+  return catalogue.categories
+    .map((category) => ({
+      ...category,
+      _count: {
+        products: catalogue.products.filter((product) => product.category.slug === category.slug).length
+      }
+    }))
+    .filter((category) => category._count.products > 0);
 }
 
 function renderProductCard(product) {
@@ -251,6 +253,7 @@ function renderProductCard(product) {
   const image = rcEscapeHtml(product.image || '');
   const categoryName = rcEscapeHtml(product.category?.name || '');
   const description = rcEscapeHtml(product.description || '');
+  const descriptionMarkup = description ? `<p class="product-desc">${description}</p>` : '';
   const slug = encodeURIComponent(product.slug);
   const imageMarkup = image
     ? `<img src="${image}" alt="${name}" loading="lazy" onerror="var container=this.parentElement;this.remove();if(container)container.classList.add('product-image-missing')">`
@@ -267,7 +270,7 @@ function renderProductCard(product) {
       <div class="product-info">
         <span class="product-category">${categoryName}</span>
         <h3 class="product-name"><a href="product.html?slug=${slug}">${name}</a></h3>
-        <p class="product-desc">${description}</p>
+        ${descriptionMarkup}
         <a href="product.html?slug=${slug}" class="catalogue-details">Voir la fiche produit <span aria-hidden="true">→</span></a>
       </div>
     </article>
@@ -275,38 +278,39 @@ function renderProductCard(product) {
 }
 
 const CATEGORY_VISUALS = {
-    "peintures-sols": { title: "Solutions pour Sols", desc: "Revêtements résistants pour sols, ateliers et espaces professionnels.", image: "images/products/peinture-epoxy.jpg" },
-    "peintures-bois": { title: "Finitions Bois", desc: "Laques et peintures pour sublimer et protéger vos surfaces en bois.", image: "images/products/laque-rainbow-mat.jpg" },
-    "enduits": { title: "Préparation & Enduits", desc: "Enduits et solutions de préparation pour une surface prête à la finition.", image: "images/products/durajir.jpg" },
-    "enduits-traditionnels": { title: "Enduits Traditionnels", desc: "Des finitions authentiques inspirées des techniques traditionnelles.", image: "images/products/durajir-arabi.jpg" },
-    "vernis": { title: "Vernis & Protection", desc: "Protection et finition durable pour des surfaces soignées.", image: "images/products/vernis-marin.jpg" },
-    "traitements-metal": { title: "Protection Métal", desc: "Solutions anticorrosion et traitements pour métaux et structures.", image: "images/products/anti-rouille.jpg" },
-    "etancheite": { title: "Étanchéité & Protection", desc: "Solutions professionnelles contre l'humidité et les infiltrations.", image: "images/products/etanche-impermeabilisation.jpg" },
-    "enduits-finition": { title: "Finition & Lissage", desc: "Préparez vos murs pour obtenir une finition régulière et élégante.", image: "images/products/spatulina-2.jpg" },
-    "colles": { title: "Colles & Pose", desc: "Colles et solutions fiables pour vos travaux de pose et de rénovation.", image: "images/products/mag-eco700.jpg" },
-    "enduits-facade": { title: "Façades & Extérieur", desc: "Solutions de finition et de protection pour façades durables.", image: "images/products/tyrolien.jpg" },
-    "peintures-murales": { title: "Peintures Murales", desc: "Des peintures pour transformer vos murs avec une finition professionnelle.", image: "images/products/magma-ultra-shield.jpg" }
+  "peintures-sols": { title: "Solutions pour Sols", desc: "Revêtements résistants pour sols, ateliers et espaces professionnels." },
+  "peintures-bois": { title: "Finitions Bois", desc: "Laques et peintures pour sublimer et protéger vos surfaces en bois." },
+  "enduits": { title: "Préparation & Enduits", desc: "Enduits et solutions de préparation pour une surface prête à la finition." },
+  "enduits-traditionnels": { title: "Enduits Traditionnels", desc: "Des finitions authentiques inspirées des techniques traditionnelles." },
+  "vernis": { title: "Vernis & Protection", desc: "Protection et finition durable pour des surfaces soignées." },
+  "traitements-metal": { title: "Protection Métal", desc: "Solutions anticorrosion et traitements pour métaux et structures." },
+  "etancheite": { title: "Étanchéité & Protection", desc: "Solutions professionnelles contre l'humidité et les infiltrations." },
+  "enduits-finition": { title: "Finition & Lissage", desc: "Préparez vos murs pour obtenir une finition régulière et élégante." },
+  "colles": { title: "Colles & Pose", desc: "Colles et solutions fiables pour vos travaux de pose et de rénovation." },
+  "enduits-facade": { title: "Façades & Extérieur", desc: "Solutions de finition et de protection pour façades durables." },
+  "peintures-murales": { title: "Peintures Murales", desc: "Des peintures pour transformer vos murs avec une finition professionnelle." },
+  "resines": { title: "Résines", desc: "" },
+  "diluants": { title: "Diluants", desc: "" },
+  "peintures-toitures": { title: "Peintures Toitures", desc: "" }
 };
 
 function renderCategoryCard(cat) {
   const count = cat._count?.products || 0;
   const visual = CATEGORY_VISUALS[cat.slug] || {
     title: cat.name,
-    desc: cat.description || "Solutions professionnelles Rainbow Colors.",
-    image: "images/rainbow-colors-social-preview.jpg"
+    desc: cat.description || ""
   };
+  const descMarkup = visual.desc ? `<p>${rcEscapeHtml(visual.desc)}</p>` : '';
 
   return `
     <a href="products.html?category=${encodeURIComponent(cat.slug)}" class="category-card premium-category-card" style="--category-color:${rcEscapeHtml(cat.color)}">
-      <div class="category-media">
-        <img src="${rcEscapeHtml(visual.image)}" alt="${rcEscapeHtml(visual.title)}" loading="lazy" onerror="this.onerror=null;this.src='images/rainbow-colors-social-preview.jpg'">
-        <div class="category-media-overlay"></div>
+      <div class="category-media category-media-placeholder" aria-hidden="true">
         <span class="category-number">${String(count).padStart(2, '0')}</span>
       </div>
       <div class="category-card-body">
         <div class="category-eyebrow">RAINBOW COLORS</div>
         <h3>${rcEscapeHtml(visual.title)}</h3>
-        <p>${rcEscapeHtml(visual.desc)}</p>
+        ${descMarkup}
         <span class="category-cta">Découvrir la collection <span aria-hidden="true">→</span></span>
       </div>
     </a>
@@ -345,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
     : null;
   let reducedMotion = !!(motionQuery && motionQuery.matches);
   const revealSelector = [
-    '.section-header',
+    '.section-header > *',
     '.category-card',
     '.product-card',
     '.promo-card',
@@ -353,6 +357,8 @@ document.addEventListener('DOMContentLoaded', () => {
     '.review-card',
     '.contact-info-card',
     '.search-wrapper',
+    '.about-story-grid > *',
+    '.footer-grid > *',
     '[data-rc-reveal]'
   ].join(',');
   const prepared = new WeakSet();
@@ -360,6 +366,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function revealNow(element) {
     if (element && element.classList) element.classList.add('rc-visible');
+  }
+
+  function revealAll() {
+    document.querySelectorAll(revealSelector + ', .rc-reveal').forEach(revealNow);
   }
 
   function startPageEntrance() {
@@ -398,9 +408,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (finished) return;
       finished = true;
       window.clearTimeout(fallbackTimer);
-      startPageEntrance();
       window.setTimeout(() => loader.classList.add('is-hidden'), 120);
-      window.setTimeout(() => loader.remove(), 900);
+      window.setTimeout(() => {
+        loader.remove();
+        startPageEntrance();
+      }, 900);
     };
 
     // Never let a slow image or iframe keep the whole storefront covered.
@@ -450,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
           );
           index = Math.max(0, siblings.indexOf(element));
         }
-        element.style.setProperty('--rc-delay', `${Math.min(index, 6) * 45}ms`);
+        element.style.setProperty('--rc-delay', `${Math.min(index, 8) * 60}ms`);
         revealObserver.observe(element);
       } catch (error) {
         revealNow(element);
@@ -514,13 +526,26 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  function installPageRestore() {
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted) return;
+      // Restored bfcache documents must never stay in a transitional state.
+      root.classList.remove('rc-page-exit');
+      root.classList.add('rc-page-ready');
+      revealAll();
+    });
+  }
+
   function watchMotionPreference() {
     if (!motionQuery) return;
     const handleChange = (event) => {
       reducedMotion = event.matches;
       if (reducedMotion) {
-        document.querySelectorAll(revealSelector + ', .rc-reveal').forEach(revealNow);
+        root.classList.remove('rc-motion-ready');
+        revealAll();
         startPageEntrance();
+      } else {
+        root.classList.add('rc-motion-ready');
       }
     };
     if (motionQuery.addEventListener) motionQuery.addEventListener('change', handleChange);
@@ -528,10 +553,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function start() {
-    installReveals();
-    installLoader();
+    try {
+      installReveals();
+      // CSS only hides reveal targets after this flag is set by working JS.
+      root.classList.add('rc-motion-ready');
+    } catch (error) {
+      root.classList.remove('rc-motion-ready');
+      revealAll();
+    }
+
+    try { installLoader(); } catch (error) { startPageEntrance(); }
     installMobileMenuAccessibility();
     installProductDetailMotion();
+    installPageRestore();
     watchMotionPreference();
   }
 

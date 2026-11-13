@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Catégories | Rainbow Colors</title>
+<meta name="theme-color" content="#080808">
+<script src="js/theme.js?v=20261112-theme"></script>
 <link rel="icon" type="image/jpeg" href="images/rainbow-colors-app-icon.jpg">
-<link rel="stylesheet" href="css/style.css?v=20261102-motion">
+<link rel="stylesheet" href="css/style.css?v=20261113-color">
 </head>
 <body>
 
@@ -14,7 +16,7 @@
     <a href="index.html" class="logo">
       <img class="rainbow-brand-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
     </a>
-    <nav class="nav-desktop"><a href="index.html" class="nav-link ">Accueil</a><a href="products.html" class="nav-link ">Produits</a><a href="categories.html" class="nav-link active">Catégories</a><a href="about.html" class="nav-link ">À Propos</a><a href="contact.html" class="nav-link ">Contact</a></nav>
+    <nav class="nav-desktop"><a href="index.html" class="nav-link ">Accueil</a><a href="products.html" class="nav-link ">Produits</a><a href="categories.html" class="nav-link active">Catégories</a><a href="color.html" class="nav-link ">Color</a></nav>
     <div class="header-actions">
       <a href="search.html" class="icon-btn" title="Rechercher" aria-label="Rechercher"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg></a>
 
@@ -25,7 +27,7 @@
 <div class="mobile-menu-overlay" onclick="toggleMobileMenu()"></div>
 <div class="mobile-menu">
   <button class="icon-btn" style="position:absolute;top:16px;right:16px" onclick="toggleMobileMenu()">✕</button>
-  <a href="index.html" class="mobile-nav-link">Accueil</a><a href="products.html" class="mobile-nav-link">Produits</a><a href="categories.html" class="mobile-nav-link">Catégories</a><a href="about.html" class="mobile-nav-link">À Propos</a><a href="contact.html" class="mobile-nav-link">Contact</a>
+  <a href="index.html" class="mobile-nav-link">Accueil</a><a href="products.html" class="mobile-nav-link">Produits</a><a href="categories.html" class="mobile-nav-link">Catégories</a><a href="color.html" class="mobile-nav-link">Color</a>
 
   
   
@@ -73,7 +75,10 @@ document.addEventListener('DOMContentLoaded', () => { loadCategories(); loadCatP
   <div class="footer-inner">
     <div class="footer-grid">
       <div class="footer-brand">
-        <img class="rainbow-brand-logo rainbow-footer-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
+        <div class="footer-brand__logos">
+          <img class="rainbow-brand-logo rainbow-footer-logo" src="images/rainbow-colors-logo-header.svg" alt="Rainbow Colors" width="500" height="168">
+          <img class="magma-brand-logo" src="images/magma-logo-transparent.png" alt="MAGMA">
+        </div>
         <p>Rainbow Colors - Votre fournisseur de confiance pour peintures et matériaux de construction en Tunisie.</p>
         <div class="footer-social">
           
@@ -98,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => { loadCategories(); loadCatP
 
 
 
-<script src="js/main.js?v=20261102-motion"></script>
+<script src="js/main.js?v=20261111-motion"></script>
 
 </body>
 </html>
