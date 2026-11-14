@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#080808">
 <script src="js/theme.js?v=20261112-theme"></script>
 <link rel="icon" type="image/jpeg" href="images/rainbow-colors-app-icon.jpg">
-<link rel="stylesheet" href="css/style.css?v=20261113-color">
+<link rel="stylesheet" href="css/style.css?v=20261114-categories">
 </head>
 <body>
 
@@ -80,16 +80,22 @@ function showSuggestions(products, q){
     return;
   }
 
-  const items = products.slice(0,5).map(p => `
+  const items = products.slice(0,5).map(p => {
+    const publicCategoryName = p.publicCategory?.name || '';
+    const categoryMarkup = publicCategoryName
+      ? `<small>${escapeHtml(publicCategoryName)}</small>`
+      : '';
+    return `
     <button type="button" class="rc-suggestion-item" data-suggestion-name="${escapeHtml(p.name)}">
       <span class="rc-suggestion-icon" aria-hidden="true">🔎</span>
       <span class="rc-suggestion-copy">
         <strong>${escapeHtml(p.name)}</strong>
-        <small>${escapeHtml(p.category?.name || 'Produit')}</small>
+        ${categoryMarkup}
       </span>
       <span class="rc-suggestion-arrow" aria-hidden="true">›</span>
     </button>
-  `).join('');
+  `;
+  }).join('');
 
   searchSuggestions.innerHTML = items + `
     <button type="button" class="rc-suggestion-all" data-search-all>
@@ -192,7 +198,7 @@ if(q){
 
 
 
-<script src="js/main.js?v=20261111-motion"></script>
+<script src="js/main.js?v=20261114-categories"></script>
 
 </body>
 </html>

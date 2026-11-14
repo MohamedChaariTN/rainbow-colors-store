@@ -130,6 +130,53 @@ function toggleMobileMenu(forceOpen) {
 const CATALOGUE_URL = 'data/catalogue.json';
 let cataloguePromise = null;
 
+// Presentation-layer collections displayed by the public storefront.
+// The catalogue records stay untouched: products outside these collections
+// remain available in the complete products listing, without a public label.
+const PUBLIC_CATEGORY_GROUPS = [
+  {
+    name: 'ÉTANCHÉITÉ',
+    slug: 'etancheite',
+    description: 'Protection durable contre l’humidité et les infiltrations.',
+    color: '#06b6d4',
+    image: 'images/categories/etancheite.jpg',
+    imageAlt: 'Application d’une protection d’étanchéité sur une toiture',
+    productSlugs: [
+      'magma-durajir',
+      'magma-durajir-etanche',
+      'rainbow-colors-etanche-eco',
+      'rainbow-colors-revetement-impermeabilisation-etanche'
+    ]
+  },
+  {
+    name: 'BOIS / WOOD',
+    slug: 'bois-wood',
+    description: 'Protection, finition et mise en valeur du bois.',
+    color: '#f97316',
+    image: 'images/categories/bois-wood.jpg',
+    imageAlt: 'Application d’une finition protectrice sur une surface en bois',
+    productSlugs: [
+      'rainbow-colors-laque-interieure-exterieure-mat',
+      'rainbow-colors-vernis-marin-polyvalent'
+    ]
+  },
+  {
+    name: 'ANTI-BRUIT',
+    slug: 'anti-bruit',
+    description: 'Confort acoustique et solutions d’isolation sonore.',
+    color: '#8b5cf6',
+    image: 'images/categories/anti-bruit.jpg',
+    imageAlt: 'Ambiance intérieure illustrative pour la collection anti-bruit',
+    productSlugs: []
+  }
+];
+
+const PUBLIC_CATEGORY_BY_PRODUCT = new Map(
+  PUBLIC_CATEGORY_GROUPS.flatMap((category) => (
+    category.productSlugs.map((productSlug) => [productSlug, category])
+  ))
+);
+
 function rcEscapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({
     '&': '&amp;',
@@ -164,6 +211,7 @@ function prepareCatalogue(data) {
     return {
       ...product,
       category,
+      publicCategory: PUBLIC_CATEGORY_BY_PRODUCT.get(product.slug) || null,
       features: Array.isArray(product.features) ? product.features.slice() : []
     };
   });
@@ -194,7 +242,10 @@ async function fetchProducts(params = {}) {
 
   let products = catalogue.products;
   if (categorySlug) {
-    products = products.filter((product) => product.category.slug === categorySlug);
+    const publicCategory = PUBLIC_CATEGORY_GROUPS.find((category) => category.slug === categorySlug);
+    products = publicCategory
+      ? products.filter((product) => product.publicCategory?.slug === publicCategory.slug)
+      : [];
   }
   if (searchTerm) {
     products = products.filter((product) => {
@@ -202,8 +253,8 @@ async function fetchProducts(params = {}) {
         product.name,
         product.slug,
         product.description,
-        product.category.name,
-        product.category.slug,
+        product.publicCategory?.name,
+        product.publicCategory?.slug,
         ...(product.features || [])
       ].join(' ');
       return rcNormalizeText(searchableText).includes(searchTerm);
@@ -238,20 +289,35 @@ async function fetchProduct(slug) {
 
 async function fetchCategories() {
   const catalogue = await loadCatalogue();
-  return catalogue.categories
-    .map((category) => ({
-      ...category,
-      _count: {
-        products: catalogue.products.filter((product) => product.category.slug === category.slug).length
-      }
-    }))
-    .filter((category) => category._count.products > 0);
+  return PUBLIC_CATEGORY_GROUPS.map((category) => ({
+    ...category,
+    productSlugs: category.productSlugs.slice(),
+    _count: {
+      products: catalogue.products.filter(
+        (product) => product.publicCategory?.slug === category.slug
+      ).length
+    }
+  }));
+}
+
+function isUpcomingPublicCategory(categorySlug) {
+  const publicCategory = PUBLIC_CATEGORY_GROUPS.find(
+    (category) => category.slug === String(categorySlug || '').trim()
+  );
+  return Boolean(publicCategory && publicCategory.productSlugs.length === 0);
+}
+
+function renderUpcomingCollectionState() {
+  return '<div class="collection-empty-state" role="status" style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--rc-gray-500)"><h3>Collection bientôt disponible</h3></div>';
 }
 
 function renderProductCard(product) {
   const name = rcEscapeHtml(product.name);
   const image = rcEscapeHtml(product.image || '');
-  const categoryName = rcEscapeHtml(product.category?.name || '');
+  const categoryName = rcEscapeHtml(product.publicCategory?.name || '');
+  const categoryMarkup = categoryName
+    ? `<span class="product-category">${categoryName}</span>`
+    : '';
   const description = rcEscapeHtml(product.description || '');
   const descriptionMarkup = description ? `<p class="product-desc">${description}</p>` : '';
   const slug = encodeURIComponent(product.slug);
@@ -268,7 +334,7 @@ function renderProductCard(product) {
         </div>
       </a>
       <div class="product-info">
-        <span class="product-category">${categoryName}</span>
+        ${categoryMarkup}
         <h3 class="product-name"><a href="product.html?slug=${slug}">${name}</a></h3>
         ${descriptionMarkup}
         <a href="product.html?slug=${slug}" class="catalogue-details">Voir la fiche produit <span aria-hidden="true">→</span></a>
@@ -277,40 +343,30 @@ function renderProductCard(product) {
   `;
 }
 
-const CATEGORY_VISUALS = {
-  "peintures-sols": { title: "Solutions pour Sols", desc: "Revêtements résistants pour sols, ateliers et espaces professionnels." },
-  "peintures-bois": { title: "Finitions Bois", desc: "Laques et peintures pour sublimer et protéger vos surfaces en bois." },
-  "enduits": { title: "Préparation & Enduits", desc: "Enduits et solutions de préparation pour une surface prête à la finition." },
-  "enduits-traditionnels": { title: "Enduits Traditionnels", desc: "Des finitions authentiques inspirées des techniques traditionnelles." },
-  "vernis": { title: "Vernis & Protection", desc: "Protection et finition durable pour des surfaces soignées." },
-  "traitements-metal": { title: "Protection Métal", desc: "Solutions anticorrosion et traitements pour métaux et structures." },
-  "etancheite": { title: "Étanchéité & Protection", desc: "Solutions professionnelles contre l'humidité et les infiltrations." },
-  "enduits-finition": { title: "Finition & Lissage", desc: "Préparez vos murs pour obtenir une finition régulière et élégante." },
-  "colles": { title: "Colles & Pose", desc: "Colles et solutions fiables pour vos travaux de pose et de rénovation." },
-  "enduits-facade": { title: "Façades & Extérieur", desc: "Solutions de finition et de protection pour façades durables." },
-  "peintures-murales": { title: "Peintures Murales", desc: "Des peintures pour transformer vos murs avec une finition professionnelle." },
-  "resines": { title: "Résines", desc: "" },
-  "diluants": { title: "Diluants", desc: "" },
-  "peintures-toitures": { title: "Peintures Toitures", desc: "" }
-};
-
 function renderCategoryCard(cat) {
   const count = cat._count?.products || 0;
-  const visual = CATEGORY_VISUALS[cat.slug] || {
-    title: cat.name,
-    desc: cat.description || ""
-  };
-  const descMarkup = visual.desc ? `<p>${rcEscapeHtml(visual.desc)}</p>` : '';
+  const name = rcEscapeHtml(cat.name);
+  const image = rcEscapeHtml(cat.image || '');
+  const imageAlt = rcEscapeHtml(cat.imageAlt || cat.name);
+  const description = rcEscapeHtml(cat.description || '');
+  const badge = count > 0 ? String(count).padStart(2, '0') : 'Bientôt';
+  const mediaMarkup = image
+    ? `<div class="category-media">
+        <img src="${image}" alt="${imageAlt}" width="1200" height="800" loading="lazy" decoding="async" onerror="var media=this.closest('.category-media');this.remove();if(media)media.classList.add('category-media-placeholder')">
+        <span class="category-media-overlay" aria-hidden="true"></span>
+        <span class="category-number" aria-hidden="true">${badge}</span>
+      </div>`
+    : `<div class="category-media category-media-placeholder" aria-hidden="true">
+        <span class="category-number">${badge}</span>
+      </div>`;
 
   return `
     <a href="products.html?category=${encodeURIComponent(cat.slug)}" class="category-card premium-category-card" style="--category-color:${rcEscapeHtml(cat.color)}">
-      <div class="category-media category-media-placeholder" aria-hidden="true">
-        <span class="category-number">${String(count).padStart(2, '0')}</span>
-      </div>
+      ${mediaMarkup}
       <div class="category-card-body">
         <div class="category-eyebrow">RAINBOW COLORS</div>
-        <h3>${rcEscapeHtml(visual.title)}</h3>
-        ${descMarkup}
+        <h3>${name}</h3>
+        ${description ? `<p>${description}</p>` : ''}
         <span class="category-cta">Découvrir la collection <span aria-hidden="true">→</span></span>
       </div>
     </a>

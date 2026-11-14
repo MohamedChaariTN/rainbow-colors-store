@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#080808">
 <script src="js/theme.js?v=20261112-theme"></script>
 <link rel="icon" type="image/jpeg" href="images/rainbow-colors-app-icon.jpg">
-<link rel="stylesheet" href="css/style.css?v=20261113-color">
+<link rel="stylesheet" href="css/style.css?v=20261114-categories">
 </head>
 <body>
 
@@ -44,7 +44,7 @@
     <div class="pd-grid">
       <div class="pd-gallery"><div class="pd-gallery-main"><img id="pdImage" src="" alt="" loading="eager"></div></div>
       <div class="pd-info">
-        <span class="pd-category" id="pdCategory">Catégorie</span>
+        <span class="pd-category" id="pdCategory" hidden></span>
         <h1 id="pdName">Nom du produit</h1>
 
         <p class="pd-desc" id="pdDesc">...</p>
@@ -66,7 +66,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('pdBreadcrumb').textContent = p.name;
     image.src = p.image;
     image.alt = p.name;
-    document.getElementById('pdCategory').textContent = p.category?.name || '';
+    const categoryEl = document.getElementById('pdCategory');
+    const publicCategoryName = p.publicCategory?.name || '';
+    categoryEl.textContent = publicCategoryName;
+    categoryEl.hidden = !publicCategoryName;
     document.getElementById('pdName').textContent = p.name;
     const description = String(p.description || '').trim();
     const descriptionEl = document.getElementById('pdDesc');
@@ -123,7 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 
-<script src="js/main.js?v=20261111-motion"></script>
+<script src="js/main.js?v=20261114-categories"></script>
 
 </body>
 </html>
