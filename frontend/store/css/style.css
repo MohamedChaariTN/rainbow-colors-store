@@ -4913,3 +4913,210 @@ html.rc-paint-on .rc-photo__light {
   }
 }
 
+/* =========================================================
+   TECHNICAL SHEET PREVIEW ACTIONS
+   One branded preview PDF per catalogue product.
+========================================================= */
+.tech-sheet-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  width: 100%;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(201, 164, 76, .22);
+}
+
+.catalogue-product-card .tech-sheet-actions {
+  margin-top: auto;
+}
+
+.tech-sheet-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid #e4ca83;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #f6e4ad 0%, #d4b25c 48%, #b18a2e 100%);
+  color: #15120a !important;
+  font-size: 12.5px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .2);
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+
+.tech-sheet-download:hover,
+.tech-sheet-download:focus-visible {
+  color: #080808 !important;
+  filter: brightness(1.04);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(201, 164, 76, .28);
+}
+
+.tech-sheet-download:active {
+  transform: translateY(0);
+}
+
+.tech-sheet-download svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+.tech-sheet-open {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  justify-content: center;
+  gap: 5px;
+  color: var(--rc-theme-link, #dfbd61) !important;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tech-sheet-open:hover {
+  color: #ffe7a0 !important;
+}
+
+.tech-sheet-open svg {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+}
+
+.tech-sheet-note {
+  display: block;
+  color: var(--rc-theme-muted, #c7bea8);
+  font-size: 10px;
+  line-height: 1.35;
+  text-align: center;
+  opacity: .88;
+}
+
+.tech-sheet-download:focus-visible,
+.tech-sheet-open:focus-visible {
+  outline: 2px solid #f4e4b6;
+  outline-offset: 3px;
+}
+
+.pd-tech-sheet {
+  width: 100%;
+  margin-top: 6px;
+  padding: 17px;
+  border: 1px solid rgba(201, 164, 76, .26);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .025);
+}
+
+.pd-tech-sheet__title {
+  margin-bottom: 11px;
+  color: var(--rc-theme-heading, #e5c66b);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.pd-tech-sheet .tech-sheet-actions {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.pd-tech-sheet .tech-sheet-download {
+  width: 100%;
+  max-width: 430px;
+  min-height: 48px;
+  font-size: 13px;
+}
+
+.pd-tech-sheet .tech-sheet-open {
+  align-self: flex-start;
+}
+
+:root[data-theme="light"] .tech-sheet-actions {
+  border-top-color: rgba(138, 100, 28, .22);
+}
+
+:root[data-theme="light"] .tech-sheet-download {
+  border-color: #c9a44c;
+  background: linear-gradient(135deg, #f7e8bb 0%, #ddbe70 48%, #bd963b 100%);
+  box-shadow: 0 6px 16px rgba(80, 59, 17, .16);
+}
+
+:root[data-theme="light"] .tech-sheet-download:hover,
+:root[data-theme="light"] .tech-sheet-download:focus-visible {
+  box-shadow: 0 10px 22px rgba(80, 59, 17, .22);
+}
+
+:root[data-theme="light"] .tech-sheet-open {
+  color: #7a5718 !important;
+}
+
+:root[data-theme="light"] .tech-sheet-open:hover {
+  color: #8a641c !important;
+}
+
+:root[data-theme="light"] .tech-sheet-note {
+  color: #6b5d46;
+}
+
+:root[data-theme="light"] .pd-tech-sheet {
+  border-color: #ddcfae;
+  background: #fffdf8;
+}
+
+@media (max-width: 1024px) {
+  .pd-grid,
+  .pd-grid > * {
+    min-width: 0;
+  }
+
+  .pd-info h1 {
+    overflow-wrap: break-word;
+  }
+}
+
+@media (max-width: 640px) {
+  .pd-info h1 {
+    font-size: 26px;
+    line-height: 1.15;
+  }
+
+  .tech-sheet-download {
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 12px;
+  }
+
+  .pd-tech-sheet {
+    padding: 14px;
+  }
+
+  .pd-tech-sheet .tech-sheet-download {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tech-sheet-download {
+    transition: none;
+  }
+
+  .tech-sheet-download:hover {
+    transform: none;
+  }
+}
+

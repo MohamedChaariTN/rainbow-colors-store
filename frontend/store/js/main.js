@@ -311,6 +311,31 @@ function renderUpcomingCollectionState() {
   return '<div class="collection-empty-state" role="status" style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--rc-gray-500)"><h3>Collection bientôt disponible</h3></div>';
 }
 
+function renderTechnicalSheetActions(product) {
+  const name = rcEscapeHtml(product.name);
+  const href = `documents/fiches-techniques/${encodeURIComponent(product.slug)}.pdf`;
+  const downloadName = rcEscapeHtml(`fiche-technique-${product.slug}.pdf`);
+  const noteId = `tech-sheet-note-${product.slug}`;
+
+  return `
+    <div class="tech-sheet-actions" data-tech-sheet="${rcEscapeHtml(product.slug)}">
+      <a class="tech-sheet-download" href="${href}" download="${downloadName}" aria-label="Télécharger la fiche technique PDF de ${name}" aria-describedby="${noteId}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path>
+        </svg>
+        <span>Télécharger la fiche technique (PDF)</span>
+      </a>
+      <a class="tech-sheet-open" href="${href}" target="_blank" rel="noopener noreferrer" aria-label="Ouvrir le PDF de ${name} dans un nouvel onglet">
+        <span>Ouvrir le PDF</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 3h7v7"></path><path d="M10 14 21 3"></path><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"></path>
+        </svg>
+      </a>
+      <span class="tech-sheet-note" id="${noteId}">Fiche produit provisoire basée sur les informations disponibles — document non officiel.</span>
+    </div>
+  `;
+}
+
 function renderProductCard(product) {
   const name = rcEscapeHtml(product.name);
   const image = rcEscapeHtml(product.image || '');
@@ -338,6 +363,7 @@ function renderProductCard(product) {
         <h3 class="product-name"><a href="product.html?slug=${slug}">${name}</a></h3>
         ${descriptionMarkup}
         <a href="product.html?slug=${slug}" class="catalogue-details">Voir la fiche produit <span aria-hidden="true">→</span></a>
+        ${renderTechnicalSheetActions(product)}
       </div>
     </article>
   `;

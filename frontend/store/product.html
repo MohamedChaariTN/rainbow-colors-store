@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#080808">
 <script src="js/theme.js?v=20261112-theme"></script>
 <link rel="icon" type="image/jpeg" href="images/rainbow-colors-app-icon.jpg">
-<link rel="stylesheet" href="css/style.css?v=20261114-categories">
+<link rel="stylesheet" href="css/style.css?v=20261117-tech-sheets-v2">
 </head>
 <body>
 
@@ -18,7 +18,7 @@
     </a>
     <nav class="nav-desktop"><a href="index.html" class="nav-link ">Accueil</a><a href="products.html" class="nav-link active">Produits</a><a href="categories.html" class="nav-link ">Catégories</a><a href="color.html" class="nav-link ">Color</a></nav>
     <div class="header-actions">
-      <a href="search.html" class="icon-btn" title="Rechercher">🔍</a>
+      <a href="search.html" class="icon-btn" title="Rechercher" aria-label="Rechercher"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg></a>
 
       <button class="icon-btn mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
     </div>
@@ -49,6 +49,10 @@
 
         <p class="pd-desc" id="pdDesc">...</p>
         <ul class="pd-features" id="pdFeatures"></ul>
+        <div class="pd-tech-sheet" id="pdTechSheet" hidden aria-labelledby="pdTechSheetTitle">
+          <div class="pd-tech-sheet__title" id="pdTechSheetTitle">Fiche produit provisoire</div>
+          <div id="pdTechSheetActions"></div>
+        </div>
 
       </div>
     </div>
@@ -79,6 +83,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const featuresEl = document.getElementById('pdFeatures');
     featuresEl.innerHTML = feats.map(f => '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>'+rcEscapeHtml(f)+'</li>').join('');
     featuresEl.style.display = feats.length ? '' : 'none';
+    const techSheetEl = document.getElementById('pdTechSheet');
+    const techSheetActionsEl = document.getElementById('pdTechSheetActions');
+    if (techSheetEl && techSheetActionsEl) {
+      techSheetActionsEl.innerHTML = renderTechnicalSheetActions(p);
+      techSheetEl.hidden = false;
+    }
     if (window.rcAnimateProductDetails) window.rcAnimateProductDetails();
   } catch(e) {
     console.error(e);
@@ -89,6 +99,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     descriptionEl.style.display = '';
     descriptionEl.textContent = 'Ce produit ne figure pas dans le catalogue public. Consultez tous les produits disponibles.';
     image.remove();
+    const techSheetEl = document.getElementById('pdTechSheet');
+    if (techSheetEl) techSheetEl.hidden = true;
     if (window.rcAnimateProductDetails) window.rcAnimateProductDetails();
   }
 });
@@ -126,7 +138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 
-<script src="js/main.js?v=20261114-categories"></script>
+<script src="js/main.js?v=20261117-tech-sheets-v2"></script>
 
 </body>
 </html>
